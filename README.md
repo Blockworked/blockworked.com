@@ -39,8 +39,10 @@ One-time setup on GitHub:
   - `fields/`, `palette/` are trimmed copies of Blockwork's `ui/src/components/fields/`.
   - blockstitch addresses the canvas by fixed element ids, so only one editor
     can exist per page.
-- Feature-card illustrations on the home page are static markup using
-  blockstitch's real class names (`instruction-row`, `wrap-mouth`, …).
+- `src/demo/BlockPreview.vue` — non-interactive block stacks (the hero's
+  background blocks and the feature-card illustrations), rendered by
+  blockstitch's real `InstructionList` from presets so they match the editor
+  exactly.
 - `src/components/Downloader.astro` — fetches the latest GitHub release in the
   browser and recommends a build for the visitor's OS/arch.
 - `src/pages/changelog.astro` — rendered **at build time** from Blockwork's
@@ -56,6 +58,11 @@ Bump both together so the site matches the shipped app:
 ```bash
 pnpm add "blockstitch@github:Blockworked/blockstitch#<commit>"
 ```
+
+**Dev-server CSS:** after editing a page's `<style>`, `astro dev` occasionally
+keeps serving the previous version to the browser (the change appears for a
+moment, then reverts). Restart `pnpm dev` if a style edit doesn't stick — the
+production build is unaffected.
 
 The dev server excludes blockstitch from Vite's dependency pre-bundling
 (`astro.config.mjs`); if the editor ever fails to hydrate in dev with an

@@ -1,32 +1,46 @@
 ---
 import Base from '../layouts/Base.astro';
 import DemoEditor from '../demo/DemoEditor.vue';
+import BlockPreview from '../demo/BlockPreview.vue';
 import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
 import {
-  BatteryCharging, Blocks, ChevronDown, Circle, Clock, Equal, GitBranch, Keyboard, Layers,
-  Monitor, MousePointerClick, Move, Play, ShieldCheck, Square,
+  Blocks, ChevronDown, Circle, Clock, Equal, GitBranch, Layers, Monitor, Play, ShieldCheck, Square,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
 ---
 
 <Base>
   <section class="hero">
-    <div class="container">
-      <div class="hero-copy">
-        <h1>Macros you can <span class="accent">see</span>.</h1>
-        <p class="hero-lede">
-          Blockwork lets you build keyboard and mouse macros by snapping blocks together — no code, no
-          guesswork. Record what you do, tweak it block by block, and fire it off with a hotkey. Free and
-          open source, for Windows, macOS, and Linux.
-        </p>
-        <div class="hero-actions">
-          <Downloader mode="compact" align="center">
-            <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
-          </Downloader>
-        </div>
+    <!-- Decorative: the editor's dot-grid canvas, fading out from the center,
+         with a couple of faint block stacks drifting at the edges. -->
+    <div class="hero-bg" aria-hidden="true">
+      <div class="hero-grid"></div>
+      <div class="hero-noise"></div>
+      <div class="hero-ghosts">
+        <div class="ghost ghost-left"><BlockPreview client:only="vue" preset="copy-paste" /></div>
+        <div class="ghost ghost-right"><BlockPreview client:only="vue" preset="if-scroll" /></div>
       </div>
+    </div>
+    <div class="container hero-copy">
+      <h1>Macros you can <span class="accent">see</span>.</h1>
+      <p class="hero-lede">
+        Blockwork lets you build keyboard and mouse macros by snapping blocks together — no code, no
+        guesswork. Record what you do, tweak it block by block, and fire it off with a hotkey. Free and
+        open source, for Windows, macOS, and Linux.
+      </p>
+      <div class="hero-actions">
+        <Downloader mode="compact" align="center">
+          <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
+        </Downloader>
+      </div>
+    </div>
+    <a class="scroll-cue" href="#try" aria-label="Scroll down"><ChevronDown /></a>
+  </section>
+
+  <section class="try" id="try">
+    <div class="container">
       <div class="hero-editor">
         <div class="editor-window">
           <div class="editor-titlebar" aria-hidden="true">
@@ -67,26 +81,7 @@ import { REPO_URL } from '../lib/releases';
         <article class="panel feature">
           <h3 class="panel-title"><Blocks />Snap together</h3>
           <div class="feature-stage dot-grid" aria-hidden="true">
-            <div class="strand-body">
-              <div class="instruction-row">
-                <div class="instruction-shape">
-                  <Keyboard class="instruction-type-icon" />
-                  <div class="instruction-content">
-                    <span class="instruction-label">Key:</span>
-                    <button type="button" class="btn-chip" tabindex="-1">Enter</button>
-                  </div>
-                </div>
-              </div>
-              <div class="instruction-row">
-                <div class="instruction-shape">
-                  <MousePointerClick class="instruction-type-icon" />
-                  <div class="instruction-content">
-                    <span class="instruction-label">Mouse:</span>
-                    <button type="button" class="dd-trigger dd-compact" tabindex="-1">Left<ChevronDown /></button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <BlockPreview client:only="vue" preset="key-mouse" />
           </div>
           <p>
             Keys, text, clicks, scrolling, mouse moves, shell commands, and opening or quitting apps —
@@ -97,31 +92,7 @@ import { REPO_URL } from '../lib/releases';
         <article class="panel feature">
           <h3 class="panel-title"><GitBranch />Loops &amp; logic</h3>
           <div class="feature-stage dot-grid" aria-hidden="true">
-            <div class="strand-body">
-              <div class="instruction-row instruction-row-wrap">
-                <div class="wrap-head-line">
-                  <GitBranch class="instruction-type-icon-inline" />
-                  <span class="instruction-label">if</span>
-                  <span class="value-block value-card-shape-bool">
-                    <span class="value-block value-card-shape"><span class="value-op">clicks</span></span>
-                    <span class="value-op">&lt;</span>
-                    <span class="value-block"><input type="text" value="100" size="3" readonly tabindex="-1" /></span>
-                  </span>
-                  <span class="instruction-label">then</span>
-                </div>
-                <div class="wrap-mouth">
-                  <div class="strand-body">
-                    <div class="instruction-row">
-                      <div class="instruction-shape">
-                        <Move class="instruction-type-icon" />
-                        <div class="instruction-content"><span class="instruction-label">Move mouse:</span></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="wrap-foot-bar"></div>
-              </div>
-            </div>
+            <BlockPreview client:only="vue" preset="if-click" />
           </div>
           <p>
             Repeat, forever, while, and If / If-Else blocks, with boolean conditions that only fit where a
@@ -132,22 +103,7 @@ import { REPO_URL } from '../lib/releases';
         <article class="panel feature">
           <h3 class="panel-title"><Equal />Variables</h3>
           <div class="feature-stage dot-grid" aria-hidden="true">
-            <div class="instruction-row solo">
-              <div class="instruction-shape">
-                <Equal class="instruction-type-icon" />
-                <div class="instruction-content">
-                  <span class="instruction-label">set</span>
-                  <button type="button" class="dd-trigger dd-compact" tabindex="-1">delay<ChevronDown /></button>
-                  <span class="instruction-label">to</span>
-                  <span class="value-block value-card-shape">
-                    <span class="value-op">pick random from</span>
-                    <span class="value-block"><input type="text" value="80" size="2" readonly tabindex="-1" /></span>
-                    <span class="value-op">to</span>
-                    <span class="value-block"><input type="text" value="120" size="3" readonly tabindex="-1" /></span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            <BlockPreview client:only="vue" preset="set-random" />
           </div>
           <p>
             Store numbers and text, combine them with operators like Join and Random, and watch their
@@ -158,15 +114,7 @@ import { REPO_URL } from '../lib/releases';
         <article class="panel feature">
           <h3 class="panel-title"><Layers />Custom blocks</h3>
           <div class="feature-stage dot-grid" aria-hidden="true">
-            <div class="instruction-row solo blockwork-custom-block" style="--blockwork-custom-block-color: #bf5af2">
-              <div class="instruction-shape">
-                <Blocks class="instruction-type-icon" />
-                <div class="instruction-content">
-                  <span class="instruction-label">log in as</span>
-                  <span class="value-block"><input type="text" value="player1" size="7" readonly tabindex="-1" /></span>
-                </div>
-              </div>
-            </div>
+            <BlockPreview client:only="vue" preset="custom-block" />
           </div>
           <p>
             Wrap a sequence you use often into your own block, give it inputs and a color, and reuse it
@@ -177,16 +125,7 @@ import { REPO_URL } from '../lib/releases';
         <article class="panel feature">
           <h3 class="panel-title"><Play />Hotkeys &amp; triggers</h3>
           <div class="feature-stage dot-grid" aria-hidden="true">
-            <div class="instruction-row solo instruction-row-when-ran instruction-row-header">
-              <div class="instruction-shape">
-                <div class="instruction-content">
-                  <BatteryCharging />
-                  <span class="instruction-label when-ran-label">When battery charged to</span>
-                  <span class="value-block"><input type="text" value="80" size="2" readonly tabindex="-1" /></span>
-                  <span class="instruction-label">%</span>
-                </div>
-              </div>
-            </div>
+            <BlockPreview client:only="vue" preset="battery" />
           </div>
           <p>
             Start and stop any macro with a global hotkey, or trigger it on a schedule, when power is
@@ -235,30 +174,92 @@ import { REPO_URL } from '../lib/releases';
 </Base>
 
 <style>
+  /* The header is 56px tall (SiteHeader.astro); the hero fills the rest of the first screen. */
   .hero {
     position: relative;
-    padding: 72px 0 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100vh - 56px);
+    min-height: calc(100svh - 56px);
+    padding: 64px 0 96px;
     overflow: hidden;
   }
-  .hero::before {
-    content: '';
+  .hero-bg {
     position: absolute;
-    inset: -20% -10% auto;
-    height: 720px;
-    background: radial-gradient(ellipse 50% 60% at 50% 30%, rgba(var(--blockstitch-accent-rgb), 0.18), transparent 70%);
+    inset: 0;
+    overflow: hidden;
     pointer-events: none;
+    /* Wide, low-contrast glows — a blue light behind the headline and a hint
+       of violet lower right. Interpolated in oklab so the falloff stays smooth. */
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 42% in oklab, rgba(var(--blockstitch-accent-rgb), 0.2), rgba(var(--blockstitch-accent-rgb), 0.07) 45%, transparent 80%),
+      radial-gradient(ellipse 45% 55% at 82% 78% in oklab, rgba(191, 90, 242, 0.09), transparent 75%),
+      radial-gradient(ellipse 40% 50% at 15% 20% in oklab, rgba(var(--blockstitch-accent-rgb), 0.07), transparent 75%);
   }
-  .hero .container { position: relative; }
-  .hero-copy {
-    max-width: 760px;
+  /* The editor canvas's dot grid, fading out toward the edges. */
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.2) 1.3px, transparent 1.5px);
+    background-size: 26px 26px;
+    background-position: center top;
+    -webkit-mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 35%, transparent 85%);
+    mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 35%, transparent 85%);
+  }
+  :global(:root[data-theme='light']) .hero-grid {
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.2) 1.3px, transparent 1.5px);
+  }
+  /* A whisper of film grain dithers the dark gradients so they don't band. */
+  .hero-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :global(:root[data-theme='light']) .hero-noise { opacity: 0.1; filter: invert(1); }
+  .hero-ghosts {
+    position: absolute;
+    inset: 0;
+    max-width: 1400px;
     margin: 0 auto;
+  }
+  .ghost {
+    position: absolute;
+    opacity: 0.4;
+  }
+  .ghost-left { left: 3%; top: 15%; }
+  .ghost-right { right: 3%; bottom: 13%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .ghost { animation: ghost-in 900ms var(--blockstitch-ease-standard) both; }
+    .ghost-left > :global(*) { animation: ghost-float 14s ease-in-out infinite; }
+    .ghost-right > :global(*) { animation: ghost-float 16s ease-in-out -6s infinite; }
+  }
+  @keyframes ghost-in {
+    from { opacity: 0; }
+  }
+  @keyframes ghost-float {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -12px; }
+  }
+  /* Only where there's room beside the headline. */
+  @media (max-width: 1180px) {
+    .ghost { opacity: 0.2; }
+  }
+  @media (max-width: 860px) {
+    .hero-ghosts { display: none; }
+  }
+  .hero-copy {
+    position: relative;
+    max-width: 1000px;
     text-align: center;
   }
   h1 {
-    font-size: clamp(40px, 6.4vw, 68px);
-    line-height: 1.02;
+    font-size: clamp(48px, 10vw, 128px);
+    line-height: 0.98;
     font-weight: 800;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.04em;
+    text-wrap: balance;
   }
   .accent {
     background: linear-gradient(160deg, var(--blockstitch-accent-light), var(--blockstitch-accent));
@@ -267,14 +268,38 @@ import { REPO_URL } from '../lib/releases';
     color: transparent;
   }
   .hero-lede {
-    margin: 18px auto 0;
-    max-width: 58ch;
-    font-size: 18px;
+    margin: 28px auto 0;
+    max-width: 52ch;
+    font-size: clamp(17px, 1.9vw, 22px);
+    line-height: 1.5;
     color: var(--blockstitch-text-dim);
     text-wrap: pretty;
   }
-  .hero-actions { margin-top: 28px; }
-  .hero-editor { margin-top: 56px; }
+  .scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 28px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-left: -20px;
+    border-radius: 50%;
+    color: var(--blockstitch-text-dim);
+    transition: color var(--blockstitch-dur-fast) var(--blockstitch-ease-standard), background var(--blockstitch-dur-fast) var(--blockstitch-ease-standard);
+  }
+  .scroll-cue:hover { color: var(--blockstitch-text); background: var(--blockstitch-hover-overlay); }
+  .scroll-cue :global(svg) { width: 22px; height: 22px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-cue :global(svg) { animation: cue-bob 2.4s var(--blockstitch-ease-standard) infinite; }
+  }
+  @keyframes cue-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+
+  .hero-actions { margin-top: 36px; display: flex; justify-content: center; }
+  .try { padding: 24px 0 40px; }
   .editor-window {
     border-radius: 12px;
     overflow: hidden;
@@ -335,7 +360,7 @@ import { REPO_URL } from '../lib/releases';
     align-items: center;
     justify-content: center;
     height: 176px;
-    padding: 12px;
+    padding: 8px;
     border-bottom: 1px solid var(--blockstitch-glass-border);
     overflow: hidden;
     font-size: 14px;
@@ -343,13 +368,9 @@ import { REPO_URL } from '../lib/releases';
   }
   /* Illustrations only — look like real blocks (hover included), but nothing grabs or types. */
   .feature-stage :global(*) { cursor: default; }
-  .feature-stage :global(input), .feature-stage :global(button) { pointer-events: none; }
-  .feature-stage :global(.instruction-row.solo) { margin-bottom: 0; }
   /* Scale the wider illustrations down rather than clip them in narrow cards. */
-  @container (max-width: 480px) { .feature-stage > :global(*) { zoom: 0.8; } }
-  /* Blockwork's custom-block coloring (ui/src/custom-block-color.css) isn't part of blockstitch. */
-  .feature-stage :global(.blockwork-custom-block .instruction-type-icon) { color: var(--blockwork-custom-block-color); }
-  :global(body:not(.bs-dragging)) .feature-stage :global(.instruction-row.blockwork-custom-block:hover::before) { background: var(--blockwork-custom-block-color); }
+  .feature-stage :global(.block-preview) { zoom: 0.9; }
+  @container (max-width: 420px) { .feature-stage :global(.block-preview) { zoom: 0.72; } }
   .feature p {
     padding: 14px 16px 16px;
     font-size: 14px;
@@ -381,7 +402,6 @@ import { REPO_URL } from '../lib/releases';
     .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 640px) {
-    .hero { padding-top: 48px; }
     .features { grid-template-columns: 1fr; }
     .cta { flex-direction: column; align-items: flex-start; padding: 28px; }
   }

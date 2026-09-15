@@ -117,10 +117,17 @@ function slotAt(loc: ValueLocation): { get(): ValueNode; set(v: ValueNode): void
     const strand = doc.strands.find(s => s.id === loc.strand_id);
     if (!strand) return null;
     const [list, idx] = resolveBody(strand, loc.index);
-    const prop = FIELD_PROPS[loc.field_id];
-    if (!list[idx] || !prop) return null;
-    container = list[idx];
-    key = prop;
+    const ins = list[idx];
+    if (!ins) return null;
+    if (loc.field_id.startsWith('CallArg:') && ins.type === 'CallBlock') {
+      container = ins.args;
+      key = Number(loc.field_id.slice('CallArg:'.length));
+    } else {
+      const prop = FIELD_PROPS[loc.field_id];
+      if (!prop) return null;
+      container = ins;
+      key = prop;
+    }
   }
   for (const step of loc.path) {
     const node = container[key] as ValueNode;

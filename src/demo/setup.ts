@@ -7,7 +7,7 @@ import {
   type ValueNode,
 } from 'blockstitch';
 import {
-  Clock, Equal, GitBranch, GitFork, Infinity, Keyboard, Mouse, MousePointerClick, Move, Play,
+  BatteryCharging, Blocks, Clock, Equal, GitBranch, GitFork, Infinity, Keyboard, Mouse, MousePointerClick, Move, Play,
   Repeat, RotateCw, TextCursor, TrendingUp,
 } from 'lucide-vue-next';
 import { reactive } from 'vue';
@@ -16,6 +16,8 @@ import { OPERATOR_KINDS } from './operators';
 import { HEADER_TYPES, STACK_TYPES, defaultInstruction, type Instruction, type InstructionType } from './types';
 
 import WhenRanFields from './fields/WhenRanFields.vue';
+import WhenBatteryChargedToFields from './fields/WhenBatteryChargedToFields.vue';
+import CallBlockFields from './fields/CallBlockFields.vue';
 import WaitFields from './fields/WaitFields.vue';
 import TextFields from './fields/TextFields.vue';
 import KeyFields from './fields/KeyFields.vue';
@@ -40,6 +42,8 @@ import PaletteWrapFields from './palette/PaletteWrapFields.vue';
 // Same icon per type as Blockwork's INSTRUCTION_TYPE_ICONS.
 const ICONS: Record<InstructionType, Component> = {
   WhenRan: Play,
+  WhenBatteryChargedTo: BatteryCharging,
+  CallBlock: Blocks,
   Wait: Clock,
   Text: TextCursor,
   Key: Keyboard,
@@ -114,6 +118,8 @@ export function setupDemo() {
 
   const fields: [InstructionType, Component, Component?][] = [
     ['WhenRan', WhenRanFields],
+    ['WhenBatteryChargedTo', WhenBatteryChargedToFields],
+    ['CallBlock', CallBlockFields],
     ['Wait', WaitFields, PaletteWaitFields],
     ['Text', TextFields, PaletteTextFields],
     ['Key', KeyFields],
@@ -139,6 +145,13 @@ export function setupDemo() {
     resolveFreshValue: kind => (kind.startsWith('Var:') ? freshValue(kind) : clone(paletteValues[kind] ?? freshValue(kind))),
     clonePaletteInstruction: type => ({ ...clone(paletteInstructions[type as InstructionType]), id: newId() }),
     getInvalidText: location => invalidTextAt(location),
+    // Same class + variable Blockwork's CustomBlockCanvasColorSync applies.
+    instructionAppearance: node => {
+      const ins = node as Instruction;
+      return ins.type === 'CallBlock'
+        ? { classes: { 'blockwork-custom-block': true }, style: { '--blockwork-custom-block-color': ins.color } }
+        : undefined;
+    },
     // Suppress the browser's own menu on blocks, like the app does.
     onCanvasContextMenu: () => {},
     onBlockContextMenu: () => {},

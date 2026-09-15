@@ -202,3 +202,12 @@ code, kbd { font-family: var(--site-mono); font-size: 0.9em; }
   background-image: radial-gradient(circle, var(--blockstitch-glass-border) 1.2px, transparent 1.2px);
   background-size: 22px 22px;
 }
+
+/* Custom-block coloring from Blockwork's ui/src/custom-block-color.css — it's
+   an app-level addition, not part of blockstitch's theme. */
+.instruction-row.blockwork-custom-block .instruction-type-icon {
+  color: var(--blockwork-custom-block-color);
+}
+body:not(.bs-dragging) .instruction-row.blockwork-custom-block:hover::before {
+  background: var(--blockwork-custom-block-color);
+}

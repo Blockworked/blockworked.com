@@ -8,6 +8,10 @@ export type KeyDirection = 'Click' | 'Press' | 'Release';
 
 export type Instruction = { id: string } & (
   | { type: 'WhenRan' }
+  | { type: 'WhenBatteryChargedTo'; threshold: ValueNode }
+  // Stand-in for Blockwork's CallBlock: the site has no BlockDef store, so the
+  // call carries its own prototype (label + one input) and color.
+  | { type: 'CallBlock'; label: string; args: ValueNode[]; color: string }
   | { type: 'Wait'; duration: ValueNode }
   | { type: 'Text'; text: ValueNode }
   | { type: 'Key'; key: string; direction: KeyDirection }
@@ -26,14 +30,16 @@ export type Instruction = { id: string } & (
 export type InstructionType = Instruction['type'];
 export type InstructionOf<T extends InstructionType> = Extract<Instruction, { type: T }>;
 
-export const HEADER_TYPES: InstructionType[] = ['WhenRan'];
-export const STACK_TYPES: InstructionType[] = ['Wait', 'Text', 'Key', 'Button', 'MoveMouse', 'Scroll', 'SetVariable', 'ChangeVariable'];
+export const HEADER_TYPES: InstructionType[] = ['WhenRan', 'WhenBatteryChargedTo'];
+export const STACK_TYPES: InstructionType[] = ['CallBlock', 'Wait', 'Text', 'Key', 'Button', 'MoveMouse', 'Scroll', 'SetVariable', 'ChangeVariable'];
 export const WRAP_TYPES: InstructionType[] = ['If', 'IfElse', 'Repeat', 'Forever', 'While'];
 
 export function defaultInstruction(type: InstructionType): Instruction {
   const id = newId();
   switch (type) {
     case 'WhenRan': return { id, type };
+    case 'WhenBatteryChargedTo': return { id, type, threshold: numberValue(100) };
+    case 'CallBlock': return { id, type, label: 'my block', args: [numberValue(0)], color: '#bf5af2' };
     case 'Wait': return { id, type, duration: numberValue(1000) };
     case 'Text': return { id, type, text: textValue('text') };
     case 'Key': return { id, type, key: 'a', direction: 'Click' };
@@ -62,6 +68,7 @@ export const FIELD_PROPS: Record<string, string> = {
   ChangeVariableValue: 'value',
   Condition: 'condition',
   RepeatCount: 'count',
+  BatteryChargeThreshold: 'threshold',
 };
 
 /** Integer-only fields, same set as Blockwork's `location_requires_integer`. */
