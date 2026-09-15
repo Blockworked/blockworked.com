@@ -1,10 +1,8 @@
 // Copied from Blockwork's ui/src/blockstitchSetup.ts — registers Blockwork's
 // instruction vocabulary (shapes, field forms, icons, operators) and builds
 // the CanvasBackend/CanvasHost blockstitch's canvas drives. `tauri` here is
-// the website's in-browser backend (tauri.ts). Website changes: no recording
-// lock/target, and no right-click menus on palette entries or placed values
-// (those only offer "Details" in the app). Call `setupBlockstitch()` once
-// before mounting anything.
+// the website's in-browser backend (tauri.ts). Website change: no recording
+// lock/target. Call `setupBlockstitch()` once before mounting anything.
 import {
   configureCanvas,
   locationsEqual,
@@ -23,7 +21,7 @@ import { OPERATOR_KINDS } from './valueOps';
 import { clonePaletteInstruction, paletteValueFor } from './paletteState';
 import { paletteCallInstructionFor, paletteCallValueFor } from './blockDefs';
 import { findBlockDef, parseParamKind, type BlockPieceDto, type InstructionDto, type InstructionType, type ValueDto, type ValueKind } from './types';
-import { openBlockMenu, openCanvasMenu, openVariableMenu } from './contextMenu';
+import { openBlockMenu, openCanvasMenu, openPaletteInstructionMenu, openPaletteValueMenu, openValueMenu, openVariableMenu } from './contextMenu';
 
 import WhenRanFields from './components/fields/WhenRanFields.vue';
 import WhenBatteryDischargedToFields from './components/fields/WhenBatteryDischargedToFields.vue';
@@ -263,9 +261,9 @@ function buildCanvasHost(): CanvasHost<InstructionDto> {
     onCanvasContextMenu: e => openCanvasMenu(e),
     onBlockContextMenu: (e, strandId, path) => openBlockMenu(e, strandId, path),
     onVariableContextMenu: (e, name) => openVariableMenu(e, name),
-    onPaletteInstructionContextMenu: () => {},
-    onPaletteValueContextMenu: () => {},
-    onValueContextMenu: () => {},
+    onPaletteInstructionContextMenu: (e, type, variantId) => openPaletteInstructionMenu(e, type, variantId),
+    onPaletteValueContextMenu: (e, kind) => openPaletteValueMenu(e, kind),
+    onValueContextMenu: (e, _location, value) => openValueMenu(e, value as ValueDto),
     resolveCallPieces: blockId => findBlockDef(state.current_macro, blockId)?.pieces.map(p => (p.kind === 'Label' ? { kind: 'Label', text: p.text } : { kind: 'Input' })),
     floatingValueColor: floatingValue =>
       floatingValue.value.kind === 'Call'

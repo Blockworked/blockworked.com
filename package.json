@@ -12,7 +12,7 @@
     "@astrojs/vue": "^7.0.2",
     "@lucide/astro": "^1.45.0",
     "astro": "^7.3.2",
-    "blockstitch": "github:Blockworked/blockstitch#76e0e970",
+    "blockstitch": "github:Blockworked/blockstitch#2e52704e",
     "lucide-vue-next": "^0.469.0",
     "marked": "^18.0.13",
     "sharp": "^0.35.4",

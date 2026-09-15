@@ -1,8 +1,7 @@
 <script setup lang="ts">
 // Trimmed copy of Blockwork's ui/src/components/ContextMenu.vue: the same
 // items and handlers for everything the website supports. Left out: copy/
-// cut/paste (Blockwork's clipboard), recording targets, "Delete N Blocks",
-// and "Details" (the app's block reference dialog).
+// cut/paste (Blockwork's clipboard), recording targets, and "Delete N Blocks".
 import { computed } from 'vue';
 import { state } from '../store';
 import { contextMenu, closeContextMenu } from '../contextMenu';
@@ -12,6 +11,9 @@ import { ICONS } from '../icons';
 import { openRenameVariableDialog } from '../variableDialogs';
 import { openEditBlockDialog } from '../blockDialogs';
 import { findBlockDef, nextSiblingPath, regenerateInstructionIds, resolveInstructionAt } from '../types';
+import type { InstructionType } from '../types';
+import { detailsForBlockDef, detailsForInstructionType, detailsForValueKind, type BlockDetails } from '../blockDetails';
+import { openDetailsDialog } from '../detailsDialog';
 
 const ATTACHED_COMMENT_OFFSET = { dx: 220, dy: 0 };
 
@@ -22,6 +24,32 @@ const attachedComment = computed(() => {
   const id = instruction.value?.id;
   if (!id) return null;
   return state.current_macro?.comments?.find(c => c.attached_to === id) ?? null;
+});
+
+// What the "Details" item shows for the current 'value' menu target — a
+// placed operator or "My Blocks" reporter call on the canvas.
+const valueDetails = computed<BlockDetails | null>(() => {
+  const v = contextMenu.valueNode;
+  if (!v) return null;
+  if (v.kind === 'Call') {
+    const def = findBlockDef(state.current_macro, v.block_id);
+    return def ? detailsForBlockDef(def) : null;
+  }
+  return detailsForValueKind(v.kind === 'Op' ? v.op : v.kind);
+});
+
+// What the "Details" item shows for the current 'block' menu target — a
+// BlockHeader row or a CallBlock both describe a custom block, everything
+// else is a fixed built-in instruction type.
+const blockDetails = computed<BlockDetails | null>(() => {
+  const ins = instruction.value;
+  if (!ins) return null;
+  const callId = headerBlockId.value ?? (ins.type === 'CallBlock' ? ins.block_id : null);
+  if (callId) {
+    const def = findBlockDef(state.current_macro, callId);
+    if (def) return detailsForBlockDef(def);
+  }
+  return detailsForInstructionType(ins.type);
 });
 
 function onDeleteBlock() {
@@ -72,6 +100,27 @@ function onEditBlockHeader() {
   if (def) openEditBlockDialog(def);
   closeContextMenu();
 }
+function onShowBlockDetails() {
+  if (blockDetails.value) openDetailsDialog(blockDetails.value);
+  closeContextMenu();
+}
+function onShowMyBlockDetails() {
+  const def = findBlockDef(state.current_macro, contextMenu.blockId);
+  if (def) openDetailsDialog(detailsForBlockDef(def));
+  closeContextMenu();
+}
+function onShowPaletteInstructionDetails() {
+  openDetailsDialog(detailsForInstructionType(contextMenu.paletteInstructionType as InstructionType));
+  closeContextMenu();
+}
+function onShowPaletteValueDetails() {
+  openDetailsDialog(detailsForValueKind(contextMenu.paletteValueKind));
+  closeContextMenu();
+}
+function onShowValueDetails() {
+  if (valueDetails.value) openDetailsDialog(valueDetails.value);
+  closeContextMenu();
+}
 function onDeleteBlockDef() {
   deleteBlock(contextMenu.blockId);
   closeContextMenu();
@@ -86,6 +135,7 @@ const items = computed<ContextMenuItem[]>(() => {
     list.push(
       { key: 'duplicate', label: 'Duplicate block', icon: ICONS['corner-down-right'], onSelect: onDuplicateBlock },
       { key: 'comment', label: attachedComment.value ? 'Comment' : 'Add Comment', icon: ICONS['message-square'], onSelect: onAddOrFocusComment },
+      { key: 'details', label: 'Details', icon: ICONS.info, onSelect: onShowBlockDetails },
       { key: 'delete', label: 'Delete block', icon: ICONS.trash, danger: true, onSelect: onDeleteBlock },
     );
     return list;
@@ -99,8 +149,18 @@ const items = computed<ContextMenuItem[]>(() => {
       { key: 'delete-var', label: 'Delete variable', icon: ICONS.trash, danger: true, onSelect: onDeleteVariable },
     ];
   }
+  if (contextMenu.type === 'paletteInstruction') {
+    return [{ key: 'details', label: 'Details', icon: ICONS.info, onSelect: onShowPaletteInstructionDetails }];
+  }
+  if (contextMenu.type === 'paletteValue') {
+    return [{ key: 'details', label: 'Details', icon: ICONS.info, onSelect: onShowPaletteValueDetails }];
+  }
+  if (contextMenu.type === 'value') {
+    return [{ key: 'details', label: 'Details', icon: ICONS.info, onSelect: onShowValueDetails }];
+  }
   return [
     { key: 'edit', label: 'Edit block', icon: ICONS.blocks, onSelect: onEditBlock },
+    { key: 'details', label: 'Details', icon: ICONS.info, onSelect: onShowMyBlockDetails },
     { key: 'delete-def', label: 'Delete block', icon: ICONS.trash, danger: true, onSelect: onDeleteBlockDef },
   ];
 });

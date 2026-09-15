@@ -12,6 +12,7 @@ import { state } from '../blockwork/store';
 import { exportMacro, keyCaptureEvent, resetMacro } from '../blockwork/tauri';
 import InstructionSidebar from '../blockwork/components/InstructionSidebar.vue';
 import ContextMenu from '../blockwork/components/ContextMenu.vue';
+import DetailsDialog from '../blockwork/components/DetailsDialog.vue';
 import CustomBlockCanvasColorSync from '../blockwork/components/CustomBlockCanvasColorSync.vue';
 
 setupBlockstitch();
@@ -35,30 +36,11 @@ function onKeydown(e: KeyboardEvent) {
   keyCaptureEvent(e.code, e.key);
 }
 
-// Picking up a block partway down a strand clones its rows into the drag
-// ghost, including any Repeat/If bodies — and those copies still carry
-// `.instruction-list` markers pointing at the original strand. blockstitch's
-// snap search then reads those stale lists and throws on every move, so the
-// block can't snap anywhere until it's dropped. Strip the markers from the
-// copies as the ghost appears (the same thing its own snap preview does). A
-// whole-strand ghost holds the real, Vue-owned card, so it's left alone.
-const ghostObserver = new MutationObserver(records => {
-  for (const record of records) {
-    for (const node of record.addedNodes) {
-      if (!(node instanceof HTMLElement) || !node.classList.contains('strand-drag-ghost')) continue;
-      if (node.querySelector(':scope > .strand-card[data-strand-id]')) continue;
-      node.querySelectorAll('.instruction-list').forEach(el => el.classList.remove('instruction-list'));
-    }
-  }
-});
-
 onMounted(() => {
   document.addEventListener('keydown', onKeydown);
-  ghostObserver.observe(document.body, { childList: true });
 });
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown);
-  ghostObserver.disconnect();
 });
 </script>
 
@@ -79,6 +61,7 @@ onBeforeUnmount(() => {
         </template>
       </Canvas>
     </div>
+    <DetailsDialog />
     <CustomBlockCanvasColorSync />
   </div>
 </template>

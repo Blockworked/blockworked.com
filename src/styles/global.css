@@ -207,19 +207,6 @@ code, kbd { font-family: var(--site-mono); font-size: 0.9em; }
   background-size: 22px 22px;
 }
 
-/* A drag ghost outlines every row it carries in blockstitch's theme, so
-   picking up a block with others under it lit them all up. Only the block
-   actually grabbed (the ghost's first row) keeps the accent outline. */
-.strand-drag-ghost .strand-body > .instruction-row ~ .instruction-row::before,
-.strand-drag-ghost .instruction-row .instruction-row::before {
-  background: var(--blockstitch-border);
-}
-.strand-drag-ghost .strand-body > .instruction-row ~ .instruction-row.instruction-row-wrap,
-.strand-drag-ghost .instruction-row .instruction-row.instruction-row-wrap {
-  --blockstitch-wrap-fill: linear-gradient(to right, var(--blockstitch-bg3), var(--blockstitch-bg2));
-  --blockstitch-wrap-outline: var(--blockstitch-border);
-}
-
 /* blockstitch's empty-strand hint text contains an em-dash; the site's copy
    avoids them, so swap in the same message without one. */
 .strand-empty-hint { font-size: 0; }
