@@ -14,10 +14,12 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 <header class="site-header">
   <div class="container site-header-inner">
-    <a class="brand" href="/">
-      <img src="/logo.png" alt="" width="28" height="28" />
-      <span>Blockwork</span>
-    </a>
+    {path !== '/' && (
+      <a class="brand" href="/">
+        <img src="/logo.png" alt="" width="28" height="28" />
+        <span>Blockwork</span>
+      </a>
+    )}
     <nav class="site-nav" aria-label="Main">
       {links.map(l => (
         <a href={l.href} aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
@@ -79,8 +81,10 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
   .site-nav {
     display: flex;
     gap: 2px;
-    margin-left: 16px;
   }
+  /* The home page's hero carries the logo, so the header omits it there. */
+  .brand + .site-nav { margin-left: 16px; }
+  .site-nav:first-child { margin-left: -10px; }
   .site-nav a {
     padding: 6px 10px;
     border-radius: var(--blockstitch-radius);

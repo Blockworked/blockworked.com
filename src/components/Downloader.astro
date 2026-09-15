@@ -28,14 +28,15 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
       </a>
       <slot name="actions" />
     </div>
-    <p class="dl-meta" data-meta aria-live="polite">Fetching the latest release…</p>
+    <div class="dl-info">
+      <p class="dl-meta" data-meta aria-live="polite">Fetching the latest release…</p>
+      {mode === 'compact' && (
+        <p class="dl-other">
+          Not on this platform? <a href="/download">See all downloads</a> · <a href={RELEASES_URL}>Release history</a>
+        </p>
+      )}
+    </div>
   </div>
-
-  {mode === 'compact' && (
-    <p class="dl-other">
-      Not on this platform? <a href="/download">See all downloads</a> · <a href={RELEASES_URL}>Release history</a>
-    </p>
-  )}
 
   {mode === 'full' && (
     <div class="dl-groups" data-groups hidden>
@@ -212,7 +213,7 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
   }
   .dl-center .dl-primary { align-items: center; }
   .dl-center .dl-buttons { justify-content: center; }
-  .dl-center .dl-meta, .dl-center .dl-other { text-align: center; }
+  .dl-center .dl-info { text-align: center; }
   .dl-meta {
     font-size: 13px;
     color: var(--blockstitch-text-dim);

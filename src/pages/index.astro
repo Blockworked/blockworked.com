@@ -13,18 +13,12 @@ import { REPO_URL } from '../lib/releases';
 
 <Base>
   <section class="hero">
-    <!-- Decorative: the editor's dot-grid canvas, fading out from the center,
-         with a couple of faint block stacks drifting at the edges. -->
-    <div class="hero-bg" aria-hidden="true">
-      <div class="hero-grid"></div>
-      <div class="hero-noise"></div>
-      <div class="hero-ghosts">
-        <div class="ghost ghost-left"><BlockPreview client:only="vue" preset="copy-paste" /></div>
-        <div class="ghost ghost-right"><BlockPreview client:only="vue" preset="if-scroll" /></div>
-      </div>
-    </div>
     <div class="container hero-copy">
-      <h1>Macros you can <span class="accent">see</span>.</h1>
+      <h1 class="hero-brand">
+        <img src="/logo.png" alt="" width="512" height="512" />
+        <span>Blockwork</span>
+      </h1>
+      <p class="hero-tagline">Macros you can <span class="accent">see</span>.</p>
       <p class="hero-lede">
         Blockwork lets you build keyboard and mouse macros by snapping blocks together — no code, no
         guesswork. Record what you do, tweak it block by block, and fire it off with a hotkey. Free and
@@ -161,7 +155,7 @@ import { REPO_URL } from '../lib/releases';
 
   <section class="section" id="download">
     <div class="container">
-      <div class="cta panel dot-grid">
+      <div class="cta panel">
         <img src="/logo.png" alt="" width="88" height="88" class="cta-logo" />
         <div class="cta-copy">
           <h2 class="section-heading">Get Blockwork</h2>
@@ -182,98 +176,48 @@ import { REPO_URL } from '../lib/releases';
     justify-content: center;
     min-height: calc(100vh - 56px);
     min-height: calc(100svh - 56px);
-    padding: 64px 0 96px;
+    padding: 80px 0 112px;
     overflow: hidden;
-  }
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-    /* Wide, low-contrast glows — a blue light behind the headline and a hint
-       of violet lower right. Interpolated in oklab so the falloff stays smooth. */
-    background:
-      radial-gradient(ellipse 60% 55% at 50% 42% in oklab, rgba(var(--blockstitch-accent-rgb), 0.2), rgba(var(--blockstitch-accent-rgb), 0.07) 45%, transparent 80%),
-      radial-gradient(ellipse 45% 55% at 82% 78% in oklab, rgba(191, 90, 242, 0.09), transparent 75%),
-      radial-gradient(ellipse 40% 50% at 15% 20% in oklab, rgba(var(--blockstitch-accent-rgb), 0.07), transparent 75%);
-  }
-  /* The editor canvas's dot grid, fading out toward the edges. */
-  .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.2) 1.3px, transparent 1.5px);
-    background-size: 26px 26px;
-    background-position: center top;
-    -webkit-mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 35%, transparent 85%);
-    mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 35%, transparent 85%);
-  }
-  :global(:root[data-theme='light']) .hero-grid {
-    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.2) 1.3px, transparent 1.5px);
-  }
-  /* A whisper of film grain dithers the dark gradients so they don't band. */
-  .hero-noise {
-    position: absolute;
-    inset: 0;
-    opacity: 0.06;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-  :global(:root[data-theme='light']) .hero-noise { opacity: 0.1; filter: invert(1); }
-  .hero-ghosts {
-    position: absolute;
-    inset: 0;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  .ghost {
-    position: absolute;
-    opacity: 0.4;
-  }
-  .ghost-left { left: 3%; top: 15%; }
-  .ghost-right { right: 3%; bottom: 13%; }
-  @media (prefers-reduced-motion: no-preference) {
-    .ghost { animation: ghost-in 900ms var(--blockstitch-ease-standard) both; }
-    .ghost-left > :global(*) { animation: ghost-float 14s ease-in-out infinite; }
-    .ghost-right > :global(*) { animation: ghost-float 16s ease-in-out -6s infinite; }
-  }
-  @keyframes ghost-in {
-    from { opacity: 0; }
-  }
-  @keyframes ghost-float {
-    0%, 100% { translate: 0 0; }
-    50% { translate: 0 -12px; }
-  }
-  /* Only where there's room beside the headline. */
-  @media (max-width: 1180px) {
-    .ghost { opacity: 0.2; }
-  }
-  @media (max-width: 860px) {
-    .hero-ghosts { display: none; }
   }
   .hero-copy {
     position: relative;
     max-width: 1000px;
     text-align: center;
   }
-  h1 {
-    font-size: clamp(48px, 10vw, 128px);
-    line-height: 0.98;
+  /* The logo and name are the headline: the lockup leads, the tagline follows. */
+  .hero-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.22em;
+    font-size: clamp(56px, 11vw, 148px);
+    line-height: 1;
     font-weight: 800;
-    letter-spacing: -0.04em;
-    text-wrap: balance;
+    letter-spacing: -0.045em;
   }
-  .accent {
-    background: linear-gradient(160deg, var(--blockstitch-accent-light), var(--blockstitch-accent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .hero-brand img {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
+    filter: drop-shadow(var(--blockstitch-shadow-lg));
   }
+  .hero-tagline {
+    margin-top: clamp(20px, 2.4vw, 32px);
+    font-size: clamp(24px, 3vw, 38px);
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--blockstitch-text);
+  }
+  .accent { color: var(--blockstitch-accent); }
+  /* Spacing grows between groups: logo + tagline, then the description, then the actions. */
   .hero-lede {
-    margin: 28px auto 0;
-    max-width: 52ch;
-    font-size: clamp(17px, 1.9vw, 22px);
-    line-height: 1.5;
-    color: var(--blockstitch-text-dim);
-    text-wrap: pretty;
+    margin: clamp(36px, 4.5vw, 56px) auto 0;
+    max-width: 58ch;
+    font-size: clamp(17px, 1.7vw, 20px);
+    line-height: 1.7;
+    color: color-mix(in srgb, var(--blockstitch-text) 78%, var(--blockstitch-text-dim));
+    text-wrap: balance;
   }
   .scroll-cue {
     position: absolute;
@@ -298,7 +242,9 @@ import { REPO_URL } from '../lib/releases';
     50% { transform: translateY(4px); }
   }
 
-  .hero-actions { margin-top: 36px; display: flex; justify-content: center; }
+  .hero-actions { margin-top: clamp(36px, 4.5vw, 56px); display: flex; justify-content: center; }
+  .hero-actions :global(.dl-primary) { gap: 18px; }
+  .hero-actions :global(.btn-lg) { min-height: 48px; padding: 0 22px; }
   .try { padding: 24px 0 40px; }
   .editor-window {
     border-radius: 12px;
@@ -384,7 +330,8 @@ import { REPO_URL } from '../lib/releases';
   .row-icon { width: 18px; height: 18px; color: var(--blockstitch-accent); flex-shrink: 0; }
 
   .section-alt {
-    background: var(--blockstitch-glass-bg);
+    /* A light tint rather than the full glass fill, so the page background still shows through. */
+    background: color-mix(in srgb, var(--blockstitch-bg2) 30%, transparent);
     border-top: 1px solid var(--blockstitch-glass-border);
     border-bottom: 1px solid var(--blockstitch-glass-border);
   }
@@ -400,6 +347,10 @@ import { REPO_URL } from '../lib/releases';
 
   @media (max-width: 960px) {
     .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px) {
+    .hero-brand { flex-direction: column; gap: 16px; font-size: 64px; }
+    .hero-brand img { width: 96px; height: 96px; }
   }
   @media (max-width: 640px) {
     .features { grid-template-columns: 1fr; }

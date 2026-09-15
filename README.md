@@ -39,8 +39,8 @@ One-time setup on GitHub:
   - `fields/`, `palette/` are trimmed copies of Blockwork's `ui/src/components/fields/`.
   - blockstitch addresses the canvas by fixed element ids, so only one editor
     can exist per page.
-- `src/demo/BlockPreview.vue` — non-interactive block stacks (the hero's
-  background blocks and the feature-card illustrations), rendered by
+- `src/demo/BlockPreview.vue` — non-interactive block stacks (the feature-card
+  illustrations), rendered by
   blockstitch's real `InstructionList` from presets so they match the editor
   exactly.
 - `src/components/Downloader.astro` — fetches the latest GitHub release in the
