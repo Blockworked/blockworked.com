@@ -36,7 +36,7 @@ function preventMenu(event: MouseEvent) {
 <template>
   <div id="macro-editor" class="demo-editor">
     <div class="editor-title-row">
-      <span class="demo-title">Try it — this is the real block editor</span>
+      <span class="demo-title">Try it: this is the real block editor</span>
       <span class="demo-hint">Drag blocks in from the sidebar · click an operator to preview it</span>
       <AppButton class="demo-reset" :icon="RotateCcw" label="Reset" title="Restore the example macro" @click="resetDocument" />
     </div>

@@ -7,7 +7,7 @@ import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
 import {
-  Blocks, ChevronDown, Circle, Equal, GitBranch, Layers, Play, Plus, Settings, SlidersHorizontal,
+  Blocks, ChevronDown, Circle, Hand, Equal, GitBranch, Layers, Play, Plus, Settings, SlidersHorizontal,
   Square, Trash2,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
@@ -35,25 +35,31 @@ import { REPO_URL } from '../lib/releases';
   <section class="try" id="try">
     <div class="container">
       <div class="hero-editor">
-        <div class="editor-window">
-          <div class="editor-titlebar" aria-hidden="true">
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span class="editor-titlebar-name">Blockwork</span>
+        <div class="editor-window" data-editor-window>
+          <div class="editor-titlebar">
+            <span class="dot" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span>
+            <span class="editor-titlebar-name" aria-hidden="true">Blockwork</span>
+            <button type="button" class="editor-done" data-editor-done>Done</button>
           </div>
           <div class="editor-body">
             <DemoEditor client:only="vue">
               <div slot="fallback" class="editor-loading dot-grid">Loading the editor…</div>
             </DemoEditor>
+            <!-- On touch screens the editor would swallow every swipe that lands
+                 on it, so it stays locked until tapped (see the script below). -->
+            <button type="button" class="editor-unlock" data-editor-unlock>
+              <Hand />Tap to try the editor
+            </button>
           </div>
         </div>
-        <p class="editor-caption">A live copy of Blockwork's editor — edits stay in this tab and nothing runs.</p>
+        <p class="editor-caption">A live copy of Blockwork's editor. Edits stay in this tab and nothing runs.</p>
       </div>
     </div>
   </section>
 
   <section class="section" id="features">
     <div class="container">
-      <h2 class="section-heading">Everything a macro needs, nothing to memorize.</h2>
+      <h2 class="section-heading">Everything a macro needs, nothing to memorize</h2>
       <p class="section-lede">
         Every instruction is a block with its own inputs. Value and condition slots are shaped by type,
         so you can tell what goes where at a glance.
@@ -95,8 +101,8 @@ import { REPO_URL } from '../lib/releases';
             <SnapPreview client:only="vue" />
           </div>
           <p>
-            Keys, text, clicks, scrolling, mouse moves, shell commands, and opening or quitting apps —
-            drag them into a stack and reorder at will.
+            Keys, text, clicks, scrolling, mouse moves, shell commands, and opening or quitting apps.
+            Drag them into a stack and reorder at will.
           </p>
         </article>
 
@@ -155,8 +161,8 @@ import { REPO_URL } from '../lib/releases';
 
   <section class="section section-alt" id="screenshots">
     <div class="container">
-      <h2 class="section-heading">A canvas for your automations.</h2>
-      <p class="section-lede">Pan, zoom, leave comments, and keep as many macros as you like — with light and dark themes.</p>
+      <h2 class="section-heading">A canvas for your automations</h2>
+      <p class="section-lede">Pan, zoom, leave comments, and keep as many macros as you like, with light and dark themes.</p>
       <Screenshots />
     </div>
   </section>
@@ -176,6 +182,11 @@ import { REPO_URL } from '../lib/releases';
 </Base>
 
 <script>
+  // Touch screens: unlock the demo editor on tap, lock it again with Done.
+  const editorWindow = document.querySelector<HTMLElement>('[data-editor-window]');
+  document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => editorWindow?.classList.add('editor-active'));
+  document.querySelector('[data-editor-done]')?.addEventListener('click', () => editorWindow?.classList.remove('editor-active'));
+
   // The header's logo is hidden on the home page while the big title is on
   // screen, and appears once the title has scrolled out of view behind the
   // header (plus a little extra scroll); scrolling back up hides it again.
@@ -318,6 +329,39 @@ import { REPO_URL } from '../lib/releases';
     height: min(600px, 78vh);
     font-size: 14px;
     line-height: normal;
+  }
+  /* Touch screens: a scrim over the editor until it's tapped, so scrolling the
+     page past it still works. `editor-active` is set by the script. */
+  .editor-unlock,
+  .editor-done { display: none; }
+  @media (pointer: coarse) {
+    .editor-body { height: min(520px, 65svh); }
+    .editor-unlock {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      border: none;
+      border-radius: 0;
+      background: color-mix(in srgb, var(--blockstitch-bg) 55%, transparent);
+      box-shadow: none;
+      color: var(--blockstitch-text);
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .editor-unlock :global(svg) { width: 18px; height: 18px; }
+    .editor-active .editor-unlock { display: none; }
+    .editor-active .editor-done {
+      display: block;
+      margin-left: auto;
+      padding: 2px 10px;
+      min-height: 0;
+      font-size: 12px;
+    }
   }
   .editor-loading {
     display: flex;

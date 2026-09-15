@@ -58,14 +58,14 @@ export function parseAsset(asset: GitHubAsset): ReleaseAsset | null {
       : { ...base, platform: 'windows', kind: 'Portable', hint: 'A single .exe, no installation', rank: 1 };
   }
   if (name.includes('macos') || name.includes('darwin')) {
-    return { ...base, platform: 'macos', kind: 'App', hint: 'Unsigned — unzip, move to Applications, then right-click › Open the first time', rank: 0 };
+    return { ...base, platform: 'macos', kind: 'App', hint: 'Unsigned: unzip, move to Applications, then right-click › Open the first time', rank: 0 };
   }
   if (name.includes('linux')) {
     if (name.endsWith('.appimage')) {
-      return { ...base, platform: 'linux', kind: 'AppImage', hint: 'Runs on most distributions — mark it executable and launch', rank: 0 };
+      return { ...base, platform: 'linux', kind: 'AppImage', hint: 'Runs on most distributions. Mark it executable and launch', rank: 0 };
     }
     if (name.endsWith('.flatpak')) {
-      return { ...base, platform: 'linux', kind: 'Flatpak', hint: 'Sandboxed bundle — install with flatpak install', rank: 1 };
+      return { ...base, platform: 'linux', kind: 'Flatpak', hint: 'Sandboxed bundle. Install with flatpak install', rank: 1 };
     }
   }
   return null;

@@ -212,3 +212,11 @@ code, kbd { font-family: var(--site-mono); font-size: 0.9em; }
 body:not(.bs-dragging) .instruction-row.blockwork-custom-block:hover::before {
   background: var(--blockwork-custom-block-color);
 }
+
+/* blockstitch's empty-strand hint text contains an em-dash; the site's copy
+   avoids them, so swap in the same message without one. */
+.strand-empty-hint { font-size: 0; }
+.strand-empty-hint::before {
+  content: 'Empty. Drag an instruction here from the sidebar.';
+  font-size: 12px;
+}

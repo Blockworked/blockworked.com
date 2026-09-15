@@ -17,7 +17,8 @@ let entries: Entry[] = [];
 try {
   const res = await fetch(`https://raw.githubusercontent.com/${REPO}/master/CHANGELOG.md`);
   if (!res.ok) throw new Error(`GitHub responded ${res.status}`);
-  const md = await res.text();
+  // The site avoids em-dashes, including in text pulled from Blockwork's changelog.
+  const md = (await res.text()).replace(/\s*\u2014\s*/g, ', ');
   // "## [0.5.3] - 2026-09-14" starts each entry; anything before the first is the preamble.
   const heading = /^## \[([^\]]+)\](?:\s*-\s*(\d{4}-\d{2}-\d{2}))?\s*$/gm;
   const matches = [...md.matchAll(heading)];
@@ -43,7 +44,7 @@ try {
 
       {entries.length === 0 ? (
         <p class="fallback">
-          The changelog couldn't be loaded when this page was built — see <a href={RELEASES_URL}>releases on GitHub</a>.
+          The changelog couldn't be loaded when this page was built. See <a href={RELEASES_URL}>releases on GitHub</a>.
         </p>
       ) : (
         <ol class="releases">
