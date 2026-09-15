@@ -6,7 +6,7 @@
 // any `.strand-card`, so the canvas's drag/snap code never treats them as
 // drop targets.
 import { computed } from 'vue';
-import { InstructionList, newId, numberValue, textValue, type ValueNode } from 'blockstitch';
+import { InstructionList, newId, numberValue, type ValueNode } from 'blockstitch';
 import { setupDemo } from './setup';
 import type { Instruction } from './types';
 
@@ -35,10 +35,13 @@ const PRESETS: Record<string, () => Instruction[]> = {
     { id: id(), type: 'SetVariable', name: 'delay', value: op('Random', numberValue(80), numberValue(120)) },
   ],
   'custom-block': () => [
-    { id: id(), type: 'CallBlock', label: 'log in as', args: [textValue('player1')], color: '#bf5af2' },
+    { id: id(), type: 'BlockHeader', label: 'log in as', params: ['user'], color: '#bf5af2' },
+    { id: id(), type: 'Text', text: { kind: 'Param', name: 'user' } },
+    { id: id(), type: 'Key', key: 'Enter', direction: 'Click' },
   ],
   battery: () => [
-    { id: id(), type: 'WhenBatteryChargedTo', threshold: numberValue(80) },
+    { id: id(), type: 'WhenBatteryChargedTo', threshold: numberValue(100) },
+    { id: id(), type: 'Command', command: 'notify-send "Fully charged"' },
   ],
 };
 

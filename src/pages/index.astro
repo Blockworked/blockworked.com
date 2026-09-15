@@ -2,11 +2,13 @@
 import Base from '../layouts/Base.astro';
 import DemoEditor from '../demo/DemoEditor.vue';
 import BlockPreview from '../demo/BlockPreview.vue';
+import SnapPreview from '../demo/SnapPreview.vue';
 import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
 import {
-  Blocks, ChevronDown, Circle, Clock, Equal, GitBranch, Layers, Monitor, Play, ShieldCheck, Square,
+  Blocks, ChevronDown, Circle, Equal, GitBranch, Layers, Play, Plus, Settings, SlidersHorizontal,
+  Square, Trash2,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
 ---
@@ -15,15 +17,12 @@ import { REPO_URL } from '../lib/releases';
   <section class="hero">
     <div class="container hero-copy">
       <h1 class="hero-brand">
-        <img src="/logo.png" alt="" width="512" height="512" />
-        <span>Blockwork</span>
+        <span class="hero-lockup">
+          <img src="/logo.png" alt="" width="512" height="512" />
+          <span>Blockwork</span>
+        </span>
       </h1>
-      <p class="hero-tagline">Macros you can <span class="accent">see</span>.</p>
-      <p class="hero-lede">
-        Blockwork lets you build keyboard and mouse macros by snapping blocks together — no code, no
-        guesswork. Record what you do, tweak it block by block, and fire it off with a hotkey. Free and
-        open source, for Windows, macOS, and Linux.
-      </p>
+      <p class="hero-tagline">Powerful, understandable & fun <span class="accent">automation</span></p>
       <div class="hero-actions">
         <Downloader mode="compact" align="center">
           <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
@@ -63,8 +62,26 @@ import { REPO_URL } from '../lib/releases';
       <div class="features">
         <article class="panel feature">
           <h3 class="panel-title"><Circle />Record</h3>
-          <div class="feature-stage dot-grid" aria-hidden="true">
-            <button type="button" class="btn-active-record" tabindex="-1"><span class="btn-icon-glyph"><Square /></span><span>Stop recording</span></button>
+          <div class="feature-stage record-stage" aria-hidden="true" inert>
+            <!-- The top-right corner of Blockwork's main window mid-recording:
+                 the macro selector row (its left side left out), then the run row with Record on the right. -->
+            <div class="mini-window">
+              <div class="editor-titlebar"></div>
+              <div class="toolbar-row">
+                <div class="selector-left"></div>
+                <div class="selector-right">
+                  <button type="button"><span class="btn-icon-glyph"><Plus /></span><span>New macro</span></button>
+                  <button type="button" class="btn-danger"><span class="btn-icon-glyph"><Trash2 /></span><span>Delete</span></button>
+                  <button type="button"><span class="btn-icon-glyph"><Settings /></span><span>Settings</span></button>
+                </div>
+              </div>
+              <div class="toolbar-row">
+                <div class="run-right">
+                  <button type="button" class="btn-active-record"><span class="btn-icon-glyph"><Square /></span><span>Stop recording</span></button>
+                  <button type="button"><span class="btn-icon-glyph"><SlidersHorizontal /></span></button>
+                </div>
+              </div>
+            </div>
           </div>
           <p>
             Hit record and use your computer normally. Keystrokes, clicks, and even mouse movement come
@@ -75,7 +92,7 @@ import { REPO_URL } from '../lib/releases';
         <article class="panel feature">
           <h3 class="panel-title"><Blocks />Snap together</h3>
           <div class="feature-stage dot-grid" aria-hidden="true">
-            <BlockPreview client:only="vue" preset="key-mouse" />
+            <SnapPreview client:only="vue" />
           </div>
           <p>
             Keys, text, clicks, scrolling, mouse moves, shell commands, and opening or quitting apps —
@@ -128,20 +145,11 @@ import { REPO_URL } from '../lib/releases';
         </article>
       </div>
 
-      <div class="platforms panel">
-        <div class="panel-row">
-          <Monitor class="row-icon" />
-          <span class="panel-row-label"><strong>Native on Windows, macOS, and Linux</strong> — including Wayland, with Flatpak and AppImage builds.</span>
-        </div>
-        <div class="panel-row">
-          <ShieldCheck class="row-icon" />
-          <span class="panel-row-label"><strong>Runs entirely on your machine</strong> — no account, no cloud. GPL-3.0 licensed.</span>
-        </div>
-        <div class="panel-row">
-          <Clock class="row-icon" />
-          <span class="panel-row-label"><strong>Precise, human-like timing</strong> — fractional waits with optional random variance.</span>
-        </div>
-      </div>
+      <dl class="specs panel">
+        <div class="panel-row"><dt>Cross-platform</dt><dd>Windows, macOS, and Linux</dd></div>
+        <div class="panel-row"><dt>Privacy</dt><dd>No account. Macros stay local.</dd></div>
+        <div class="panel-row"><dt>Source Code</dt><dd><a href={REPO_URL}>GPL-3.0 on GitHub</a></dd></div>
+      </dl>
     </div>
   </section>
 
@@ -167,6 +175,40 @@ import { REPO_URL } from '../lib/releases';
   </section>
 </Base>
 
+<script>
+  // The header's logo is hidden on the home page while the big title is on
+  // screen, and appears once the title has scrolled out of view behind the
+  // header (plus a little extra scroll); scrolling back up hides it again.
+  /** Extra scroll past the point where the title is fully hidden, in px. */
+  const SHOW_AFTER = 40;
+
+  const title = document.querySelector<HTMLElement>('.hero-brand');
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const brand = document.querySelector<HTMLElement>('.site-header .brand-home');
+
+  if (title && header && brand) {
+    let threshold = 0;
+
+    const update = () => {
+      const shown = window.scrollY > threshold;
+      brand.classList.toggle('brand-shown', shown);
+      brand.toggleAttribute('inert', !shown);
+    };
+
+    const measure = () => {
+      const titleBottom = title.getBoundingClientRect().bottom + window.scrollY;
+      threshold = titleBottom - header.getBoundingClientRect().bottom + SHOW_AFTER;
+      update();
+    };
+
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', measure);
+    document.fonts?.ready.then(measure);
+    window.addEventListener('load', measure);
+    measure();
+  }
+</script>
+
 <style>
   /* The header is 56px tall (SiteHeader.astro); the hero fills the rest of the first screen. */
   .hero {
@@ -177,7 +219,6 @@ import { REPO_URL } from '../lib/releases';
     min-height: calc(100vh - 56px);
     min-height: calc(100svh - 56px);
     padding: 80px 0 112px;
-    overflow: hidden;
   }
   .hero-copy {
     position: relative;
@@ -186,20 +227,20 @@ import { REPO_URL } from '../lib/releases';
   }
   /* The logo and name are the headline: the lockup leads, the tagline follows. */
   .hero-brand {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.22em;
     font-size: clamp(56px, 11vw, 148px);
     line-height: 1;
     font-weight: 800;
     letter-spacing: -0.045em;
   }
+  .hero-lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22em;
+  }
   .hero-brand img {
     width: 1.05em;
     height: 1.05em;
     flex-shrink: 0;
-    filter: drop-shadow(var(--blockstitch-shadow-lg));
   }
   .hero-tagline {
     margin-top: clamp(20px, 2.4vw, 32px);
@@ -317,17 +358,41 @@ import { REPO_URL } from '../lib/releases';
   /* Scale the wider illustrations down rather than clip them in narrow cards. */
   .feature-stage :global(.block-preview) { zoom: 0.9; }
   @container (max-width: 420px) { .feature-stage :global(.block-preview) { zoom: 0.72; } }
+  /* A cropped app window pinned to the stage's top-right corner; its left and
+     bottom edges run off the card. */
+  .record-stage { position: relative; padding: 0; justify-content: flex-start; align-items: stretch; }
+  .mini-window {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 640px;
+    height: 400px;
+    border: 1px solid var(--blockstitch-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--blockstitch-bg);
+    box-shadow: var(--blockstitch-shadow-md);
+    font-size: 14px;
+    zoom: 1.1;
+  }
+  .mini-window .run-right { gap: 6px; }
+  .mini-window :global(svg) { width: 14px; height: 14px; }
+  @container (max-width: 420px) { .mini-window { zoom: 0.92; } }
   .feature p {
     padding: 14px 16px 16px;
     font-size: 14px;
     color: var(--blockstitch-text-dim);
   }
 
-  .platforms { margin-top: var(--blockstitch-spacing); }
-  .platforms .panel-row { padding: 12px 16px; gap: 12px; }
-  .platforms .panel-row-label { font-size: 14px; color: var(--blockstitch-text-dim); }
-  .platforms strong { color: var(--blockstitch-text); font-weight: 600; }
-  .row-icon { width: 18px; height: 18px; color: var(--blockstitch-accent); flex-shrink: 0; }
+  .specs { max-width: 560px; margin: 48px auto 0; }
+  .specs .panel-row { padding: 12px 18px; gap: 16px; align-items: baseline; }
+  .specs dt { width: 120px; flex-shrink: 0; font-size: 13px; color: var(--blockstitch-text-dim); }
+  .specs dd { margin: 0; font-size: 14px; color: var(--blockstitch-text); }
+  .specs a { color: var(--blockstitch-accent); text-decoration: none; }
+  .specs a:hover { text-decoration: underline; }
+  @media (max-width: 520px) {
+    .specs .panel-row { flex-direction: column; gap: 2px; }
+  }
 
   .section-alt {
     /* A light tint rather than the full glass fill, so the page background still shows through. */
@@ -349,7 +414,8 @@ import { REPO_URL } from '../lib/releases';
     .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 520px) {
-    .hero-brand { flex-direction: column; gap: 16px; font-size: 64px; }
+    .hero-brand { font-size: 64px; }
+    .hero-lockup { flex-direction: column; gap: 16px; }
     .hero-brand img { width: 96px; height: 96px; }
   }
   @media (max-width: 640px) {

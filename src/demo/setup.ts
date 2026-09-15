@@ -8,7 +8,7 @@ import {
 } from 'blockstitch';
 import {
   BatteryCharging, Blocks, Clock, Equal, GitBranch, GitFork, Infinity, Keyboard, Mouse, MousePointerClick, Move, Play,
-  Repeat, RotateCw, TextCursor, TrendingUp,
+  Repeat, RotateCw, Terminal, TextCursor, TrendingUp,
 } from 'lucide-vue-next';
 import { reactive } from 'vue';
 import { backend, doc, invalidTextAt } from './store';
@@ -18,6 +18,8 @@ import { HEADER_TYPES, STACK_TYPES, defaultInstruction, type Instruction, type I
 import WhenRanFields from './fields/WhenRanFields.vue';
 import WhenBatteryChargedToFields from './fields/WhenBatteryChargedToFields.vue';
 import CallBlockFields from './fields/CallBlockFields.vue';
+import BlockHeaderFields from './fields/BlockHeaderFields.vue';
+import CommandFields from './fields/CommandFields.vue';
 import WaitFields from './fields/WaitFields.vue';
 import TextFields from './fields/TextFields.vue';
 import KeyFields from './fields/KeyFields.vue';
@@ -44,6 +46,8 @@ const ICONS: Record<InstructionType, Component> = {
   WhenRan: Play,
   WhenBatteryChargedTo: BatteryCharging,
   CallBlock: Blocks,
+  BlockHeader: Blocks,
+  Command: Terminal,
   Wait: Clock,
   Text: TextCursor,
   Key: Keyboard,
@@ -96,7 +100,7 @@ export function setupDemo() {
 
   registerOperators(OPERATOR_KINDS);
 
-  for (const type of HEADER_TYPES) registerBlockShape(type, { kind: 'header', icon: ICONS[type], isEntryTrigger: true });
+  for (const type of HEADER_TYPES) registerBlockShape(type, { kind: 'header', icon: ICONS[type], isEntryTrigger: type !== 'BlockHeader' });
   for (const type of STACK_TYPES) registerBlockShape(type, { kind: 'stack', icon: ICONS[type] });
   registerBlockShape<Instruction>('If', {
     kind: 'wrap', icon: ICONS.If,
@@ -120,6 +124,8 @@ export function setupDemo() {
     ['WhenRan', WhenRanFields],
     ['WhenBatteryChargedTo', WhenBatteryChargedToFields],
     ['CallBlock', CallBlockFields],
+    ['BlockHeader', BlockHeaderFields],
+    ['Command', CommandFields],
     ['Wait', WaitFields, PaletteWaitFields],
     ['Text', TextFields, PaletteTextFields],
     ['Key', KeyFields],
@@ -148,7 +154,7 @@ export function setupDemo() {
     // Same class + variable Blockwork's CustomBlockCanvasColorSync applies.
     instructionAppearance: node => {
       const ins = node as Instruction;
-      return ins.type === 'CallBlock'
+      return ins.type === 'CallBlock' || ins.type === 'BlockHeader'
         ? { classes: { 'blockwork-custom-block': true }, style: { '--blockwork-custom-block-color': ins.color } }
         : undefined;
     },

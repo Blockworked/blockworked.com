@@ -3,7 +3,7 @@
 // BlockworkPage: fetches the latest GitHub release in the browser (so the
 // static site never goes stale between deploys), suggests the build for the
 // visitor's OS/arch, and — in `full` mode — lists every asset by platform.
-import { Download, Monitor, Laptop, SquareTerminal, TriangleAlert } from '@lucide/astro';
+import { Download, Monitor, Laptop, SquareTerminal, TriangleAlert, ExternalLink } from '@lucide/astro';
 import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   align?: 'start' | 'center';
 }
 const { mode = 'full', align = 'start' } = Astro.props;
+const AUR_URL = 'https://aur.archlinux.org/packages/blockwork';
 
 const platforms: { id: Platform; icon: typeof Monitor }[] = [
   { id: 'windows', icon: Monitor },
@@ -45,13 +46,21 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
           <h3 class="panel-title"><Icon />{PLATFORM_LABELS[id]}</h3>
           <div data-rows></div>
           {id === 'linux' && (
+            <div class="panel-row dl-row">
+              <div class="panel-row-label">
+                <div class="dl-row-title">AUR <span class="dl-arch">Arch Linux</span></div>
+                <div class="panel-row-hint">Builds from source: <code>paru -S blockwork</code></div>
+              </div>
+              <a class="btn" href={AUR_URL}><ExternalLink /><span class="dl-btn-text">View package</span></a>
+            </div>
+          )}
+          {id === 'linux' && (
             <div class="dl-note">
               <div class="banner">
                 <TriangleAlert />
                 <span>
                   Recording and hotkeys read <code>/dev/input</code> directly, so your user must be in the
                   <code>input</code> group: <code>sudo usermod -aG input $USER</code>, then log out and back in.
-                  Also on the AUR as <code>blockwork-git</code>.
                 </span>
               </div>
             </div>

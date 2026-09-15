@@ -14,12 +14,12 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 <header class="site-header">
   <div class="container site-header-inner">
-    {path !== '/' && (
-      <a class="brand" href="/">
-        <img src="/logo.png" alt="" width="28" height="28" />
-        <span>Blockwork</span>
-      </a>
-    )}
+    <!-- On the home page this stays hidden until the big title has scrolled
+         out of view (see index.astro). -->
+    <a class:list={['brand', { 'brand-home': path === '/' }]} href="/" inert={path === '/' ? true : undefined}>
+      <img src="/logo.png" alt="" width="28" height="28" />
+      <span>Blockwork</span>
+    </a>
     <nav class="site-nav" aria-label="Main">
       {links.map(l => (
         <a href={l.href} aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
@@ -69,22 +69,24 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     gap: var(--blockstitch-spacing);
     height: 56px;
   }
+  /* Same weight and tracking as the home page's big wordmark. */
   .brand {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-weight: 700;
-    font-size: 15px;
+    font-weight: 800;
+    font-size: 16px;
+    line-height: 1;
     text-decoration: none;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.045em;
   }
   .site-nav {
     display: flex;
     gap: 2px;
   }
-  /* The home page's hero carries the logo, so the header omits it there. */
   .brand + .site-nav { margin-left: 16px; }
-  .site-nav:first-child { margin-left: -10px; }
+  .brand-home { visibility: hidden; }
+  .brand-home.brand-shown { visibility: visible; }
   .site-nav a {
     padding: 6px 10px;
     border-radius: var(--blockstitch-radius);

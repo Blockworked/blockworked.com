@@ -42,7 +42,7 @@ One-time setup on GitHub:
 - `src/demo/BlockPreview.vue` — non-interactive block stacks (the feature-card
   illustrations), rendered by
   blockstitch's real `InstructionList` from presets so they match the editor
-  exactly.
+  exactly. `SnapPreview.vue` is the looping drag-and-snap one.
 - `src/components/Downloader.astro` — fetches the latest GitHub release in the
   browser and recommends a build for the visitor's OS/arch.
 - `src/pages/changelog.astro` — rendered **at build time** from Blockwork's

@@ -12,6 +12,10 @@ export type Instruction = { id: string } & (
   // Stand-in for Blockwork's CallBlock: the site has no BlockDef store, so the
   // call carries its own prototype (label + one input) and color.
   | { type: 'CallBlock'; label: string; args: ValueNode[]; color: string }
+  // Likewise for Blockwork's BlockHeader: the definition's hat row carries its
+  // own label, parameter names, and color.
+  | { type: 'BlockHeader'; label: string; params: string[]; color: string }
+  | { type: 'Command'; command: string }
   | { type: 'Wait'; duration: ValueNode }
   | { type: 'Text'; text: ValueNode }
   | { type: 'Key'; key: string; direction: KeyDirection }
@@ -30,8 +34,8 @@ export type Instruction = { id: string } & (
 export type InstructionType = Instruction['type'];
 export type InstructionOf<T extends InstructionType> = Extract<Instruction, { type: T }>;
 
-export const HEADER_TYPES: InstructionType[] = ['WhenRan', 'WhenBatteryChargedTo'];
-export const STACK_TYPES: InstructionType[] = ['CallBlock', 'Wait', 'Text', 'Key', 'Button', 'MoveMouse', 'Scroll', 'SetVariable', 'ChangeVariable'];
+export const HEADER_TYPES: InstructionType[] = ['WhenRan', 'BlockHeader', 'WhenBatteryChargedTo'];
+export const STACK_TYPES: InstructionType[] = ['CallBlock', 'Wait', 'Text', 'Key', 'Button', 'MoveMouse', 'Scroll', 'Command', 'SetVariable', 'ChangeVariable'];
 export const WRAP_TYPES: InstructionType[] = ['If', 'IfElse', 'Repeat', 'Forever', 'While'];
 
 export function defaultInstruction(type: InstructionType): Instruction {
@@ -40,6 +44,8 @@ export function defaultInstruction(type: InstructionType): Instruction {
     case 'WhenRan': return { id, type };
     case 'WhenBatteryChargedTo': return { id, type, threshold: numberValue(100) };
     case 'CallBlock': return { id, type, label: 'my block', args: [numberValue(0)], color: '#bf5af2' };
+    case 'BlockHeader': return { id, type, label: 'my block', params: [], color: '#bf5af2' };
+    case 'Command': return { id, type, command: '' };
     case 'Wait': return { id, type, duration: numberValue(1000) };
     case 'Text': return { id, type, text: textValue('text') };
     case 'Key': return { id, type, key: 'a', direction: 'Click' };
