@@ -1,11 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
-import EditorMockup from '../components/EditorMockup.astro';
+import DemoEditor from '../demo/DemoEditor.vue';
 import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
 import {
-  BatteryCharging, Blocks, Circle, Clock, Equal, GitBranch, Keyboard, Layers,
+  BatteryCharging, Blocks, ChevronDown, Circle, Clock, Equal, GitBranch, Keyboard, Layers,
   Monitor, MousePointerClick, Move, Play, ShieldCheck, Square,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
@@ -15,26 +15,37 @@ import { REPO_URL } from '../lib/releases';
   <section class="hero">
     <div class="container">
       <div class="hero-copy">
-        <span class="eyebrow">Free &amp; open source · Windows · macOS · Linux</span>
         <h1>Macros you can <span class="accent">see</span>.</h1>
         <p class="hero-lede">
           Blockwork lets you build keyboard and mouse macros by snapping blocks together — no code, no
-          guesswork. Record what you do, tweak it block by block, and fire it off with a hotkey.
+          guesswork. Record what you do, tweak it block by block, and fire it off with a hotkey. Free and
+          open source, for Windows, macOS, and Linux.
         </p>
         <div class="hero-actions">
-          <Downloader mode="compact" />
-          <a class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
+          <Downloader mode="compact" align="center">
+            <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
+          </Downloader>
         </div>
       </div>
       <div class="hero-editor">
-        <EditorMockup />
+        <div class="editor-window">
+          <div class="editor-titlebar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="editor-titlebar-name">Blockwork</span>
+          </div>
+          <div class="editor-body">
+            <DemoEditor client:only="vue">
+              <div slot="fallback" class="editor-loading dot-grid">Loading the editor…</div>
+            </DemoEditor>
+          </div>
+        </div>
+        <p class="editor-caption">A live copy of Blockwork's editor — edits stay in this tab and nothing runs.</p>
       </div>
     </div>
   </section>
 
   <section class="section" id="features">
     <div class="container">
-      <span class="eyebrow">Features</span>
       <h2 class="section-heading">Everything a macro needs, nothing to memorize.</h2>
       <p class="section-lede">
         Every instruction is a block with its own inputs. Value and condition slots are shaped by type,
@@ -44,8 +55,8 @@ import { REPO_URL } from '../lib/releases';
       <div class="features">
         <article class="panel feature">
           <h3 class="panel-title"><Circle />Record</h3>
-          <div class="feature-stage dot-grid">
-            <span class="btn btn-record fake recording"><Square />Stop recording</span>
+          <div class="feature-stage dot-grid" aria-hidden="true">
+            <button type="button" class="btn-active-record" tabindex="-1"><span class="btn-icon-glyph"><Square /></span><span>Stop recording</span></button>
           </div>
           <p>
             Hit record and use your computer normally. Keystrokes, clicks, and even mouse movement come
@@ -55,10 +66,26 @@ import { REPO_URL } from '../lib/releases';
 
         <article class="panel feature">
           <h3 class="panel-title"><Blocks />Snap together</h3>
-          <div class="feature-stage dot-grid">
-            <div class="bw-strand">
-              <div class="bw-row"><Keyboard class="bw-icon" /><span class="bw-label">Key:</span><span class="chip">Enter</span></div>
-              <div class="bw-row"><MousePointerClick class="bw-icon" /><span class="bw-label">Mouse:</span><span class="bw-field">Left</span></div>
+          <div class="feature-stage dot-grid" aria-hidden="true">
+            <div class="strand-body">
+              <div class="instruction-row">
+                <div class="instruction-shape">
+                  <Keyboard class="instruction-type-icon" />
+                  <div class="instruction-content">
+                    <span class="instruction-label">Key:</span>
+                    <button type="button" class="btn-chip" tabindex="-1">Enter</button>
+                  </div>
+                </div>
+              </div>
+              <div class="instruction-row">
+                <div class="instruction-shape">
+                  <MousePointerClick class="instruction-type-icon" />
+                  <div class="instruction-content">
+                    <span class="instruction-label">Mouse:</span>
+                    <button type="button" class="dd-trigger dd-compact" tabindex="-1">Left<ChevronDown /></button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <p>
@@ -69,18 +96,30 @@ import { REPO_URL } from '../lib/releases';
 
         <article class="panel feature">
           <h3 class="panel-title"><GitBranch />Loops &amp; logic</h3>
-          <div class="feature-stage dot-grid">
-            <div class="bw-strand">
-              <div class="bw-wrap">
-                <div class="bw-wrap-head">
-                  <GitBranch class="bw-icon" /><span class="bw-label">if</span>
-                  <span class="bw-bool"><span class="bw-field">clicks</span><span class="bw-op">&lt;</span><span class="bw-field bw-num">100</span></span>
-                  <span class="bw-label">then</span>
+          <div class="feature-stage dot-grid" aria-hidden="true">
+            <div class="strand-body">
+              <div class="instruction-row instruction-row-wrap">
+                <div class="wrap-head-line">
+                  <GitBranch class="instruction-type-icon-inline" />
+                  <span class="instruction-label">if</span>
+                  <span class="value-block value-card-shape-bool">
+                    <span class="value-block value-card-shape"><span class="value-op">clicks</span></span>
+                    <span class="value-op">&lt;</span>
+                    <span class="value-block"><input type="text" value="100" size="3" readonly tabindex="-1" /></span>
+                  </span>
+                  <span class="instruction-label">then</span>
                 </div>
-                <div class="bw-wrap-mouth">
-                  <div class="bw-row"><Move class="bw-icon" /><span class="bw-label">Move mouse:</span></div>
+                <div class="wrap-mouth">
+                  <div class="strand-body">
+                    <div class="instruction-row">
+                      <div class="instruction-shape">
+                        <Move class="instruction-type-icon" />
+                        <div class="instruction-content"><span class="instruction-label">Move mouse:</span></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="bw-wrap-foot"></div>
+                <div class="wrap-foot-bar"></div>
               </div>
             </div>
           </div>
@@ -92,10 +131,22 @@ import { REPO_URL } from '../lib/releases';
 
         <article class="panel feature">
           <h3 class="panel-title"><Equal />Variables</h3>
-          <div class="feature-stage dot-grid">
-            <div class="bw-row bw-solo">
-              <Equal class="bw-icon" /><span class="bw-label">set</span><span class="bw-field">delay</span><span class="bw-label">to</span>
-              <span class="bw-value"><span class="bw-op">random</span><span class="bw-field bw-num">80</span><span class="bw-op">to</span><span class="bw-field bw-num">120</span></span>
+          <div class="feature-stage dot-grid" aria-hidden="true">
+            <div class="instruction-row solo">
+              <div class="instruction-shape">
+                <Equal class="instruction-type-icon" />
+                <div class="instruction-content">
+                  <span class="instruction-label">set</span>
+                  <button type="button" class="dd-trigger dd-compact" tabindex="-1">delay<ChevronDown /></button>
+                  <span class="instruction-label">to</span>
+                  <span class="value-block value-card-shape">
+                    <span class="value-op">pick random from</span>
+                    <span class="value-block"><input type="text" value="80" size="2" readonly tabindex="-1" /></span>
+                    <span class="value-op">to</span>
+                    <span class="value-block"><input type="text" value="120" size="3" readonly tabindex="-1" /></span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
           <p>
@@ -106,9 +157,15 @@ import { REPO_URL } from '../lib/releases';
 
         <article class="panel feature">
           <h3 class="panel-title"><Layers />Custom blocks</h3>
-          <div class="feature-stage dot-grid">
-            <div class="bw-row bw-solo custom-block">
-              <Layers class="bw-icon" /><span class="bw-label">log in as</span><span class="bw-field">player1</span>
+          <div class="feature-stage dot-grid" aria-hidden="true">
+            <div class="instruction-row solo blockwork-custom-block" style="--blockwork-custom-block-color: #bf5af2">
+              <div class="instruction-shape">
+                <Blocks class="instruction-type-icon" />
+                <div class="instruction-content">
+                  <span class="instruction-label">log in as</span>
+                  <span class="value-block"><input type="text" value="player1" size="7" readonly tabindex="-1" /></span>
+                </div>
+              </div>
             </div>
           </div>
           <p>
@@ -119,9 +176,16 @@ import { REPO_URL } from '../lib/releases';
 
         <article class="panel feature">
           <h3 class="panel-title"><Play />Hotkeys &amp; triggers</h3>
-          <div class="feature-stage dot-grid">
-            <div class="bw-row bw-header bw-solo">
-              <BatteryCharging class="bw-icon" /><span class="bw-label">When battery charged to</span><span class="bw-field bw-num">80</span><span class="bw-label plain">%</span>
+          <div class="feature-stage dot-grid" aria-hidden="true">
+            <div class="instruction-row solo instruction-row-when-ran instruction-row-header">
+              <div class="instruction-shape">
+                <div class="instruction-content">
+                  <BatteryCharging />
+                  <span class="instruction-label when-ran-label">When battery charged to</span>
+                  <span class="value-block"><input type="text" value="80" size="2" readonly tabindex="-1" /></span>
+                  <span class="instruction-label">%</span>
+                </div>
+              </div>
             </div>
           </div>
           <p>
@@ -150,7 +214,6 @@ import { REPO_URL } from '../lib/releases';
 
   <section class="section section-alt" id="screenshots">
     <div class="container">
-      <span class="eyebrow">Screenshots</span>
       <h2 class="section-heading">A canvas for your automations.</h2>
       <p class="section-lede">Pan, zoom, leave comments, and keep as many macros as you like — with light and dark themes.</p>
       <Screenshots />
@@ -186,7 +249,11 @@ import { REPO_URL } from '../lib/releases';
     pointer-events: none;
   }
   .hero .container { position: relative; }
-  .hero-copy { max-width: 720px; }
+  .hero-copy {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+  }
   h1 {
     font-size: clamp(40px, 6.4vw, 68px);
     line-height: 1.02;
@@ -200,20 +267,60 @@ import { REPO_URL } from '../lib/releases';
     color: transparent;
   }
   .hero-lede {
-    margin-top: 18px;
+    margin: 18px auto 0;
     max-width: 58ch;
     font-size: 18px;
     color: var(--blockstitch-text-dim);
     text-wrap: pretty;
   }
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 12px;
-    margin-top: 28px;
-  }
+  .hero-actions { margin-top: 28px; }
   .hero-editor { margin-top: 56px; }
+  .editor-window {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--blockstitch-border);
+    background: var(--blockstitch-bg);
+    box-shadow: var(--blockstitch-shadow-lg), 0 0 0 1px var(--blockstitch-glass-border);
+  }
+  .editor-titlebar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    background: var(--blockstitch-bg2);
+    border-bottom: 1px solid var(--blockstitch-glass-border);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blockstitch-bg3); border: 1px solid var(--blockstitch-border); }
+  .editor-titlebar-name {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--blockstitch-text-dim);
+  }
+  /* blockstitch's editor expects to fill a fixed-size window. */
+  .editor-body {
+    position: relative;
+    height: min(600px, 78vh);
+    font-size: 14px;
+    line-height: normal;
+  }
+  .editor-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--blockstitch-text-dim);
+    font-size: 13px;
+  }
+  .editor-caption {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--blockstitch-text-dim);
+    text-align: center;
+  }
 
   .features {
     display: grid;
@@ -221,37 +328,33 @@ import { REPO_URL } from '../lib/releases';
     gap: var(--blockstitch-spacing);
     margin-top: 40px;
   }
-  .feature { display: flex; flex-direction: column; }
+  .feature { display: flex; flex-direction: column; container-type: inline-size; }
   .feature h3 { margin: 0; }
   .feature-stage {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 150px;
-    padding: 16px;
+    height: 176px;
+    padding: 12px;
     border-bottom: 1px solid var(--blockstitch-glass-border);
     overflow: hidden;
+    font-size: 14px;
+    line-height: normal;
   }
+  /* Illustrations only — look like real blocks (hover included), but nothing grabs or types. */
+  .feature-stage :global(*) { cursor: default; }
+  .feature-stage :global(input), .feature-stage :global(button) { pointer-events: none; }
+  .feature-stage :global(.instruction-row.solo) { margin-bottom: 0; }
+  /* Scale the wider illustrations down rather than clip them in narrow cards. */
+  @container (max-width: 480px) { .feature-stage > :global(*) { zoom: 0.8; } }
+  /* Blockwork's custom-block coloring (ui/src/custom-block-color.css) isn't part of blockstitch. */
+  .feature-stage :global(.blockwork-custom-block .instruction-type-icon) { color: var(--blockwork-custom-block-color); }
+  :global(body:not(.bs-dragging)) .feature-stage :global(.instruction-row.blockwork-custom-block:hover::before) { background: var(--blockwork-custom-block-color); }
   .feature p {
     padding: 14px 16px 16px;
     font-size: 14px;
     color: var(--blockstitch-text-dim);
   }
-  .fake { pointer-events: none; }
-  .recording {
-    color: var(--blockstitch-text);
-    background: linear-gradient(160deg, rgba(var(--blockstitch-red-rgb), 0.35), rgba(var(--blockstitch-red-rgb), 0.18));
-    animation: record-pulse 1.6s var(--blockstitch-ease-standard) infinite;
-  }
-  .recording :global(svg) { color: var(--blockstitch-red); fill: currentColor; }
-  @keyframes record-pulse {
-    0%, 100% { box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-sm), 0 0 0 0 rgba(var(--blockstitch-red-rgb), 0.5); }
-    50% { box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-sm), 0 0 0 10px rgba(var(--blockstitch-red-rgb), 0); }
-  }
-  .custom-block { --custom: #bf5af2; }
-  .custom-block :global(.bw-icon) { color: var(--custom); }
-  .custom-block:hover::before { background: var(--custom); }
-  .plain { text-transform: none; letter-spacing: 0; }
 
   .platforms { margin-top: var(--blockstitch-spacing); }
   .platforms .panel-row { padding: 12px 16px; gap: 12px; }

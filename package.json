@@ -5,16 +5,21 @@
   "packageManager": "pnpm@11.26.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build",
+    "build": "astro check && vue-tsc --noEmit && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/vue": "^7.0.2",
     "@lucide/astro": "^1.45.0",
     "astro": "^7.3.2",
-    "marked": "^18.0.13"
+    "blockstitch": "github:Blockworked/blockstitch#76e0e970",
+    "lucide-vue-next": "^0.469.0",
+    "marked": "^18.0.13",
+    "vue": "^3.5.42"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.11"
   }
 }

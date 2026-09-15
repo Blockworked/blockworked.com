@@ -8,8 +8,9 @@ import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
 
 interface Props {
   mode?: 'compact' | 'full';
+  align?: 'start' | 'center';
 }
-const { mode = 'full' } = Astro.props;
+const { mode = 'full', align = 'start' } = Astro.props;
 
 const platforms: { id: Platform; icon: typeof Monitor }[] = [
   { id: 'windows', icon: Monitor },
@@ -18,12 +19,15 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
 ];
 ---
 
-<div class="dl" data-downloader data-mode={mode}>
+<div class:list={['dl', { 'dl-center': align === 'center' }]} data-downloader data-mode={mode}>
   <div class="dl-primary">
-    <a class="btn btn-primary btn-lg" href={RELEASES_URL} data-recommended>
-      <Download />
-      <span data-recommended-label>Download Blockwork</span>
-    </a>
+    <div class="dl-buttons">
+      <a class="btn btn-primary btn-lg" href={RELEASES_URL} data-recommended>
+        <Download />
+        <span data-recommended-label>Download Blockwork</span>
+      </a>
+      <slot name="actions" />
+    </div>
     <p class="dl-meta" data-meta aria-live="polite">Fetching the latest release…</p>
   </div>
 
@@ -201,6 +205,14 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     align-items: flex-start;
     gap: 10px;
   }
+  .dl-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .dl-center .dl-primary { align-items: center; }
+  .dl-center .dl-buttons { justify-content: center; }
+  .dl-center .dl-meta, .dl-center .dl-other { text-align: center; }
   .dl-meta {
     font-size: 13px;
     color: var(--blockstitch-text-dim);
