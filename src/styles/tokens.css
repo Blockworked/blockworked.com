@@ -1,0 +1,100 @@
+/* Design tokens copied verbatim from blockstitch's `src/theme/blockstitch.css`
+   (`:root` + `:root[data-theme="light"]`). blockstitch's stylesheet can't be
+   imported whole — it also carries app-shell globals (`body { overflow:
+   hidden }`, bare `button` styling, editor layout) that don't belong on a
+   scrolling website — so keep this block in sync by hand when the palette
+   changes there. Site-only additions live at the bottom. */
+
+:root {
+  /* ── Base palette ──────────────────────────────────────────────────────── */
+  --blockstitch-bg: #1c1c1e;
+  --blockstitch-bg2: #2c2c2e;
+  --blockstitch-bg3: #3a3a3c;
+  --blockstitch-border: #48484a;
+  --blockstitch-text: #e0e0e0;
+  --blockstitch-text-dim: #8e8e93;
+  --blockstitch-accent: #0a84ff;
+  --blockstitch-accent-rgb: 10, 132, 255;
+  --blockstitch-red: #ff453a;
+  --blockstitch-red-rgb: 255, 69, 58;
+  --blockstitch-yellow: #ffd60a;
+  --blockstitch-yellow-rgb: 255, 214, 10;
+  --blockstitch-yellow-bg: #2d2200;
+  --blockstitch-yellow-border: #7d6200;
+  --blockstitch-accent-light: #3aa0ff;
+  --blockstitch-radius: 6px;
+  --blockstitch-radius-lg: 14px;
+  --blockstitch-spacing-sm: 8px;
+  --blockstitch-spacing: 12px;
+  --blockstitch-btn-h-sm: 26px;
+  --blockstitch-btn-h-md: 32px;
+  --blockstitch-connector-cut-inset: 10px;
+  --blockstitch-connector-cut-width: 22px;
+  --blockstitch-connector-notch-depth: 8px;
+
+  /* ── Glass surfaces ────────────────────────────────────────────────────── */
+  --blockstitch-glass-bg: rgba(44, 44, 46, 0.55);
+  --blockstitch-glass-bg-strong: rgba(58, 58, 60, 0.6);
+  --blockstitch-glass-border: rgba(255, 255, 255, 0.08);
+  --blockstitch-glass-blur: 18px;
+
+  /* ── Shadows & glow ────────────────────────────────────────────────────── */
+  --blockstitch-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --blockstitch-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --blockstitch-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --blockstitch-bevel-top: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --blockstitch-bevel-press: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  --blockstitch-glow-accent: 0 0 0 3px rgba(var(--blockstitch-accent-rgb), 0.28), 0 0 20px rgba(var(--blockstitch-accent-rgb), 0.25);
+  --blockstitch-glow-red: 0 0 0 3px rgba(var(--blockstitch-red-rgb), 0.28), 0 0 20px rgba(var(--blockstitch-red-rgb), 0.3);
+
+  /* ── Overlays & scrollbar ──────────────────────────────────────────────── */
+  --blockstitch-hover-overlay: rgba(255, 255, 255, 0.05);
+  --blockstitch-scrollbar-thumb: rgba(255, 255, 255, 0.18);
+  --blockstitch-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+
+  /* ── Motion ────────────────────────────────────────────────────────────── */
+  --blockstitch-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --blockstitch-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --blockstitch-dur-fast: 120ms;
+  --blockstitch-dur-base: 200ms;
+  --blockstitch-dur-slow: 400ms;
+}
+
+:root[data-theme="light"] {
+  --blockstitch-bg: #f2f2f5;
+  --blockstitch-bg2: #ffffff;
+  --blockstitch-bg3: #e7e7ec;
+  --blockstitch-border: #d4d4da;
+  --blockstitch-text: #1c1c1e;
+  --blockstitch-text-dim: #6e6e73;
+  --blockstitch-yellow-bg: #fff6d8;
+  --blockstitch-yellow-border: #e6c200;
+
+  --blockstitch-glass-bg: rgba(255, 255, 255, 0.6);
+  --blockstitch-glass-bg-strong: rgba(230, 230, 236, 0.75);
+  --blockstitch-glass-border: rgba(0, 0, 0, 0.12);
+
+  --blockstitch-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --blockstitch-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --blockstitch-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.14);
+  --blockstitch-bevel-top: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --blockstitch-bevel-press: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+
+  --blockstitch-hover-overlay: rgba(0, 0, 0, 0.04);
+  --blockstitch-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --blockstitch-scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+}
+
+/* ── Site-only ───────────────────────────────────────────────────────────── */
+:root {
+  /* Opaque equivalent of blockstitch's block fill (glass-bg-strong laid over
+     the bg2 backer) — the site's blocks sit over busy backgrounds, and a
+     single flat color keeps the C-block's separate bars seamless. */
+  --site-block-fill: color-mix(in srgb, var(--blockstitch-bg3) 60%, var(--blockstitch-bg2));
+  --site-max-w: 1120px;
+  --site-font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --site-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+}
+:root[data-theme="light"] {
+  --site-block-fill: color-mix(in srgb, var(--blockstitch-bg3) 75%, var(--blockstitch-bg2));
+}

@@ -1,0 +1,110 @@
+---
+import { Moon, Sun, Download } from '@lucide/astro';
+import GitHubMark from './GitHubMark.astro';
+import { REPO_URL } from '../lib/releases';
+
+const links = [
+  { href: '/#features', label: 'Features' },
+  { href: '/#screenshots', label: 'Screenshots' },
+  { href: '/download', label: 'Download' },
+  { href: '/changelog', label: 'Changelog' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<header class="site-header">
+  <div class="container site-header-inner">
+    <a class="brand" href="/">
+      <img src="/logo.png" alt="" width="28" height="28" />
+      <span>Blockwork</span>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      {links.map(l => (
+        <a href={l.href} aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
+      ))}
+    </nav>
+    <div class="site-header-actions">
+      <a class="btn btn-icon btn-ghost" href={REPO_URL} title="Blockwork on GitHub" aria-label="Blockwork on GitHub">
+        <GitHubMark width="16" height="16" />
+      </a>
+      <button class="btn btn-icon btn-ghost theme-toggle" type="button" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">
+        <Sun class="icon-sun" />
+        <Moon class="icon-moon" />
+      </button>
+      <a class="btn btn-primary header-cta" href="/download"><Download />Download</a>
+    </div>
+  </div>
+</header>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('.theme-toggle');
+  btn?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem('blockstitch-theme', next);
+    } catch {
+      // storage disabled — the toggle still works for this page view
+    }
+  });
+</script>
+
+<style>
+  /* blockstitch `.toolbar-row` */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--blockstitch-glass-bg);
+    backdrop-filter: blur(var(--blockstitch-glass-blur));
+    -webkit-backdrop-filter: blur(var(--blockstitch-glass-blur));
+    border-bottom: 1px solid var(--blockstitch-glass-border);
+    box-shadow: var(--blockstitch-shadow-sm);
+  }
+  .site-header-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--blockstitch-spacing);
+    height: 56px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .site-nav {
+    display: flex;
+    gap: 2px;
+    margin-left: 16px;
+  }
+  .site-nav a {
+    padding: 6px 10px;
+    border-radius: var(--blockstitch-radius);
+    font-size: 13px;
+    color: var(--blockstitch-text-dim);
+    text-decoration: none;
+    transition: background var(--blockstitch-dur-fast) var(--blockstitch-ease-standard), color var(--blockstitch-dur-fast) var(--blockstitch-ease-standard);
+  }
+  .site-nav a:hover { background: var(--blockstitch-hover-overlay); color: var(--blockstitch-text); }
+  .site-nav a[aria-current='page'] { color: var(--blockstitch-text); }
+  .site-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .theme-toggle .icon-moon { display: none; }
+  :global(:root[data-theme='light']) .theme-toggle .icon-sun { display: none; }
+  :global(:root[data-theme='light']) .theme-toggle .icon-moon { display: block; }
+
+  @media (max-width: 720px) {
+    .site-nav { display: none; }
+  }
+  @media (max-width: 400px) {
+    .header-cta { display: none; }
+  }
+</style>

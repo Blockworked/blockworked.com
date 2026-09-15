@@ -1,0 +1,161 @@
+---
+// A static recreation of Blockwork's main editor — toolbar, palette sidebar,
+// and a dot-grid canvas holding one macro — built from the same blockstitch
+// shapes (see styles/blocks.css). Labels match the real field components in
+// Blockwork's ui/src/components/fields/.
+import {
+  AppWindow, ChevronDown, Circle, Clock, Equal, Keyboard, MessageSquare,
+  MousePointerClick, Play, Repeat, Save, Settings, TextCursor, TrendingUp, Move,
+} from '@lucide/astro';
+---
+
+<div class="editor" aria-label="The Blockwork editor" role="img">
+  <div class="editor-titlebar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="editor-titlebar-name">Blockwork</span>
+  </div>
+
+  <div class="editor-toolbar">
+    <div class="macro-select">
+      <span class="tiny-label">Macro</span>
+      <span class="btn fake dd"><span>Login &amp; farm clicks</span><ChevronDown /></span>
+    </div>
+    <span class="chip hotkey">F8</span>
+    <span class="btn fake btn-record"><Circle />Record</span>
+    <span class="btn fake btn-primary run"><Play />Run</span>
+    <span class="btn fake btn-icon"><Settings /></span>
+  </div>
+
+  <div class="editor-body">
+    <aside class="palette">
+      <div class="palette-label">Instructions</div>
+      <div class="palette-list">
+        <div class="bw-row bw-solo"><Keyboard class="bw-icon" /><span class="bw-label">Key:</span><span class="chip">A</span></div>
+        <div class="bw-row bw-solo"><Clock class="bw-icon" /><span class="bw-label">Wait (ms):</span><span class="bw-field bw-num">100</span></div>
+        <div class="bw-row bw-solo"><Move class="bw-icon" /><span class="bw-label">Move mouse:</span></div>
+        <div class="bw-row bw-solo"><Equal class="bw-icon" /><span class="bw-label">set</span><span class="bw-field">var</span></div>
+      </div>
+    </aside>
+
+    <div class="canvas dot-grid">
+      <div class="bw-strand bw-snap strand">
+        <div class="bw-row bw-header" style="--i:0"><Play class="bw-icon" /><span class="bw-label">When Ran</span></div>
+        <div class="bw-row" style="--i:1"><AppWindow class="bw-icon" /><span class="bw-label">Open:</span><span class="chip app-chip"><AppWindow />Firefox</span></div>
+        <div class="bw-row" style="--i:2"><Clock class="bw-icon" /><span class="bw-label">Wait (ms):</span><span class="bw-field bw-num">800</span></div>
+        <div class="bw-row" style="--i:3"><Keyboard class="bw-icon" /><span class="bw-label">Key:</span><span class="chip">Ctrl + L</span></div>
+        <div class="bw-row" style="--i:4"><TextCursor class="bw-icon" /><span class="bw-label">Text:</span><span class="bw-field">blockworked.com</span></div>
+        <div class="bw-wrap" style="--i:5">
+          <div class="bw-wrap-head"><Repeat class="bw-icon" /><span class="bw-label">repeat</span><span class="bw-field bw-num">10</span></div>
+          <div class="bw-wrap-mouth">
+            <div class="bw-row"><MousePointerClick class="bw-icon" /><span class="bw-label">Mouse:</span><span class="btn fake dd small">Left<ChevronDown /></span></div>
+            <div class="bw-row">
+              <Clock class="bw-icon" /><span class="bw-label">Wait (ms):</span>
+              <span class="bw-value"><span class="bw-field bw-num">150</span><span class="bw-op">+</span><span class="bw-value"><span class="bw-op">random</span><span class="bw-field bw-num">0</span><span class="bw-op">to</span><span class="bw-field bw-num">60</span></span></span>
+            </div>
+            <div class="bw-row"><TrendingUp class="bw-icon" /><span class="bw-label">change</span><span class="bw-field">clicks</span><span class="bw-label">by</span><span class="bw-field bw-num">1</span></div>
+          </div>
+          <div class="bw-wrap-foot"></div>
+        </div>
+      </div>
+
+      <div class="bw-comment comment">
+        <div class="bw-comment-header"><MessageSquare />Comment</div>
+        <div class="bw-comment-body">Randomized waits so it doesn't click like a robot.</div>
+      </div>
+
+      <div class="editor-actions">
+        <span class="btn fake btn-primary"><Save />Save macro</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .editor {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--blockstitch-border);
+    background: var(--blockstitch-bg);
+    box-shadow: var(--blockstitch-shadow-lg), 0 0 0 1px var(--blockstitch-glass-border);
+    font-size: 13px;
+    user-select: none;
+  }
+  .editor-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    background: var(--blockstitch-bg2);
+    border-bottom: 1px solid var(--blockstitch-glass-border);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blockstitch-bg3); border: 1px solid var(--blockstitch-border); }
+  .editor-titlebar-name {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--blockstitch-text-dim);
+  }
+
+  .editor-toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--blockstitch-glass-bg);
+    border-bottom: 1px solid var(--blockstitch-glass-border);
+  }
+  .macro-select { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .tiny-label { font-size: 11px; color: var(--blockstitch-text-dim); }
+  .fake { cursor: default; pointer-events: none; }
+  .dd { justify-content: space-between; max-width: 220px; }
+  .dd span { overflow: hidden; text-overflow: ellipsis; }
+  .dd.small { min-height: 24px; padding: 0 6px; gap: 4px; font-size: 12px; }
+  .dd.small :global(svg) { width: 12px; height: 12px; }
+  .hotkey { min-height: 32px; }
+  .run { min-width: 96px; }
+
+  .editor-body { display: flex; height: 480px; }
+  .palette {
+    width: 188px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--blockstitch-glass-border);
+    background: var(--blockstitch-glass-bg);
+    overflow: hidden;
+  }
+  .palette-label {
+    padding: 8px 8px 0;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--blockstitch-text-dim);
+  }
+  .palette-list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .canvas { position: relative; flex: 1; overflow: hidden; }
+  .strand { position: absolute; left: 28px; top: 24px; }
+  .comment { position: absolute; right: 22px; top: 318px; }
+  .app-chip { gap: 5px; }
+  .app-chip :global(svg) { width: 13px; height: 13px; }
+  .editor-actions { position: absolute; right: 16px; top: 16px; }
+
+  @media (max-width: 1080px) {
+    .comment { display: none; }
+  }
+  @media (max-width: 760px) {
+    .palette, .hotkey, .editor-actions { display: none; }
+    .editor-body { height: 450px; }
+    .strand { left: 14px; }
+  }
+  @media (max-width: 420px) {
+    .btn-record { display: none; }
+  }
+</style>

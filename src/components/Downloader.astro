@@ -1,0 +1,233 @@
+---
+// Latest-release downloader, ported from ethanstokes.dev's Kobweb
+// BlockworkPage: fetches the latest GitHub release in the browser (so the
+// static site never goes stale between deploys), suggests the build for the
+// visitor's OS/arch, and — in `full` mode — lists every asset by platform.
+import { Download, Monitor, Laptop, SquareTerminal, TriangleAlert } from '@lucide/astro';
+import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
+
+interface Props {
+  mode?: 'compact' | 'full';
+}
+const { mode = 'full' } = Astro.props;
+
+const platforms: { id: Platform; icon: typeof Monitor }[] = [
+  { id: 'windows', icon: Monitor },
+  { id: 'macos', icon: Laptop },
+  { id: 'linux', icon: SquareTerminal },
+];
+---
+
+<div class="dl" data-downloader data-mode={mode}>
+  <div class="dl-primary">
+    <a class="btn btn-primary btn-lg" href={RELEASES_URL} data-recommended>
+      <Download />
+      <span data-recommended-label>Download Blockwork</span>
+    </a>
+    <p class="dl-meta" data-meta aria-live="polite">Fetching the latest release…</p>
+  </div>
+
+  {mode === 'compact' && (
+    <p class="dl-other">
+      Not on this platform? <a href="/download">See all downloads</a> · <a href={RELEASES_URL}>Release history</a>
+    </p>
+  )}
+
+  {mode === 'full' && (
+    <div class="dl-groups" data-groups hidden>
+      {platforms.map(({ id, icon: Icon }) => (
+        <section class="panel" data-platform={id}>
+          <h3 class="panel-title"><Icon />{PLATFORM_LABELS[id]}</h3>
+          <div data-rows></div>
+          {id === 'linux' && (
+            <div class="dl-note">
+              <div class="banner">
+                <TriangleAlert />
+                <span>
+                  Recording and hotkeys read <code>/dev/input</code> directly, so your user must be in the
+                  <code>input</code> group: <code>sudo usermod -aG input $USER</code>, then log out and back in.
+                  Also on the AUR as <code>blockwork-git</code>.
+                </span>
+              </div>
+            </div>
+          )}
+        </section>
+      ))}
+    </div>
+  )}
+
+  <template data-row-template>
+    <div class="panel-row dl-row">
+      <div class="panel-row-label">
+        <div class="dl-row-title"><span data-kind></span> <span class="dl-arch" data-arch></span></div>
+        <div class="panel-row-hint" data-hint></div>
+      </div>
+      <span class="panel-row-hint dl-size" data-size></span>
+      <a class="btn" data-link><Download /><span class="dl-btn-text">Download</span></a>
+    </div>
+  </template>
+</div>
+
+<script>
+  import {
+    PLATFORM_LABELS, RELEASES_URL, REPO, formatDate, formatSize, parseAsset,
+    type Arch, type GitHubRelease, type Platform, type ReleaseAsset,
+  } from '../lib/releases';
+
+  interface NavigatorUAData {
+    platform: string;
+    getHighEntropyValues(hints: string[]): Promise<{ architecture?: string }>;
+  }
+
+  async function detect(): Promise<{ platform: Platform | null; arch: Arch }> {
+    const uaData = (navigator as Navigator & { userAgentData?: NavigatorUAData }).userAgentData;
+    const ua = navigator.userAgent.toLowerCase();
+    const src = (uaData?.platform ?? '').toLowerCase() || ua;
+
+    let platform: Platform | null = null;
+    if (/android|iphone|ipad/.test(ua)) platform = null;
+    else if (src.includes('win')) platform = 'windows';
+    else if (src.includes('mac')) platform = 'macos';
+    else if (src.includes('linux') || src.includes('x11') || src.includes('cros')) platform = 'linux';
+
+    let arch: Arch = /arm64|aarch64/.test(ua) ? 'arm64' : 'x86_64';
+    try {
+      const hints = await uaData?.getHighEntropyValues(['architecture']);
+      if (hints?.architecture === 'arm') arch = 'arm64';
+      else if (hints?.architecture === 'x86') arch = 'x86_64';
+    } catch {
+      // Hint unavailable — keep the UA-string guess.
+    }
+    // The only macOS build is Apple silicon.
+    if (platform === 'macos') arch = 'arm64';
+    return { platform, arch };
+  }
+
+  function pickRecommended(assets: ReleaseAsset[], platform: Platform | null, arch: Arch) {
+    if (!platform) return null;
+    const matches = assets.filter(a => a.platform === platform);
+    return (
+      matches.find(a => a.arch === arch && a.rank === 0) ??
+      matches.find(a => a.arch === arch) ??
+      matches.find(a => a.rank === 0) ??
+      null
+    );
+  }
+
+  // One request shared by every downloader on the page (the home page has two),
+  // since unauthenticated GitHub API calls are limited to 60/hour per visitor.
+  const latestRelease: Promise<GitHubRelease> = fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+    headers: { Accept: 'application/vnd.github+json' },
+  }).then(res => {
+    if (!res.ok) throw new Error(`GitHub API responded ${res.status}`);
+    return res.json();
+  });
+
+  const archLabel = (a: ReleaseAsset) => (a.platform === 'macos' ? 'Apple silicon' : a.arch === 'arm64' ? 'ARM64' : 'x64');
+
+  async function init(root: HTMLElement) {
+    const recommendedLink = root.querySelector<HTMLAnchorElement>('[data-recommended]')!;
+    const recommendedLabel = root.querySelector<HTMLElement>('[data-recommended-label]')!;
+    const meta = root.querySelector<HTMLElement>('[data-meta]')!;
+
+    let release: GitHubRelease;
+    try {
+      release = await latestRelease;
+    } catch {
+      recommendedLabel.textContent = 'View releases on GitHub';
+      recommendedLink.href = RELEASES_URL;
+      meta.textContent = "Couldn't reach GitHub to fetch the latest release.";
+      return;
+    }
+
+    const assets = release.assets.map(parseAsset).filter((a): a is ReleaseAsset => a !== null);
+    const { platform, arch } = await detect();
+    const recommended = pickRecommended(assets, platform, arch);
+    const version = release.tag_name.replace(/^v/, '');
+    const released = `Version ${version} · released ${formatDate(release.published_at)}`;
+
+    if (recommended) {
+      recommendedLink.href = recommended.url;
+      recommendedLabel.textContent = `Download for ${PLATFORM_LABELS[recommended.platform]}`;
+      meta.textContent = `${released} · ${recommended.kind}, ${archLabel(recommended)}, ${formatSize(recommended.size)}`;
+    } else {
+      recommendedLink.href = root.dataset.mode === 'full' ? '#all-downloads' : '/download';
+      recommendedLabel.textContent = 'Choose a download';
+      meta.textContent = platform
+        ? `${released} · no ${PLATFORM_LABELS[platform]} build in this release`
+        : `${released} · available for Windows, macOS, and Linux`;
+    }
+
+    const groups = root.querySelector<HTMLElement>('[data-groups]');
+    const template = root.querySelector<HTMLTemplateElement>('[data-row-template]');
+    if (!groups || !template) return;
+    groups.id = 'all-downloads';
+
+    for (const section of groups.querySelectorAll<HTMLElement>('[data-platform]')) {
+      const id = section.dataset.platform as Platform;
+      const rows = section.querySelector<HTMLElement>('[data-rows]')!;
+      const list = assets
+        .filter(a => a.platform === id)
+        .sort((a, b) => Number(a.arch !== arch) - Number(b.arch !== arch) || a.rank - b.rank);
+      if (list.length === 0) {
+        section.hidden = true;
+        continue;
+      }
+      // The visitor's own platform goes first.
+      if (id === platform) groups.prepend(section);
+      for (const asset of list) {
+        const row = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+        row.querySelector('[data-kind]')!.textContent = asset.kind;
+        row.querySelector('[data-arch]')!.textContent = archLabel(asset);
+        row.querySelector('[data-hint]')!.textContent = asset.hint;
+        row.querySelector('[data-size]')!.textContent = formatSize(asset.size);
+        const link = row.querySelector<HTMLAnchorElement>('[data-link]')!;
+        link.href = asset.url;
+        link.title = asset.name;
+        if (asset === recommended) link.classList.add('btn-primary');
+        rows.append(row);
+      }
+    }
+    groups.hidden = false;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-downloader]').forEach(init);
+</script>
+
+<style>
+  .dl-primary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .dl-meta {
+    font-size: 13px;
+    color: var(--blockstitch-text-dim);
+    min-height: 1.5em;
+  }
+  .dl-other {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--blockstitch-text-dim);
+  }
+  .dl-other a { color: var(--blockstitch-accent); text-decoration: none; }
+  .dl-other a:hover { text-decoration: underline; }
+
+  .dl-groups {
+    display: grid;
+    gap: var(--blockstitch-spacing);
+    margin-top: 32px;
+  }
+  .dl-groups h3 { margin: 0; }
+  .dl-row-title { font-weight: 600; font-size: 14px; }
+  .dl-arch { font-weight: 400; color: var(--blockstitch-text-dim); font-size: 13px; }
+  .dl-size { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .dl-note { padding: 0 12px 12px; }
+  .dl-note .banner { overflow-wrap: anywhere; }
+
+  @media (max-width: 560px) {
+    .dl-size { display: none; }
+    .dl-btn-text { display: none; }
+  }
+</style>

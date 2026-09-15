@@ -1,0 +1,285 @@
+---
+import Base from '../layouts/Base.astro';
+import EditorMockup from '../components/EditorMockup.astro';
+import Downloader from '../components/Downloader.astro';
+import Screenshots from '../components/Screenshots.astro';
+import GitHubMark from '../components/GitHubMark.astro';
+import {
+  BatteryCharging, Blocks, Circle, Clock, Equal, GitBranch, Keyboard, Layers,
+  Monitor, MousePointerClick, Move, Play, ShieldCheck, Square,
+} from '@lucide/astro';
+import { REPO_URL } from '../lib/releases';
+---
+
+<Base>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-copy">
+        <span class="eyebrow">Free &amp; open source · Windows · macOS · Linux</span>
+        <h1>Macros you can <span class="accent">see</span>.</h1>
+        <p class="hero-lede">
+          Blockwork lets you build keyboard and mouse macros by snapping blocks together — no code, no
+          guesswork. Record what you do, tweak it block by block, and fire it off with a hotkey.
+        </p>
+        <div class="hero-actions">
+          <Downloader mode="compact" />
+          <a class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
+        </div>
+      </div>
+      <div class="hero-editor">
+        <EditorMockup />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <span class="eyebrow">Features</span>
+      <h2 class="section-heading">Everything a macro needs, nothing to memorize.</h2>
+      <p class="section-lede">
+        Every instruction is a block with its own inputs. Value and condition slots are shaped by type,
+        so you can tell what goes where at a glance.
+      </p>
+
+      <div class="features">
+        <article class="panel feature">
+          <h3 class="panel-title"><Circle />Record</h3>
+          <div class="feature-stage dot-grid">
+            <span class="btn btn-record fake recording"><Square />Stop recording</span>
+          </div>
+          <p>
+            Hit record and use your computer normally. Keystrokes, clicks, and even mouse movement come
+            back as editable blocks.
+          </p>
+        </article>
+
+        <article class="panel feature">
+          <h3 class="panel-title"><Blocks />Snap together</h3>
+          <div class="feature-stage dot-grid">
+            <div class="bw-strand">
+              <div class="bw-row"><Keyboard class="bw-icon" /><span class="bw-label">Key:</span><span class="chip">Enter</span></div>
+              <div class="bw-row"><MousePointerClick class="bw-icon" /><span class="bw-label">Mouse:</span><span class="bw-field">Left</span></div>
+            </div>
+          </div>
+          <p>
+            Keys, text, clicks, scrolling, mouse moves, shell commands, and opening or quitting apps —
+            drag them into a stack and reorder at will.
+          </p>
+        </article>
+
+        <article class="panel feature">
+          <h3 class="panel-title"><GitBranch />Loops &amp; logic</h3>
+          <div class="feature-stage dot-grid">
+            <div class="bw-strand">
+              <div class="bw-wrap">
+                <div class="bw-wrap-head">
+                  <GitBranch class="bw-icon" /><span class="bw-label">if</span>
+                  <span class="bw-bool"><span class="bw-field">clicks</span><span class="bw-op">&lt;</span><span class="bw-field bw-num">100</span></span>
+                  <span class="bw-label">then</span>
+                </div>
+                <div class="bw-wrap-mouth">
+                  <div class="bw-row"><Move class="bw-icon" /><span class="bw-label">Move mouse:</span></div>
+                </div>
+                <div class="bw-wrap-foot"></div>
+              </div>
+            </div>
+          </div>
+          <p>
+            Repeat, forever, while, and If / If-Else blocks, with boolean conditions that only fit where a
+            condition belongs.
+          </p>
+        </article>
+
+        <article class="panel feature">
+          <h3 class="panel-title"><Equal />Variables</h3>
+          <div class="feature-stage dot-grid">
+            <div class="bw-row bw-solo">
+              <Equal class="bw-icon" /><span class="bw-label">set</span><span class="bw-field">delay</span><span class="bw-label">to</span>
+              <span class="bw-value"><span class="bw-op">random</span><span class="bw-field bw-num">80</span><span class="bw-op">to</span><span class="bw-field bw-num">120</span></span>
+            </div>
+          </div>
+          <p>
+            Store numbers and text, combine them with operators like Join and Random, and watch their
+            values preview live right in the editor.
+          </p>
+        </article>
+
+        <article class="panel feature">
+          <h3 class="panel-title"><Layers />Custom blocks</h3>
+          <div class="feature-stage dot-grid">
+            <div class="bw-row bw-solo custom-block">
+              <Layers class="bw-icon" /><span class="bw-label">log in as</span><span class="bw-field">player1</span>
+            </div>
+          </div>
+          <p>
+            Wrap a sequence you use often into your own block, give it inputs and a color, and reuse it
+            anywhere in the macro.
+          </p>
+        </article>
+
+        <article class="panel feature">
+          <h3 class="panel-title"><Play />Hotkeys &amp; triggers</h3>
+          <div class="feature-stage dot-grid">
+            <div class="bw-row bw-header bw-solo">
+              <BatteryCharging class="bw-icon" /><span class="bw-label">When battery charged to</span><span class="bw-field bw-num">80</span><span class="bw-label plain">%</span>
+            </div>
+          </div>
+          <p>
+            Start and stop any macro with a global hotkey, or trigger it on a schedule, when power is
+            plugged in, or when the battery hits a level.
+          </p>
+        </article>
+      </div>
+
+      <div class="platforms panel">
+        <div class="panel-row">
+          <Monitor class="row-icon" />
+          <span class="panel-row-label"><strong>Native on Windows, macOS, and Linux</strong> — including Wayland, with Flatpak and AppImage builds.</span>
+        </div>
+        <div class="panel-row">
+          <ShieldCheck class="row-icon" />
+          <span class="panel-row-label"><strong>Runs entirely on your machine</strong> — no account, no cloud. GPL-3.0 licensed.</span>
+        </div>
+        <div class="panel-row">
+          <Clock class="row-icon" />
+          <span class="panel-row-label"><strong>Precise, human-like timing</strong> — fractional waits with optional random variance.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="screenshots">
+    <div class="container">
+      <span class="eyebrow">Screenshots</span>
+      <h2 class="section-heading">A canvas for your automations.</h2>
+      <p class="section-lede">Pan, zoom, leave comments, and keep as many macros as you like — with light and dark themes.</p>
+      <Screenshots />
+    </div>
+  </section>
+
+  <section class="section" id="download">
+    <div class="container">
+      <div class="cta panel dot-grid">
+        <img src="/logo.png" alt="" width="88" height="88" class="cta-logo" />
+        <div class="cta-copy">
+          <h2 class="section-heading">Get Blockwork</h2>
+          <p class="section-lede">Free and open source. Grab the latest release for your platform.</p>
+          <div class="cta-actions"><Downloader mode="compact" /></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    padding: 72px 0 40px;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: -20% -10% auto;
+    height: 720px;
+    background: radial-gradient(ellipse 50% 60% at 50% 30%, rgba(var(--blockstitch-accent-rgb), 0.18), transparent 70%);
+    pointer-events: none;
+  }
+  .hero .container { position: relative; }
+  .hero-copy { max-width: 720px; }
+  h1 {
+    font-size: clamp(40px, 6.4vw, 68px);
+    line-height: 1.02;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+  .accent {
+    background: linear-gradient(160deg, var(--blockstitch-accent-light), var(--blockstitch-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero-lede {
+    margin-top: 18px;
+    max-width: 58ch;
+    font-size: 18px;
+    color: var(--blockstitch-text-dim);
+    text-wrap: pretty;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .hero-editor { margin-top: 56px; }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--blockstitch-spacing);
+    margin-top: 40px;
+  }
+  .feature { display: flex; flex-direction: column; }
+  .feature h3 { margin: 0; }
+  .feature-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    padding: 16px;
+    border-bottom: 1px solid var(--blockstitch-glass-border);
+    overflow: hidden;
+  }
+  .feature p {
+    padding: 14px 16px 16px;
+    font-size: 14px;
+    color: var(--blockstitch-text-dim);
+  }
+  .fake { pointer-events: none; }
+  .recording {
+    color: var(--blockstitch-text);
+    background: linear-gradient(160deg, rgba(var(--blockstitch-red-rgb), 0.35), rgba(var(--blockstitch-red-rgb), 0.18));
+    animation: record-pulse 1.6s var(--blockstitch-ease-standard) infinite;
+  }
+  .recording :global(svg) { color: var(--blockstitch-red); fill: currentColor; }
+  @keyframes record-pulse {
+    0%, 100% { box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-sm), 0 0 0 0 rgba(var(--blockstitch-red-rgb), 0.5); }
+    50% { box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-sm), 0 0 0 10px rgba(var(--blockstitch-red-rgb), 0); }
+  }
+  .custom-block { --custom: #bf5af2; }
+  .custom-block :global(.bw-icon) { color: var(--custom); }
+  .custom-block:hover::before { background: var(--custom); }
+  .plain { text-transform: none; letter-spacing: 0; }
+
+  .platforms { margin-top: var(--blockstitch-spacing); }
+  .platforms .panel-row { padding: 12px 16px; gap: 12px; }
+  .platforms .panel-row-label { font-size: 14px; color: var(--blockstitch-text-dim); }
+  .platforms strong { color: var(--blockstitch-text); font-weight: 600; }
+  .row-icon { width: 18px; height: 18px; color: var(--blockstitch-accent); flex-shrink: 0; }
+
+  .section-alt {
+    background: var(--blockstitch-glass-bg);
+    border-top: 1px solid var(--blockstitch-glass-border);
+    border-bottom: 1px solid var(--blockstitch-glass-border);
+  }
+
+  .cta {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 40px;
+  }
+  .cta-logo { flex-shrink: 0; filter: drop-shadow(var(--blockstitch-shadow-md)); }
+  .cta-actions { margin-top: 20px; }
+
+  @media (max-width: 960px) {
+    .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .hero { padding-top: 48px; }
+    .features { grid-template-columns: 1fr; }
+    .cta { flex-direction: column; align-items: flex-start; padding: 28px; }
+  }
+</style>

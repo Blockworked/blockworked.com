@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = 'Build keyboard and mouse macros by snapping blocks together. Free for Windows, macOS, and Linux.',
+} = Astro.props;
+const fullTitle = title ? `${title} · Blockwork` : 'Blockwork — Visual macros for Windows, macOS & Linux';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL('/logo.png', Astro.site)} />
+    <meta name="theme-color" content="#1c1c1e" />
+    <!-- Resolve the theme before first paint. Shares blockstitch's storage key,
+         so the choice matches the app's own toggle wording; falls back to the
+         OS preference rather than the app's dark default. -->
+    <script is:inline>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem('blockstitch-theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+  </head>
+  <body>
+    <SiteHeader />
+    <main>
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>

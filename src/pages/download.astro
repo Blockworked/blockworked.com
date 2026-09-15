@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import Downloader from '../components/Downloader.astro';
+import { REPO_URL } from '../lib/releases';
+---
+
+<Base title="Download" description="Download Blockwork for Windows, macOS, or Linux.">
+  <section class="section download">
+    <div class="container narrow">
+      <img src="/logo.png" alt="" width="72" height="72" class="logo" />
+      <span class="eyebrow">Download</span>
+      <h1 class="section-heading">Get Blockwork</h1>
+      <p class="section-lede">
+        Free and open source under the GPL-3.0. Every build below comes straight from the
+        latest <a href={`${REPO_URL}/releases/latest`}>GitHub release</a>.
+      </p>
+      <div class="dl-wrap">
+        <Downloader mode="full" />
+      </div>
+      <p class="build-note">
+        Prefer to build it yourself? Clone the <a href={REPO_URL}>repository</a> and run <code>just</code>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .narrow { max-width: 760px; }
+  .logo { margin-bottom: 20px; filter: drop-shadow(var(--blockstitch-shadow-md)); }
+  .section-lede a, .build-note a { color: var(--blockstitch-accent); text-decoration: none; }
+  .section-lede a:hover, .build-note a:hover { text-decoration: underline; }
+  .dl-wrap { margin-top: 28px; }
+  .build-note {
+    margin-top: 32px;
+    font-size: 13px;
+    color: var(--blockstitch-text-dim);
+  }
+</style>

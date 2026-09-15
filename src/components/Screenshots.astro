@@ -1,0 +1,80 @@
+---
+// Drop captures into src/assets/screenshots/ with the names below (png, jpg,
+// or webp) and they appear automatically, resized and converted by astro:assets;
+// until then each slot renders a labelled placeholder.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { ImageOff } from '@lucide/astro';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/screenshots/*.{png,jpg,jpeg,webp}', { eager: true });
+const find = (name: string) =>
+  Object.entries(files).find(([path]) => path.split('/').pop()!.replace(/\.\w+$/, '') === name)?.[1].default;
+
+const shots = [
+  { name: 'editor', caption: 'Building a macro in the block editor', wide: true },
+  { name: 'recording', caption: 'Recording keyboard and mouse input' },
+  { name: 'settings', caption: 'Global hotkeys and settings' },
+].map(s => ({ ...s, image: find(s.name) }));
+---
+
+<div class="shots">
+  {shots.map(s => (
+    <figure class:list={['shot', { wide: s.wide }]}>
+      {s.image ? (
+        <div class="shot-frame">
+          <Image src={s.image} alt={s.caption} widths={[640, 1120, 1600]} sizes="(max-width: 720px) 100vw, 1120px" />
+        </div>
+      ) : (
+        <div class="shot-frame shot-placeholder dot-grid">
+          <ImageOff />
+          <span>src/assets/screenshots/{s.name}.png</span>
+        </div>
+      )}
+      <figcaption>{s.caption}</figcaption>
+    </figure>
+  ))}
+</div>
+
+<style>
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 40px;
+  }
+  .shot.wide { grid-column: 1 / -1; }
+  .shot-frame {
+    display: block;
+    border-radius: var(--blockstitch-radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--blockstitch-border);
+    background: var(--blockstitch-bg2);
+    box-shadow: var(--blockstitch-shadow-md);
+    transition: transform var(--blockstitch-dur-base) var(--blockstitch-ease-standard), box-shadow var(--blockstitch-dur-base) var(--blockstitch-ease-standard);
+  }
+  .shot-frame :global(img) { display: block; width: 100%; height: auto; }
+  .shot-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    aspect-ratio: 16 / 10;
+    color: var(--blockstitch-text-dim);
+    font-family: var(--site-mono);
+    font-size: 12px;
+    border-style: dashed;
+    box-shadow: none;
+  }
+  .wide .shot-placeholder { aspect-ratio: 16 / 8; }
+  .shot-placeholder :global(svg) { width: 22px; height: 22px; }
+  figcaption {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--blockstitch-text-dim);
+    text-align: center;
+  }
+  @media (max-width: 720px) {
+    .shots { grid-template-columns: 1fr; }
+  }
+</style>

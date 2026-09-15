@@ -1,0 +1,158 @@
+---
+// Rendered at build time from Blockwork's CHANGELOG.md (Keep a Changelog
+// format) on the default branch — richer than the GitHub release bodies,
+// which are generated from it at tag time and are sometimes just a stub.
+import Base from '../layouts/Base.astro';
+import { Tag } from '@lucide/astro';
+import { marked } from 'marked';
+import { RELEASES_URL, REPO, REPO_URL, formatDate } from '../lib/releases';
+
+interface Entry {
+  version: string;
+  date: string | null;
+  html: string;
+}
+
+let entries: Entry[] = [];
+try {
+  const res = await fetch(`https://raw.githubusercontent.com/${REPO}/master/CHANGELOG.md`);
+  if (!res.ok) throw new Error(`GitHub responded ${res.status}`);
+  const md = await res.text();
+  // "## [0.5.3] - 2026-09-14" starts each entry; anything before the first is the preamble.
+  const heading = /^## \[([^\]]+)\](?:\s*-\s*(\d{4}-\d{2}-\d{2}))?\s*$/gm;
+  const matches = [...md.matchAll(heading)];
+  entries = matches.map((m, i) => {
+    const body = md.slice(m.index! + m[0].length, matches[i + 1]?.index ?? md.length);
+    return {
+      version: m[1],
+      date: m[2] ?? null,
+      // Drop trailing link-reference definitions ("[0.5.3]: https://…").
+      html: marked.parse(body.replace(/^\[[^\]]+\]:\s+\S+\s*$/gm, '').trim(), { async: false }),
+    };
+  });
+} catch (e) {
+  console.warn(`[changelog] couldn't fetch CHANGELOG.md, rendering the fallback: ${e}`);
+}
+---
+
+<Base title="Changelog" description="What's new in each Blockwork release.">
+  <section class="section">
+    <div class="container narrow">
+      <span class="eyebrow">Changelog</span>
+      <h1 class="section-heading">What's new</h1>
+      <p class="section-lede">Every Blockwork release, newest first.</p>
+
+      {entries.length === 0 ? (
+        <p class="fallback">
+          The changelog couldn't be loaded when this page was built — see <a href={RELEASES_URL}>releases on GitHub</a>.
+        </p>
+      ) : (
+        <ol class="releases">
+          {entries.map((e, i) => {
+            const unreleased = e.version.toLowerCase() === 'unreleased';
+            return (
+              <li class:list={['release', { current: i === 0 && !unreleased }]}>
+                <div class="release-marker" aria-hidden="true"></div>
+                <article class="panel">
+                  <header class="panel-title release-header">
+                    <Tag />
+                    {unreleased ? <span class="version">Unreleased</span> : <a class="version" href={`${REPO_URL}/releases/tag/${e.version}`}>{e.version}</a>}
+                    {i === 0 && !unreleased && <span class="badge">Latest</span>}
+                    {e.date && <time datetime={e.date}>{formatDate(`${e.date}T12:00:00`)}</time>}
+                  </header>
+                  <div class="notes" set:html={e.html || '<p>No notes for this release.</p>'} />
+                </article>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .narrow { max-width: 760px; }
+  .fallback { margin-top: 32px; color: var(--blockstitch-text-dim); }
+  .fallback a { color: var(--blockstitch-accent); }
+
+  .releases {
+    list-style: none;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .release { position: relative; padding-left: 28px; }
+  /* A timeline spine, echoing the C-block spine. */
+  .release::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 0;
+    bottom: -20px;
+    width: 1.5px;
+    background: var(--blockstitch-border);
+  }
+  .release:last-child::before { bottom: 0; }
+  .release-marker {
+    position: absolute;
+    left: 0;
+    top: 12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--blockstitch-bg2);
+    border: 1.5px solid var(--blockstitch-border);
+  }
+  .release.current .release-marker {
+    background: var(--blockstitch-accent);
+    border-color: var(--blockstitch-accent);
+    box-shadow: var(--blockstitch-glow-accent);
+  }
+  .release-header { gap: 8px; }
+  .version {
+    color: var(--blockstitch-text);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  a.version:hover { color: var(--blockstitch-accent); }
+  .release-header time {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    font-size: 12px;
+  }
+  .badge {
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(var(--blockstitch-accent-rgb), 0.16);
+    color: var(--blockstitch-accent);
+    font-size: 10px;
+  }
+
+  .notes {
+    padding: 12px 16px 16px;
+    font-size: 14px;
+  }
+  .notes :global(h3) {
+    margin: 14px 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--blockstitch-text-dim);
+  }
+  .notes :global(h3:first-child) { margin-top: 0; }
+  .notes :global(p) { margin: 6px 0; }
+  .notes :global(ul) { padding-left: 20px; }
+  .notes :global(li) { margin: 3px 0; }
+  .notes :global(li::marker) { color: var(--blockstitch-text-dim); }
+  .notes :global(a) { color: var(--blockstitch-accent); }
+  .notes :global(code) {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--blockstitch-bg3);
+  }
+</style>
