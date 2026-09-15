@@ -45,10 +45,10 @@ import { REPO_URL } from '../lib/releases';
             <DemoEditor client:only="vue">
               <div slot="fallback" class="editor-loading dot-grid">Loading the editor…</div>
             </DemoEditor>
-            <!-- On touch screens the editor would swallow every swipe that lands
-                 on it, so it stays locked until tapped (see the script below). -->
+            <!-- The editor would swallow every scroll or swipe that lands on it,
+                 so it stays locked until clicked (see the script below). -->
             <button type="button" class="editor-unlock" data-editor-unlock>
-              <Hand />Tap to try the editor
+              <Hand /><span class="unlock-click">Click to try the editor</span><span class="unlock-tap">Tap to try the editor</span>
             </button>
           </div>
         </div>
@@ -182,7 +182,7 @@ import { REPO_URL } from '../lib/releases';
 </Base>
 
 <script>
-  // Touch screens: unlock the demo editor on tap, lock it again with Done.
+  // Unlock the demo editor on click, lock it again with Done.
   const editorWindow = document.querySelector<HTMLElement>('[data-editor-window]');
   document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => editorWindow?.classList.add('editor-active'));
   document.querySelector('[data-editor-done]')?.addEventListener('click', () => editorWindow?.classList.remove('editor-active'));
@@ -330,38 +330,41 @@ import { REPO_URL } from '../lib/releases';
     font-size: 14px;
     line-height: normal;
   }
-  /* Touch screens: a scrim over the editor until it's tapped, so scrolling the
-     page past it still works. `editor-active` is set by the script. */
-  .editor-unlock,
+  /* A scrim over the editor until it's clicked, so scrolling the page past it
+     still works. `editor-active` is set by the script. */
+  .editor-unlock {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--blockstitch-bg) 55%, transparent);
+    box-shadow: none;
+    color: var(--blockstitch-text);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .editor-unlock:hover:not(:disabled) { background: color-mix(in srgb, var(--blockstitch-bg) 40%, transparent); transform: none; }
+  .editor-unlock :global(svg) { width: 18px; height: 18px; }
+  .unlock-tap { display: none; }
   .editor-done { display: none; }
+  .editor-active .editor-unlock { display: none; }
+  .editor-active .editor-done {
+    display: block;
+    margin-left: auto;
+    padding: 2px 10px;
+    min-height: 0;
+    font-size: 12px;
+  }
   @media (pointer: coarse) {
     .editor-body { height: min(520px, 65svh); }
-    .editor-unlock {
-      position: absolute;
-      inset: 0;
-      z-index: 30;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      border: none;
-      border-radius: 0;
-      background: color-mix(in srgb, var(--blockstitch-bg) 55%, transparent);
-      box-shadow: none;
-      color: var(--blockstitch-text);
-      font-size: 15px;
-      font-weight: 600;
-    }
-    .editor-unlock :global(svg) { width: 18px; height: 18px; }
-    .editor-active .editor-unlock { display: none; }
-    .editor-active .editor-done {
-      display: block;
-      margin-left: auto;
-      padding: 2px 10px;
-      min-height: 0;
-      font-size: 12px;
-    }
+    .unlock-click { display: none; }
+    .unlock-tap { display: inline; }
   }
   .editor-loading {
     display: flex;

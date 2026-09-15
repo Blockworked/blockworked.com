@@ -31,18 +31,26 @@ One-time setup on GitHub:
 - `src/styles/global.css` — imports `blockstitch/theme.css` into a cascade layer,
   so site styles win over its app-window globals (fixed-height body, bare
   `button` styling) without forking it.
-- `src/demo/` — the live editor on the home page: blockstitch's real `Canvas`,
-  palette, and value components, rendered `client:only`.
-  - `setup.ts` registers shapes/fields/operators (Blockwork's `blockstitchSetup.ts`).
-  - `store.ts` is an in-browser `CanvasBackend` porting Blockwork's Rust canvas
-    commands (`split_strand`, `merge_strand`, `take_value`, …). Nothing persists.
-  - `fields/`, `palette/` are trimmed copies of Blockwork's `ui/src/components/fields/`.
-  - blockstitch addresses the canvas by fixed element ids, so only one editor
-    can exist per page.
+- `src/blockwork/` — Blockwork's editor frontend, copied from Blockwork's `ui/src/`:
+  field components, the sidebar, Make a Variable / Make a Block dialogs, the
+  operator table, and `blockstitchSetup.ts`. Keep these in sync with the app
+  when its editor changes. The website-only files are:
+  - `tauri.ts` replaces the app's Tauri bridge with an in-browser backend that
+    ports the Rust commands (`split_strand`, `create_block`, `take_value`, …).
+    Nothing persists.
+  - `store.ts` holds the reactive state and the starter macro.
+  - `evaluate.ts` ports `Value::eval` for click-to-preview.
+  - `keyNames.ts` and `macroFile.ts` turn the workspace into a real `.macro`
+    file (the Export button), in the same JSON shape as blockwork-core's `Macro`.
+  - `components/AppSelectorDialog.vue` and `components/ContextMenu.vue` are
+    trimmed web versions of the app's.
+- `src/demo/DemoEditor.vue` — the home page editor, built from `src/blockwork/`.
+  blockstitch addresses the canvas by fixed element ids, so only one editor can
+  exist per page.
 - `src/demo/BlockPreview.vue` — non-interactive block stacks (the feature-card
-  illustrations), rendered by
-  blockstitch's real `InstructionList` from presets so they match the editor
-  exactly. `SnapPreview.vue` is the looping drag-and-snap one.
+  illustrations), rendered by blockstitch's real `InstructionList` from presets
+  so they match the editor exactly. `SnapPreview.vue` is the looping
+  drag-and-snap one.
 - `src/components/Downloader.astro` — fetches the latest GitHub release in the
   browser and recommends a build for the visitor's OS/arch.
 - `src/pages/changelog.astro` — rendered **at build time** from Blockwork's

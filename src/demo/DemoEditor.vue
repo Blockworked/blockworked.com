@@ -1,19 +1,20 @@
 <script setup lang="ts">
-// A live, working slice of Blockwork's editor built from blockstitch's real
-// components — same layout as Blockwork's MacroEditor.vue + InstructionSidebar.vue.
-// blockstitch addresses the canvas and sidebar by fixed element ids
-// (#canvas-scroll, #instruction-sidebar, …), so only one of these can exist
-// per page.
-import { Trash2, RotateCcw } from 'lucide-vue-next';
-import { AppButton, Canvas, PaletteInstructionBlock, PaletteValueBlock, beginSidebarResize, sidebarWidth, type ValueNode } from 'blockstitch';
-import {
-  PALETTE_INSTRUCTIONS, PALETTE_VALUE_KINDS, PALETTE_VARIABLE_INSTRUCTIONS,
-  paletteInstructions, paletteValues, setupDemo,
-} from './setup';
-import { resetDocument } from './store';
-import { VARIABLES } from './types';
+// The live editor on the home page: Blockwork's own MacroEditor layout
+// (ui/src/components/MacroEditor.vue) built from the components copied into
+// src/blockwork/, running against the in-browser backend. blockstitch
+// addresses the canvas and sidebar by fixed element ids (#canvas-scroll,
+// #instruction-sidebar, …), so only one of these can exist per page.
+import { onBeforeUnmount, onMounted } from 'vue';
+import { Download, RotateCcw } from 'lucide-vue-next';
+import { AppButton, Canvas, sidebarWidth } from 'blockstitch';
+import { setupBlockstitch } from '../blockwork/blockstitchSetup';
+import { state } from '../blockwork/store';
+import { exportMacro, keyCaptureEvent, resetMacro } from '../blockwork/tauri';
+import InstructionSidebar from '../blockwork/components/InstructionSidebar.vue';
+import ContextMenu from '../blockwork/components/ContextMenu.vue';
+import CustomBlockCanvasColorSync from '../blockwork/components/CustomBlockCanvasColorSync.vue';
 
-setupDemo();
+setupBlockstitch();
 
 // blockstitch's default sidebar width suits a full app window; start narrower
 // inside the page unless the visitor has already dragged it themselves.
@@ -23,58 +24,62 @@ try {
   sidebarWidth.value = 250;
 }
 
-function onValueUpdate(kind: string, next: ValueNode) {
-  paletteValues[kind] = next;
+function onTitleInput(e: Event) {
+  if (state.current_macro) state.current_macro.name = (e.target as HTMLInputElement).value;
 }
 
-function preventMenu(event: MouseEvent) {
-  if ((event.target as Element | null)?.closest('input, textarea')) return;
-  event.preventDefault();
+// Key blocks capture the next key pressed, like App.vue's keydown handler.
+function onKeydown(e: KeyboardEvent) {
+  if (state.key_capture == null) return;
+  e.preventDefault();
+  keyCaptureEvent(e.code, e.key);
 }
+
+// Picking up a block partway down a strand clones its rows into the drag
+// ghost, including any Repeat/If bodies — and those copies still carry
+// `.instruction-list` markers pointing at the original strand. blockstitch's
+// snap search then reads those stale lists and throws on every move, so the
+// block can't snap anywhere until it's dropped. Strip the markers from the
+// copies as the ghost appears (the same thing its own snap preview does). A
+// whole-strand ghost holds the real, Vue-owned card, so it's left alone.
+const ghostObserver = new MutationObserver(records => {
+  for (const record of records) {
+    for (const node of record.addedNodes) {
+      if (!(node instanceof HTMLElement) || !node.classList.contains('strand-drag-ghost')) continue;
+      if (node.querySelector(':scope > .strand-card[data-strand-id]')) continue;
+      node.querySelectorAll('.instruction-list').forEach(el => el.classList.remove('instruction-list'));
+    }
+  }
+});
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown);
+  ghostObserver.observe(document.body, { childList: true });
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown);
+  ghostObserver.disconnect();
+});
 </script>
 
 <template>
   <div id="macro-editor" class="demo-editor">
     <div class="editor-title-row">
-      <span class="demo-title">Try it: this is the real block editor</span>
-      <span class="demo-hint">Drag blocks in from the sidebar · click an operator to preview it</span>
-      <AppButton class="demo-reset" :icon="RotateCcw" label="Reset" title="Restore the example macro" @click="resetDocument" />
+      <label for="macro-title">Title</label>
+      <input id="macro-title" type="text" placeholder="Macro name" :value="state.current_macro?.name" @input="onTitleInput">
+      <AppButton :icon="RotateCcw" label="Reset" title="Restore the example macro" @click="resetMacro" />
+      <AppButton class="btn-primary" :icon="Download" label="Export" title="Download a .macro file you can import into Blockwork" @click="exportMacro" />
     </div>
 
     <div class="editor-content-area">
-      <div class="instruction-sidebar" id="instruction-sidebar" :style="{ width: sidebarWidth + 'px' }" @contextmenu="preventMenu">
-        <div class="sidebar-trash-hint">
-          <Trash2 />
-          <span>Drag a block here to delete it</span>
-        </div>
-        <div class="sidebar-scroll">
-          <div class="sidebar-palette">
-            <PaletteInstructionBlock v-for="type in PALETTE_INSTRUCTIONS" :key="type" :type="type" :instruction="paletteInstructions[type]" />
-          </div>
-
-          <div class="sidebar-section-label">Operator</div>
-          <div class="sidebar-palette sidebar-palette-values">
-            <PaletteValueBlock
-              v-for="kind in PALETTE_VALUE_KINDS"
-              :key="kind"
-              :kind="kind"
-              :value="paletteValues[kind]"
-              @update:value="v => onValueUpdate(kind, v)"
-            />
-          </div>
-
-          <div class="sidebar-section-label">Variables</div>
-          <div class="sidebar-palette sidebar-palette-values">
-            <PaletteValueBlock v-for="name in VARIABLES" :key="name" :kind="`Var:${name}`" />
-          </div>
-          <div class="sidebar-palette">
-            <PaletteInstructionBlock v-for="type in PALETTE_VARIABLE_INSTRUCTIONS" :key="type" :type="type" :instruction="paletteInstructions[type]" />
-          </div>
-        </div>
-        <div class="sidebar-resize-handle" @pointerdown="beginSidebarResize" />
-      </div>
-      <Canvas />
+      <InstructionSidebar />
+      <Canvas>
+        <template #context-menu>
+          <ContextMenu />
+        </template>
+      </Canvas>
     </div>
+    <CustomBlockCanvasColorSync />
   </div>
 </template>
 
@@ -84,25 +89,10 @@ function preventMenu(event: MouseEvent) {
   height: 100%;
   border-top: none;
 }
-.demo-title {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.demo-hint {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  color: var(--blockstitch-text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.instruction-sidebar {
+.demo-editor :deep(.instruction-sidebar) {
   max-width: 42%;
 }
 @media (max-width: 640px) {
-  .demo-hint { display: none; }
-  .demo-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .editor-title-row label { display: none; }
 }
 </style>

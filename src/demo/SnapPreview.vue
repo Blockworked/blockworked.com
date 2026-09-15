@@ -7,17 +7,17 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 // lucide's `hand-grab` is still named `Grab` in this lucide-vue-next version.
 import { Grab as HandGrab, Hand } from 'lucide-vue-next';
-import { InstructionList, newId } from 'blockstitch';
-import { setupDemo } from './setup';
-import type { Instruction } from './types';
+import { InstructionList } from 'blockstitch';
+import { setupBlockstitch } from '../blockwork/blockstitchSetup';
+import { newId, type InstructionDto } from '../blockwork/types';
 
-setupDemo();
+setupBlockstitch();
 
-const stack: Instruction[] = [
+const stack: InstructionDto[] = [
   { id: newId(), type: 'Key', key: 'Enter', direction: 'Click' },
   { id: newId(), type: 'Button', button: 'Left', direction: 'Click' },
 ];
-const carried: Instruction[] = [{ ...stack[1], id: newId() }];
+const carried: InstructionDto[] = [{ ...stack[1], id: newId() }];
 
 /** Where the carried block starts, relative to where it lands. */
 const START = { x: 80, y: 78 };

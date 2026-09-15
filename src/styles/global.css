@@ -4,6 +4,10 @@
    app-window globals it carries (a fixed-height, non-scrolling body; bare
    `button` styling) without forking it. */
 @import 'blockstitch/theme.css' layer(blockstitch);
+/* Blockwork's own app-level additions on top of the theme (custom-block
+   colors, the Make a Block dialog, dropdowns inside blocks), copied as-is. */
+@import '../blockwork/custom-block-color.css' layer(blockstitch);
+@import '../blockwork/block-interactions.css' layer(blockstitch);
 
 :root {
   --site-max-w: 1120px;
@@ -203,14 +207,17 @@ code, kbd { font-family: var(--site-mono); font-size: 0.9em; }
   background-size: 22px 22px;
 }
 
-/* Custom-block coloring from Blockwork's ui/src/custom-block-color.css — it's
-   an app-level addition, not part of blockstitch's theme. */
-.instruction-row.blockwork-custom-block .instruction-type-icon,
-.instruction-row.blockwork-custom-block .custom-block-header-icon {
-  color: var(--blockwork-custom-block-color);
+/* A drag ghost outlines every row it carries in blockstitch's theme, so
+   picking up a block with others under it lit them all up. Only the block
+   actually grabbed (the ghost's first row) keeps the accent outline. */
+.strand-drag-ghost .strand-body > .instruction-row ~ .instruction-row::before,
+.strand-drag-ghost .instruction-row .instruction-row::before {
+  background: var(--blockstitch-border);
 }
-body:not(.bs-dragging) .instruction-row.blockwork-custom-block:hover::before {
-  background: var(--blockwork-custom-block-color);
+.strand-drag-ghost .strand-body > .instruction-row ~ .instruction-row.instruction-row-wrap,
+.strand-drag-ghost .instruction-row .instruction-row.instruction-row-wrap {
+  --blockstitch-wrap-fill: linear-gradient(to right, var(--blockstitch-bg3), var(--blockstitch-bg2));
+  --blockstitch-wrap-outline: var(--blockstitch-border);
 }
 
 /* blockstitch's empty-strand hint text contains an em-dash; the site's copy

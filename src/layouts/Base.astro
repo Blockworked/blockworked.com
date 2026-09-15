@@ -50,5 +50,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       <slot />
     </main>
     <SiteFooter />
+    <!-- blockstitch teleports dropdown and context menus here (Blockwork's index.html has the same). -->
+    <div id="dd-portal"></div>
   </body>
 </html>
