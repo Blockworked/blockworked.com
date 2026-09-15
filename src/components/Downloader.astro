@@ -3,7 +3,7 @@
 // BlockworkPage: fetches the latest GitHub release in the browser (so the
 // static site never goes stale between deploys), suggests the build for the
 // visitor's OS/arch, and — in `full` mode — lists every asset by platform.
-import { Download, Monitor, Laptop, SquareTerminal, TriangleAlert, ExternalLink } from '@lucide/astro';
+import { Download, Monitor, Laptop, SquareTerminal, ExternalLink } from '@lucide/astro';
 import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
 
 interface Props {
@@ -52,17 +52,6 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
                 <div class="panel-row-hint">Builds from source: <code>paru -S blockwork</code></div>
               </div>
               <a class="btn" href={AUR_URL}><ExternalLink /><span class="dl-btn-text">View package</span></a>
-            </div>
-          )}
-          {id === 'linux' && (
-            <div class="dl-note">
-              <div class="banner">
-                <TriangleAlert />
-                <span>
-                  Recording and hotkeys read <code>/dev/input</code> directly, so your user must be in the
-                  <code>input</code> group: <code>sudo usermod -aG input $USER</code>, then log out and back in.
-                </span>
-              </div>
             </div>
           )}
         </section>
@@ -243,10 +232,13 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
   }
   .dl-groups h3 { margin: 0; }
   .dl-row-title { font-weight: 600; font-size: 14px; }
+  /* The release rows sit in their own wrapper, so the last one drops its
+     divider; keep it when a static row (the AUR entry) follows. */
+  [data-rows]:has(+ .panel-row) > :global(.panel-row:last-child) {
+    border-bottom: 1px solid var(--blockstitch-glass-border);
+  }
   .dl-arch { font-weight: 400; color: var(--blockstitch-text-dim); font-size: 13px; }
   .dl-size { white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .dl-note { padding: 0 12px 12px; }
-  .dl-note .banner { overflow-wrap: anywhere; }
 
   @media (max-width: 560px) {
     .dl-size { display: none; }
