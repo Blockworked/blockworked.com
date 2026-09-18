@@ -207,16 +207,31 @@ import { REPO_URL } from '../lib/releases';
   const coarsePointer = window.matchMedia('(pointer: coarse)');
   document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => {
     editorWindow?.classList.add('editor-active');
-    if (coarsePointer.matches) document.body.classList.add('editor-fullscreen-lock');
+    if (coarsePointer.matches) {
+      document.body.classList.add('editor-fullscreen-lock');
+      // Fullscreen the whole document, not just the editor window: its
+      // dialogs (make-a-variable, details, …) are Vue Teleports onto
+      // <body>, and only descendants of the fullscreen element still
+      // render once one is active.
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    }
     rotateHint?.classList.remove('dismissed');
   });
   document.querySelector('[data-editor-done]')?.addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     editorWindow?.classList.remove('editor-active');
     document.body.classList.remove('editor-fullscreen-lock');
   });
   document.querySelector('[data-editor-rotate-dismiss]')?.addEventListener('click', (e) => {
     e.stopPropagation();
     rotateHint?.classList.add('dismissed');
+  });
+  // Exiting fullscreen through the browser/OS (back gesture, Esc, …) instead
+  // of the Done button should still close the editor.
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) return;
+    editorWindow?.classList.remove('editor-active');
+    document.body.classList.remove('editor-fullscreen-lock');
   });
 
   // Before activation, the editor is rendered at a fixed desktop-ish width
