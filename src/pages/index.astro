@@ -7,7 +7,7 @@ import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
 import {
-  Blocks, ChevronDown, Circle, Hand, Equal, GitBranch, Layers, Play, Plus, Settings, SlidersHorizontal,
+  Blocks, ChevronDown, Circle, Hand, Equal, GitBranch, Layers, Play, Plus, RotateCw, Settings, SlidersHorizontal,
   Square, Trash2,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
@@ -57,8 +57,18 @@ import { REPO_URL } from '../lib/releases';
             <button type="button" class="editor-unlock" data-editor-unlock>
               <Hand /><span class="unlock-click">Click to try the editor</span><span class="unlock-tap">Tap to try the editor</span>
             </button>
+            <!-- Sidebar and canvas both get more room in landscape; only
+                 shown once active, on phones, while held upright. -->
+            <div class="editor-rotate-hint" data-editor-rotate-hint>
+              <RotateCw /><span>Rotate your device for more room</span>
+              <button type="button" class="editor-rotate-dismiss" data-editor-rotate-dismiss aria-label="Dismiss">✕</button>
+            </div>
           </div>
         </div>
+        <!-- Dims the page behind the fullscreen phone editor (see
+             `.editor-active` under `pointer: coarse` below), which now
+             floats with a gap instead of touching the screen edges. -->
+        <div class="editor-mobile-scrim" data-editor-scrim aria-hidden="true"></div>
         <p class="editor-caption">A live copy of Blockwork's editor. Edits stay in this tab and nothing runs.</p>
       </div>
     </div>
@@ -193,14 +203,20 @@ import { REPO_URL } from '../lib/releases';
   // also toggles a fullscreen overlay (see .editor-active under `pointer:
   // coarse` in the styles below) — lock page scroll behind it while it's up.
   const editorWindow = document.querySelector<HTMLElement>('[data-editor-window]');
+  const rotateHint = document.querySelector<HTMLElement>('[data-editor-rotate-hint]');
   const coarsePointer = window.matchMedia('(pointer: coarse)');
   document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => {
     editorWindow?.classList.add('editor-active');
     if (coarsePointer.matches) document.body.classList.add('editor-fullscreen-lock');
+    rotateHint?.classList.remove('dismissed');
   });
   document.querySelector('[data-editor-done]')?.addEventListener('click', () => {
     editorWindow?.classList.remove('editor-active');
     document.body.classList.remove('editor-fullscreen-lock');
+  });
+  document.querySelector('[data-editor-rotate-dismiss]')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    rotateHint?.classList.add('dismissed');
   });
 
   // Before activation, the editor is rendered at a fixed desktop-ish width
@@ -413,16 +429,65 @@ import { REPO_URL } from '../lib/releases';
 
     /* Activating the editor drops the scaled preview and gives it the whole
        screen instead of the small in-page frame, so there's room for the
-       sidebar and canvas at their real (unscaled) size. */
+       sidebar and canvas at their real (unscaled) size. It floats with a
+       gap from the screen edges (rather than going truly edge-to-edge) so
+       nothing sits flush against the phone's bezel/corners, with a dimmed
+       scrim behind it covering the rest of the page. */
     .editor-window.editor-active {
       position: fixed;
-      inset: 0;
+      inset: 14px;
       z-index: 200;
-      border-radius: 0;
     }
     .editor-window.editor-active .editor-body {
-      height: calc(100dvh - 30px);
+      height: calc(100% - 30px);
     }
+    .editor-window.editor-active ~ .editor-mobile-scrim {
+      display: block;
+    }
+  }
+  /* Sidebar and canvas both get more room in landscape; nudge phone users to
+     rotate once they're actually in the editor. Dismissible per-open (see the
+     script below, which clears the dismissal on each activate). */
+  @media (pointer: coarse) and (orientation: portrait) {
+    .editor-active .editor-rotate-hint:not(.dismissed) {
+      display: flex;
+    }
+  }
+  .editor-mobile-scrim {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .editor-rotate-hint {
+    display: none;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 60;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--blockstitch-bg2) 94%, transparent);
+    border: 1px solid var(--blockstitch-border);
+    box-shadow: var(--blockstitch-shadow-lg);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blockstitch-text);
+  }
+  .editor-rotate-hint :global(svg) { width: 16px; height: 16px; flex-shrink: 0; }
+  .editor-rotate-hint span { flex: 1; }
+  .editor-rotate-dismiss {
+    border: none;
+    background: none;
+    padding: 2px 4px;
+    min-height: 0;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--blockstitch-text-dim);
   }
   .editor-loading {
     display: flex;
