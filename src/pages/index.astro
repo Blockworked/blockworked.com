@@ -42,9 +42,16 @@ import { REPO_URL } from '../lib/releases';
             <button type="button" class="editor-done" data-editor-done>Done</button>
           </div>
           <div class="editor-body">
-            <DemoEditor client:only="vue">
-              <div slot="fallback" class="editor-loading dot-grid">Loading the editor…</div>
-            </DemoEditor>
+            <!-- On phones this is scaled down to a wide thumbnail of the real
+                 desktop-width layout (see `.editor-scale-wrap` below) instead
+                 of letting the sidebar's fixed min-width dominate a narrow
+                 screen; activating the editor drops the scale back to 1:1
+                 inside a fullscreen overlay instead. -->
+            <div class="editor-scale-wrap" data-editor-scale-wrap>
+              <DemoEditor client:only="vue">
+                <div slot="fallback" class="editor-loading dot-grid">Loading the editor…</div>
+              </DemoEditor>
+            </div>
             <!-- The editor would swallow every scroll or swipe that lands on it,
                  so it stays locked until clicked (see the script below). -->
             <button type="button" class="editor-unlock" data-editor-unlock>
@@ -182,10 +189,31 @@ import { REPO_URL } from '../lib/releases';
 </Base>
 
 <script>
-  // Unlock the demo editor on click, lock it again with Done.
+  // Unlock the demo editor on click, lock it again with Done. On phones this
+  // also toggles a fullscreen overlay (see .editor-active under `pointer:
+  // coarse` in the styles below) — lock page scroll behind it while it's up.
   const editorWindow = document.querySelector<HTMLElement>('[data-editor-window]');
-  document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => editorWindow?.classList.add('editor-active'));
-  document.querySelector('[data-editor-done]')?.addEventListener('click', () => editorWindow?.classList.remove('editor-active'));
+  const coarsePointer = window.matchMedia('(pointer: coarse)');
+  document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => {
+    editorWindow?.classList.add('editor-active');
+    if (coarsePointer.matches) document.body.classList.add('editor-fullscreen-lock');
+  });
+  document.querySelector('[data-editor-done]')?.addEventListener('click', () => {
+    editorWindow?.classList.remove('editor-active');
+    document.body.classList.remove('editor-fullscreen-lock');
+  });
+
+  // Before activation, the editor is rendered at a fixed desktop-ish width
+  // (see `.editor-scale-wrap`) and scaled down to fit the frame's real width,
+  // so phones get a proportional wide preview instead of a squeezed one.
+  const EDITOR_PREVIEW_NATURAL_WIDTH = 680;
+  function updateEditorPreviewScale() {
+    if (!editorWindow) return;
+    const scale = Math.min(1, editorWindow.clientWidth / EDITOR_PREVIEW_NATURAL_WIDTH);
+    editorWindow.style.setProperty('--editor-preview-scale', String(scale));
+  }
+  updateEditorPreviewScale();
+  window.addEventListener('resize', updateEditorPreviewScale);
 
   // The header's logo is hidden on the home page while the big title is on
   // screen, and appears once the title has scrolled out of view behind the
@@ -330,6 +358,7 @@ import { REPO_URL } from '../lib/releases';
     font-size: 14px;
     line-height: normal;
   }
+  .editor-scale-wrap { position: absolute; inset: 0; }
   /* A scrim over the editor until it's clicked, so scrolling the page past it
      still works. `editor-active` is set by the script. */
   .editor-unlock {
@@ -362,9 +391,38 @@ import { REPO_URL } from '../lib/releases';
     font-size: 12px;
   }
   @media (pointer: coarse) {
-    .editor-body { height: min(520px, 65svh); }
     .unlock-click { display: none; }
     .unlock-tap { display: inline; }
+
+    /* Before the editor is activated, render it at a fixed desktop-ish width
+       and scale the whole thing down to fit the phone screen, so the sidebar
+       and canvas keep their normal proportions instead of blockstitch's
+       fixed-minimum sidebar width dominating a narrow viewport. `--editor-
+       preview-scale` is computed from the frame's real width by the script
+       below; the fallback keeps things reasonable before that first runs. */
+    .editor-window:not(.editor-active) .editor-body {
+      height: calc(420px * var(--editor-preview-scale, 0.5));
+    }
+    .editor-window:not(.editor-active) .editor-scale-wrap {
+      inset: auto;
+      width: 680px;
+      height: 420px;
+      transform: scale(var(--editor-preview-scale, 0.5));
+      transform-origin: top left;
+    }
+
+    /* Activating the editor drops the scaled preview and gives it the whole
+       screen instead of the small in-page frame, so there's room for the
+       sidebar and canvas at their real (unscaled) size. */
+    .editor-window.editor-active {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      border-radius: 0;
+    }
+    .editor-window.editor-active .editor-body {
+      height: calc(100dvh - 30px);
+    }
   }
   .editor-loading {
     display: flex;
@@ -374,6 +432,10 @@ import { REPO_URL } from '../lib/releases';
     color: var(--blockstitch-text-dim);
     font-size: 13px;
   }
+  /* The editor becomes a fixed fullscreen overlay on phones once active (see
+     above); keep the page underneath from scrolling while it's up. */
+  :global(body.editor-fullscreen-lock) { overflow: hidden; }
+
   .editor-caption {
     margin-top: 10px;
     font-size: 12px;
