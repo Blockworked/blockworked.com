@@ -30,7 +30,6 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
       <slot name="actions" />
     </div>
     <div class="dl-info">
-      <p class="dl-meta" data-meta aria-live="polite">Fetching the latest release…</p>
       {mode === 'compact' && (
         <p class="dl-other">
           Not on this platform? <a href="/download">See all downloads</a> <a href={RELEASES_URL}>Release history</a>
@@ -73,7 +72,7 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
 
 <script>
   import {
-    PLATFORM_LABELS, RELEASES_URL, REPO, formatDate, formatSize, parseAsset,
+    PLATFORM_LABELS, RELEASES_URL, REPO, formatSize, parseAsset,
     type Arch, type GitHubRelease, type Platform, type ReleaseAsset,
   } from '../lib/releases';
 
@@ -131,7 +130,6 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
   async function init(root: HTMLElement) {
     const recommendedLink = root.querySelector<HTMLAnchorElement>('[data-recommended]')!;
     const recommendedLabel = root.querySelector<HTMLElement>('[data-recommended-label]')!;
-    const meta = root.querySelector<HTMLElement>('[data-meta]')!;
 
     let release: GitHubRelease;
     try {
@@ -139,26 +137,19 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     } catch {
       recommendedLabel.textContent = 'View releases on GitHub';
       recommendedLink.href = RELEASES_URL;
-      meta.textContent = "Couldn't reach GitHub to fetch the latest release.";
       return;
     }
 
     const assets = release.assets.map(parseAsset).filter((a): a is ReleaseAsset => a !== null);
     const { platform, arch } = await detect();
     const recommended = pickRecommended(assets, platform, arch);
-    const version = release.tag_name.replace(/^v/, '');
-    const released = `Version ${version}, released ${formatDate(release.published_at)}`;
 
     if (recommended) {
       recommendedLink.href = recommended.url;
       recommendedLabel.textContent = `Download for ${PLATFORM_LABELS[recommended.platform]}`;
-      meta.textContent = `${released}. ${recommended.kind}, ${archLabel(recommended)}, ${formatSize(recommended.size)}`;
     } else {
       recommendedLink.href = root.dataset.mode === 'full' ? '#all-downloads' : '/download';
       recommendedLabel.textContent = 'Choose a download';
-      meta.textContent = platform
-        ? `${released}. No ${PLATFORM_LABELS[platform]} build in this release`
-        : `${released}, available for Windows, macOS, and Linux`;
     }
 
     const groups = root.querySelector<HTMLElement>('[data-groups]');
@@ -213,11 +204,6 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
   .dl-center .dl-buttons { justify-content: center; }
   .dl-center .dl-info { text-align: center; }
   .dl-center .dl-other { justify-content: center; }
-  .dl-meta {
-    font-size: 13px;
-    color: var(--blockstitch-text-dim);
-    min-height: 1.5em;
-  }
   .dl-other {
     margin-top: 6px;
     display: flex;
