@@ -1,14 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
-import DemoEditor from '../demo/DemoEditor.vue';
-import BlockPreview from '../demo/BlockPreview.vue';
-import SnapPreview from '../demo/SnapPreview.vue';
 import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
 import {
-  Blocks, ChevronDown, Circle, Hand, Equal, GitBranch, Layers, Play, Plus, RotateCw, Settings, SlidersHorizontal,
-  Square, Trash2,
+  ChevronDown, Hand, RotateCw,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
 ---
@@ -42,15 +38,16 @@ import { REPO_URL } from '../lib/releases';
             <button type="button" class="editor-done" data-editor-done>Done</button>
           </div>
           <div class="editor-body">
-            <!-- On phones this is scaled down to a wide thumbnail of the real
+            <!-- Blockwork's real Qt editor, compiled to WebAssembly (qt-demo/),
+                 is drawn into this element once the page scrolls near it.
+                 On phones it's scaled down to a wide thumbnail of the real
                  desktop-width layout (see `.editor-scale-wrap` below) instead
                  of letting the sidebar's fixed min-width dominate a narrow
                  screen; activating the editor drops the scale back to 1:1
                  inside a fullscreen overlay instead. -->
             <div class="editor-scale-wrap" data-editor-scale-wrap>
-              <DemoEditor client:only="vue">
-                <div slot="fallback" class="editor-loading dot-grid">Loading the editor…</div>
-              </DemoEditor>
+              <div class="qt-host" data-qt-screen="editor"></div>
+              <div class="editor-loading dot-grid" data-editor-loading>Loading the editor…</div>
             </div>
             <!-- The editor would swallow every scroll or swipe that lands on it,
                  so it stays locked until clicked (see the script below). -->
@@ -83,88 +80,50 @@ import { REPO_URL } from '../lib/releases';
       </p>
 
       <div class="features">
-        <article class="panel feature">
-          <h3 class="panel-title"><Circle />Record</h3>
-          <div class="feature-stage record-stage" aria-hidden="true" inert>
-            <!-- The top-right corner of Blockwork's main window mid-recording:
-                 the macro selector row (its left side left out), then the run row with Record on the right. -->
-            <div class="mini-window">
-              <div class="editor-titlebar"></div>
-              <div class="toolbar-row">
-                <div class="selector-left"></div>
-                <div class="selector-right">
-                  <button type="button"><span class="btn-icon-glyph"><Plus /></span><span>New macro</span></button>
-                  <button type="button" class="btn-danger"><span class="btn-icon-glyph"><Trash2 /></span><span>Delete</span></button>
-                  <button type="button"><span class="btn-icon-glyph"><Settings /></span><span>Settings</span></button>
-                </div>
-              </div>
-              <div class="toolbar-row">
-                <div class="run-right">
-                  <button type="button" class="btn-active-record"><span class="btn-icon-glyph"><Square /></span><span>Stop recording</span></button>
-                  <button type="button"><span class="btn-icon-glyph"><SlidersHorizontal /></span></button>
-                </div>
-              </div>
-            </div>
+        <article class="feature">
+          <div class="feature-copy">
+            <h3>Record it once, then edit the blocks</h3>
+            <p>Press Record and do the task yourself. Every key and button press and release comes back as its own block, with the real pause between them, ready to trim, retime, or loop.</p>
           </div>
-          <p>
-            Hit record and use your computer normally. Keystrokes, clicks, and even mouse movement come
-            back as editable blocks.
-          </p>
+          <div class="feature-stage" aria-hidden="true">
+            <div class="qt-host" data-qt-screen="record"></div>
+          </div>
         </article>
-
-        <article class="panel feature">
-          <h3 class="panel-title"><Blocks />Snap together</h3>
-          <div class="feature-stage dot-grid" aria-hidden="true">
-            <SnapPreview client:only="vue" />
+        <article class="feature">
+          <div class="feature-copy">
+            <h3>Build by dragging, not typing</h3>
+            <p>Pull blocks from the sidebar and snap them into a stack. Each slot has a shape, so a condition can't end up where a number goes.</p>
           </div>
-          <p>
-            Keys, text, clicks, scrolling, mouse moves, shell commands, and opening or quitting apps.
-            Drag them into a stack and reorder at will.
-          </p>
+          <div class="feature-stage" aria-hidden="true">
+            <div class="qt-host" data-qt-screen="snap"></div>
+          </div>
         </article>
-
-        <article class="panel feature">
-          <h3 class="panel-title"><GitBranch />Loops &amp; logic</h3>
-          <div class="feature-stage dot-grid" aria-hidden="true">
-            <BlockPreview client:only="vue" preset="if-click" />
+        <article class="feature">
+          <div class="feature-copy">
+            <h3>Loops and variables you can see</h3>
+            <p>Repeat, while and if wrap around the blocks they control. Variables and operators like pick random fill the slots, and clicking one shows its value right now.</p>
           </div>
-          <p>
-            Repeat, forever, while, and If / If-Else blocks, with boolean conditions that only fit where a
-            condition belongs.
-          </p>
+          <div class="feature-stage" aria-hidden="true">
+            <div class="qt-host" data-qt-screen="logic"></div>
+          </div>
         </article>
-
-        <article class="panel feature">
-          <h3 class="panel-title"><Equal />Variables</h3>
-          <div class="feature-stage dot-grid" aria-hidden="true">
-            <BlockPreview client:only="vue" preset="set-random" />
+        <article class="feature">
+          <div class="feature-copy">
+            <h3>Make your own blocks</h3>
+            <p>Turn a sequence you keep rebuilding into one block with its own inputs and color, then drop it into any macro.</p>
           </div>
-          <p>
-            Store numbers and text, combine them with operators like Join and Random, and watch their
-            values preview live right in the editor.
-          </p>
+          <div class="feature-stage" aria-hidden="true">
+            <div class="qt-host" data-qt-screen="custom-block"></div>
+          </div>
         </article>
-
-        <article class="panel feature">
-          <h3 class="panel-title"><Layers />Custom blocks</h3>
-          <div class="feature-stage dot-grid" aria-hidden="true">
-            <BlockPreview client:only="vue" preset="custom-block" />
+        <article class="feature">
+          <div class="feature-copy">
+            <h3>Runs when you're not looking</h3>
+            <p>Start a macro from a global hotkey, on a schedule, when a window comes into focus, or when the battery is full.</p>
           </div>
-          <p>
-            Wrap a sequence you use often into your own block, give it inputs and a color, and reuse it
-            anywhere in the macro.
-          </p>
-        </article>
-
-        <article class="panel feature">
-          <h3 class="panel-title"><Play />Hotkeys &amp; triggers</h3>
-          <div class="feature-stage dot-grid" aria-hidden="true">
-            <BlockPreview client:only="vue" preset="battery" />
+          <div class="feature-stage" aria-hidden="true">
+            <div class="qt-host" data-qt-screen="battery"></div>
           </div>
-          <p>
-            Start and stop any macro with a global hotkey, or trigger it on a schedule, when power is
-            plugged in, or when the battery hits a level.
-          </p>
         </article>
       </div>
 
@@ -199,6 +158,32 @@ import { REPO_URL } from '../lib/releases';
 </Base>
 
 <script>
+  import { setEditorScale, startQtDemo } from '../lib/qtDemo';
+
+  // The Qt editor is ~8 MB compressed, so it only starts once the visitor
+  // scrolls toward it or the feature illustrations, which come from the same
+  // instance.
+  const loading = document.querySelector<HTMLElement>('[data-editor-loading]');
+  const qtSections = document.querySelectorAll<HTMLElement>('#try, .features');
+  const start = () => {
+    startQtDemo()
+      .then(() => loading?.remove())
+      .catch(error => {
+        console.error(error);
+        if (loading) loading.textContent = "The editor couldn't start in this browser.";
+      });
+  };
+  if (qtSections.length && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      if (!entries.some(e => e.isIntersecting)) return;
+      observer.disconnect();
+      start();
+    }, { rootMargin: '600px 0px' });
+    qtSections.forEach(el => observer.observe(el));
+  } else {
+    start();
+  }
+
   // Unlock the demo editor on click, lock it again with Done. On phones this
   // also toggles a fullscreen overlay (see .editor-active under `pointer:
   // coarse` in the styles below) — lock page scroll behind it while it's up.
@@ -207,12 +192,11 @@ import { REPO_URL } from '../lib/releases';
   const coarsePointer = window.matchMedia('(pointer: coarse)');
   document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => {
     editorWindow?.classList.add('editor-active');
+    updateEditorPreviewScale();
     if (coarsePointer.matches) {
       document.body.classList.add('editor-fullscreen-lock');
-      // Fullscreen the whole document, not just the editor window: its
-      // dialogs (make-a-variable, details, …) are Vue Teleports onto
-      // <body>, and only descendants of the fullscreen element still
-      // render once one is active.
+      // Fullscreen the whole document rather than the editor window, so
+      // the fixed overlay below keeps its gap and scrim.
       document.documentElement.requestFullscreen?.().catch(() => {});
     }
     rotateHint?.classList.remove('dismissed');
@@ -220,6 +204,7 @@ import { REPO_URL } from '../lib/releases';
   document.querySelector('[data-editor-done]')?.addEventListener('click', () => {
     if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     editorWindow?.classList.remove('editor-active');
+    updateEditorPreviewScale();
     document.body.classList.remove('editor-fullscreen-lock');
   });
   document.querySelector('[data-editor-rotate-dismiss]')?.addEventListener('click', (e) => {
@@ -231,17 +216,21 @@ import { REPO_URL } from '../lib/releases';
   document.addEventListener('fullscreenchange', () => {
     if (document.fullscreenElement) return;
     editorWindow?.classList.remove('editor-active');
+    updateEditorPreviewScale();
     document.body.classList.remove('editor-fullscreen-lock');
   });
 
-  // Before activation, the editor is rendered at a fixed desktop-ish width
-  // (see `.editor-scale-wrap`) and scaled down to fit the frame's real width,
-  // so phones get a proportional wide preview instead of a squeezed one.
+  // Before activation on phones, the editor is laid out at a fixed
+  // desktop-ish width and scaled down to fit the frame's real width (Qt does
+  // the scaling; the frame's height follows `--editor-preview-scale`), so
+  // phones get a proportional wide preview instead of a squeezed one.
   const EDITOR_PREVIEW_NATURAL_WIDTH = 680;
   function updateEditorPreviewScale() {
     if (!editorWindow) return;
     const scale = Math.min(1, editorWindow.clientWidth / EDITOR_PREVIEW_NATURAL_WIDTH);
     editorWindow.style.setProperty('--editor-preview-scale', String(scale));
+    const thumbnail = coarsePointer.matches && !editorWindow.classList.contains('editor-active');
+    setEditorScale(thumbnail ? scale : 1);
   }
   updateEditorPreviewScale();
   window.addEventListener('resize', updateEditorPreviewScale);
@@ -390,6 +379,9 @@ import { REPO_URL } from '../lib/releases';
     line-height: normal;
   }
   .editor-scale-wrap { position: absolute; inset: 0; }
+  /* Qt sizes each screen to its host element and follows it as it resizes. */
+  .qt-host { position: absolute; inset: 0; }
+  .editor-loading { position: absolute; inset: 0; z-index: 1; }
   /* A scrim over the editor until it's clicked, so scrolling the page past it
      still works. `editor-active` is set by the script. */
   .editor-unlock {
@@ -425,21 +417,15 @@ import { REPO_URL } from '../lib/releases';
     .unlock-click { display: none; }
     .unlock-tap { display: inline; }
 
-    /* Before the editor is activated, render it at a fixed desktop-ish width
-       and scale the whole thing down to fit the phone screen, so the sidebar
-       and canvas keep their normal proportions instead of blockstitch's
-       fixed-minimum sidebar width dominating a narrow viewport. `--editor-
-       preview-scale` is computed from the frame's real width by the script
-       below; the fallback keeps things reasonable before that first runs. */
+    /* Before the editor is activated, it's laid out at a fixed desktop-ish
+       width and scaled down to fit the phone screen (by Qt, see the script
+       below), so the sidebar and canvas keep their normal proportions instead
+       of the fixed-minimum sidebar width dominating a narrow viewport. The
+       frame keeps the desktop layout's 680:420 shape; `--editor-preview-
+       scale` is computed from its real width, and the fallback keeps things
+       reasonable before that first runs. */
     .editor-window:not(.editor-active) .editor-body {
       height: calc(420px * var(--editor-preview-scale, 0.5));
-    }
-    .editor-window:not(.editor-active) .editor-scale-wrap {
-      inset: auto;
-      width: 680px;
-      height: 420px;
-      transform: scale(var(--editor-preview-scale, 0.5));
-      transform-origin: top left;
     }
 
     /* Activating the editor drops the scaled preview and gives it the whole
@@ -447,11 +433,12 @@ import { REPO_URL } from '../lib/releases';
        sidebar and canvas at their real (unscaled) size. It floats with a
        gap from the screen edges (rather than going truly edge-to-edge) so
        nothing sits flush against the phone's bezel/corners, with a dimmed
-       scrim behind it covering the rest of the page. */
+       scrim behind it covering the rest of the page.
+       The site header is hidden outright below rather than out-z-indexed. */
     .editor-window.editor-active {
       position: fixed;
       inset: 14px;
-      z-index: 200;
+      z-index: 10;
     }
     .editor-window.editor-active .editor-body {
       height: calc(100% - 30px);
@@ -460,6 +447,7 @@ import { REPO_URL } from '../lib/releases';
       display: block;
     }
   }
+  :global(body.editor-fullscreen-lock .site-header) { display: none; }
   /* Sidebar and canvas both get more room in landscape; nudge phone users to
      rotate once they're actually in the editor. Dismissible per-open (see the
      script below, which clears the dismissal on each activate). */
@@ -472,7 +460,7 @@ import { REPO_URL } from '../lib/releases';
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 150;
+    z-index: 5;
     background: rgba(0, 0, 0, 0.6);
   }
   .editor-rotate-hint {
@@ -523,55 +511,45 @@ import { REPO_URL } from '../lib/releases';
     text-align: center;
   }
 
+  /* One row per feature: the copy on one side and the live blocks (drawn by
+     Qt, see qt-demo/PreviewStage.qml) straight on the page background on the other,
+     swapping sides every row. */
   .features {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--blockstitch-spacing);
-    margin-top: 40px;
-  }
-  .feature { display: flex; flex-direction: column; container-type: inline-size; }
-  .feature h3 { margin: 0; }
-  .feature-stage {
     display: flex;
+    flex-direction: column;
+    gap: clamp(48px, 7vw, 96px);
+    margin-top: clamp(48px, 6vw, 80px);
+  }
+  .feature {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     align-items: center;
-    justify-content: center;
-    height: 176px;
-    padding: 8px;
-    border-bottom: 1px solid var(--blockstitch-glass-border);
-    overflow: hidden;
-    font-size: 14px;
-    line-height: normal;
+    gap: clamp(24px, 4vw, 56px);
   }
-  /* Illustrations only — look like real blocks (hover included), but nothing grabs or types. */
-  .feature-stage :global(*) { cursor: default; }
-  /* Scale the wider illustrations down rather than clip them in narrow cards. */
-  .feature-stage :global(.block-preview) { zoom: 0.9; }
-  @container (max-width: 420px) { .feature-stage :global(.block-preview) { zoom: 0.72; } }
-  /* A cropped app window pinned to the stage's top-right corner; its left and
-     bottom edges run off the card. */
-  .record-stage { position: relative; padding: 0; justify-content: flex-start; align-items: stretch; }
-  .mini-window {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 640px;
-    height: 400px;
-    border: 1px solid var(--blockstitch-border);
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--blockstitch-bg);
-    box-shadow: var(--blockstitch-shadow-md);
-    font-size: 14px;
-    zoom: 1.1;
+  .feature:nth-child(even) .feature-copy { order: 2; }
+  .feature-copy h3 {
+    margin: 0;
+    font-size: clamp(22px, 2.4vw, 28px);
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--blockstitch-text);
+    text-wrap: balance;
   }
-  .mini-window .run-right { gap: 6px; }
-  .mini-window :global(svg) { width: 14px; height: 14px; }
-  @container (max-width: 420px) { .mini-window { zoom: 0.92; } }
-  .feature p {
-    padding: 14px 16px 16px;
-    font-size: 14px;
+  .feature-copy p {
+    margin-top: 12px;
+    max-width: 44ch;
+    font-size: 16px;
+    line-height: 1.65;
     color: var(--blockstitch-text-dim);
   }
+  .feature-stage {
+    position: relative;
+    height: 400px;
+  }
+  /* Illustrations only: Qt draws real blocks here, but the page keeps every
+     pointer event, so scrolling over one scrolls the page. */
+  .feature-stage .qt-host { pointer-events: none; }
 
   .specs { max-width: 560px; margin: 48px auto 0; }
   .specs .panel-row { padding: 12px 18px; gap: 16px; align-items: baseline; }
@@ -599,16 +577,17 @@ import { REPO_URL } from '../lib/releases';
   .cta-logo { flex-shrink: 0; filter: drop-shadow(var(--blockstitch-shadow-md)); }
   .cta-actions { margin-top: 20px; }
 
-  @media (max-width: 960px) {
-    .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
   @media (max-width: 520px) {
     .hero-brand { font-size: 64px; }
     .hero-lockup { flex-direction: column; gap: 16px; }
     .hero-brand img { width: 96px; height: 96px; }
   }
+  @media (max-width: 760px) {
+    .feature { grid-template-columns: 1fr; gap: 8px; }
+    .feature:nth-child(even) .feature-copy { order: 0; }
+    .feature-stage { height: 340px; }
+  }
   @media (max-width: 640px) {
-    .features { grid-template-columns: 1fr; }
     .cta { flex-direction: column; align-items: flex-start; padding: 28px; }
   }
 </style>

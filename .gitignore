@@ -2,3 +2,6 @@ dist/
 .astro/
 node_modules/
 .DS_Store
+qt-demo/build/
+qt-demo/deps/
+public/demo/

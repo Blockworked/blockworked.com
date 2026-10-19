@@ -1,13 +1,8 @@
-/* blockstitch's own theme — the exact stylesheet Blockwork's editor uses —
-   loaded into a cascade layer. Everything unlayered below (and every Astro
-   component style) wins over it, which lets the site undo the few
-   app-window globals it carries (a fixed-height, non-scrolling body; bare
-   `button` styling) without forking it. */
-@import 'blockstitch/theme.css' layer(blockstitch);
-/* Blockwork's own app-level additions on top of the theme (custom-block
-   colors, the Make a Block dialog, dropdowns inside blocks), copied as-is. */
-@import '../blockwork/custom-block-color.css' layer(blockstitch);
-@import '../blockwork/block-interactions.css' layer(blockstitch);
+/* blockstitch's theme tokens and base controls (see theme.css), loaded into a
+   cascade layer. Everything unlayered below (and every Astro component
+   style) wins over it, which lets the site undo the few app-window globals
+   it carries (a fixed-height, non-scrolling body; bare `button` styling). */
+@import './theme.css' layer(blockstitch);
 
 :root {
   --site-max-w: 1120px;

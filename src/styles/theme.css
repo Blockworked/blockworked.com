@@ -1,0 +1,181 @@
+/* The parts of blockstitch's old browser theme (blockstitch/src/theme/
+   blockstitch.css) the site's own markup still uses: the color, spacing and
+   motion tokens with their light-theme overrides and the base button and
+   field styles. The editor itself is Blockwork's Qt build now (qt-demo/),
+   which brings its own look. */
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+}
+:root {
+  --blockstitch-bg: #1c1c1e;
+  --blockstitch-bg2: #2c2c2e;
+  --blockstitch-bg3: #3a3a3c;
+  --blockstitch-border: #48484a;
+  --blockstitch-text: #e0e0e0;
+  --blockstitch-text-dim: #8e8e93;
+  --blockstitch-accent: #0a84ff;
+  --blockstitch-accent-rgb: 10, 132, 255;
+  --blockstitch-red: #ff453a;
+  --blockstitch-red-rgb: 255, 69, 58;
+  --blockstitch-yellow: #ffd60a;
+  --blockstitch-yellow-rgb: 255, 214, 10;
+  --blockstitch-yellow-bg: #2d2200;
+  --blockstitch-yellow-border: #7d6200;
+  --blockstitch-accent-light: #3aa0ff;
+  --blockstitch-radius: 6px;
+  --blockstitch-radius-lg: 14px;
+  --blockstitch-spacing-sm: 8px;
+  --blockstitch-spacing: 12px;
+  --blockstitch-btn-h-sm: 26px;
+  --blockstitch-btn-h-md: 32px;
+  --blockstitch-connector-cut-inset: 10px;
+  --blockstitch-connector-cut-width: 22px;
+  --blockstitch-connector-notch-depth: 8px;
+  --blockstitch-glass-bg: rgba(44, 44, 46, 0.55);
+  --blockstitch-glass-bg-strong: rgba(58, 58, 60, 0.6);
+  --blockstitch-glass-border: rgba(255, 255, 255, 0.08);
+  --blockstitch-glass-blur: 18px;
+  --blockstitch-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --blockstitch-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --blockstitch-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --blockstitch-bevel-top: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --blockstitch-bevel-press: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  --blockstitch-glow-accent: 0 0 0 3px rgba(var(--blockstitch-accent-rgb), 0.28), 0 0 20px rgba(var(--blockstitch-accent-rgb), 0.25);
+  --blockstitch-glow-red: 0 0 0 3px rgba(var(--blockstitch-red-rgb), 0.28), 0 0 20px rgba(var(--blockstitch-red-rgb), 0.3);
+  --blockstitch-hover-overlay: rgba(255, 255, 255, 0.05);
+  --blockstitch-scrollbar-thumb: rgba(255, 255, 255, 0.18);
+  --blockstitch-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  --blockstitch-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --blockstitch-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --blockstitch-dur-fast: 120ms;
+  --blockstitch-dur-base: 200ms;
+  --blockstitch-dur-slow: 400ms;
+}
+:root[data-theme="light"] {
+  --blockstitch-bg: #f2f2f5;
+  --blockstitch-bg2: #ffffff;
+  --blockstitch-bg3: #e7e7ec;
+  --blockstitch-border: #d4d4da;
+  --blockstitch-text: #1c1c1e;
+  --blockstitch-text-dim: #6e6e73;
+  --blockstitch-yellow-bg: #fff6d8;
+  --blockstitch-yellow-border: #e6c200;
+  --blockstitch-glass-bg: rgba(255, 255, 255, 0.6);
+  --blockstitch-glass-bg-strong: rgba(230, 230, 236, 0.75);
+  --blockstitch-glass-border: rgba(0, 0, 0, 0.12);
+  --blockstitch-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --blockstitch-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --blockstitch-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.14);
+  --blockstitch-bevel-top: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --blockstitch-bevel-press: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  --blockstitch-hover-overlay: rgba(0, 0, 0, 0.04);
+  --blockstitch-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --blockstitch-scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  background: var(--blockstitch-bg);
+  color: var(--blockstitch-text);
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--blockstitch-btn-h-md);
+  padding: 0 12px;
+  border-radius: var(--blockstitch-radius);
+  border: 1px solid var(--blockstitch-border);
+  background: linear-gradient(160deg, var(--blockstitch-bg3), var(--blockstitch-bg2));
+  color: var(--blockstitch-text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-sm);
+  transition: transform var(--blockstitch-dur-fast) var(--blockstitch-ease-standard),
+  box-shadow var(--blockstitch-dur-fast) var(--blockstitch-ease-standard),
+  background var(--blockstitch-dur-fast) var(--blockstitch-ease-standard),
+  border-color var(--blockstitch-dur-fast) var(--blockstitch-ease-standard),
+  color var(--blockstitch-dur-fast) var(--blockstitch-ease-standard);
+}
+button svg {
+  width: 15px; height: 15px; flex-shrink: 0;
+}
+button:hover:not(:disabled) {
+  background: linear-gradient(160deg, var(--blockstitch-bg3), var(--blockstitch-bg3));
+  transform: translateY(-1px);
+  box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-md);
+}
+button:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  box-shadow: var(--blockstitch-bevel-press), var(--blockstitch-shadow-sm);
+}
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-sm), var(--blockstitch-glow-accent);
+}
+button:disabled {
+  opacity: 0.38; cursor: default;
+}
+.btn-primary {
+  background: linear-gradient(160deg, var(--blockstitch-accent-light), var(--blockstitch-accent));
+  border-color: var(--blockstitch-accent);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(160deg, #56aeff, #1c8fff);
+  box-shadow: var(--blockstitch-bevel-top), var(--blockstitch-shadow-md), 0 0 16px rgba(var(--blockstitch-accent-rgb), 0.35);
+}
+.btn-primary:disabled {
+  background: linear-gradient(160deg, var(--blockstitch-bg3), var(--blockstitch-bg2));
+  border-color: var(--blockstitch-border);
+  color: var(--blockstitch-text);
+}
+.btn-icon {
+  min-height: var(--blockstitch-btn-h-sm);
+  min-width: var(--blockstitch-btn-h-sm);
+  padding: 0;
+  font-size: 12px;
+}
+.btn-icon svg {
+  width: 13px; height: 13px;
+}
+input[type="text"], input[type="number"], input[type="time"], select, textarea {
+  background: var(--blockstitch-bg2);
+  color: var(--blockstitch-text);
+  border: 1px solid var(--blockstitch-border);
+  border-radius: var(--blockstitch-radius);
+  padding: 5px 8px;
+  font-size: 13px;
+  transition: box-shadow var(--blockstitch-dur-fast) var(--blockstitch-ease-standard),
+  border-color var(--blockstitch-dur-fast) var(--blockstitch-ease-standard);
+}
+input[type="text"]:focus, input[type="number"]:focus, input[type="time"]:focus, select:focus {
+  outline: none;
+  border-color: var(--blockstitch-accent);
+  box-shadow: var(--blockstitch-glow-accent);
+}
+:root:not([data-theme="light"]) input[type="time"] {
+  color-scheme: dark;
+}
+:root[data-theme="light"] input[type="time"] {
+  color-scheme: light;
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+input[type="checkbox"] {
+  accent-color: var(--blockstitch-accent); cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  button, input, select {
+    transition: none !important;
+  }
+}
+

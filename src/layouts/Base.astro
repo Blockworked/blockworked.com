@@ -30,9 +30,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:description" content={description} />
     <meta property="og:image" content={new URL('/logo.png', Astro.site)} />
     <meta name="theme-color" content="#1c1c1e" />
-    <!-- Resolve the theme before first paint. Shares blockstitch's storage key,
-         so the choice matches the app's own toggle wording; falls back to the
-         OS preference rather than the app's dark default. -->
+    <!-- Resolve the theme before first paint (the key predates the Qt
+         editor; kept so returning visitors keep their choice), falling back
+         to the OS preference rather than the app's dark default. -->
     <script is:inline>
       (function () {
         var t = null;
@@ -50,7 +50,5 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       <slot />
     </main>
     <SiteFooter />
-    <!-- blockstitch teleports dropdown and context menus here (Blockwork's index.html has the same). -->
-    <div id="dd-portal"></div>
   </body>
 </html>
