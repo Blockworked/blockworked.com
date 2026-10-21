@@ -50,6 +50,13 @@ One-time setup on GitHub:
   a Qt screen, in the order `DemoMain.qml` expects. It also keeps Qt from taking
   focus (and scrolling the page) until the editor is clicked, and on phones has
   Qt draw the locked editor as a shrunk thumbnail of the desktop layout.
+- `src/lib/site.ts` — the top nav links. community.blockworked.com
+  (Blockworked/Blockwork-community-blocks) shows the same header and footer and
+  runs the same theme and cross-site fade scripts from its `src/site-nav.ts`, a
+  copy of `SiteHeader.astro`, `SiteFooter.astro` and the scripts in `Base.astro`;
+  change both together. The theme choice is shared through a `bw-theme` cookie
+  on `blockworked.com`. Set `PUBLIC_COMMUNITY_URL` to point the Community link
+  at a local `wrangler dev`.
 - `src/components/Downloader.astro` — fetches the latest GitHub release in the
   browser and recommends a build for the visitor's OS/arch.
 - `src/pages/changelog.astro` — rendered **at build time** from Blockwork's

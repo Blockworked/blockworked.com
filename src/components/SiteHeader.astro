@@ -2,13 +2,10 @@
 import { Moon, Sun, Download } from '@lucide/astro';
 import GitHubMark from './GitHubMark.astro';
 import { REPO_URL } from '../lib/releases';
+import { NAV_LINKS } from '../lib/site';
 
-const links = [
-  { href: '/#features', label: 'Features' },
-  { href: '/#screenshots', label: 'Screenshots' },
-  { href: '/download', label: 'Download' },
-  { href: '/changelog', label: 'Changelog' },
-];
+// Mirrored on community.blockworked.com (see src/lib/site.ts): keep the
+// markup and styles here in step with that copy.
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 ---
 
@@ -21,7 +18,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
       <span>Blockwork</span>
     </a>
     <nav class="site-nav" aria-label="Main">
-      {links.map(l => (
+      {NAV_LINKS.map(l => (
         <a href={l.href} aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
       ))}
     </nav>
@@ -48,6 +45,9 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     } catch {
       // storage disabled — the toggle still works for this page view
     }
+    // Shared with community.blockworked.com, which reads the same cookie.
+    const domain = /(^|\.)blockworked\.com$/.test(location.hostname) ? '; domain=blockworked.com' : '';
+    document.cookie = `bw-theme=${next}; path=/; max-age=31536000; samesite=lax${domain}`;
   });
 </script>
 
@@ -58,6 +58,8 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     top: 0;
     z-index: 50;
     background: var(--blockstitch-glass-bg);
+    /* Kept in place (not cross-faded) by same-site view transitions. */
+    view-transition-name: site-header;
     backdrop-filter: blur(var(--blockstitch-glass-blur));
     -webkit-backdrop-filter: blur(var(--blockstitch-glass-blur));
     border-bottom: 1px solid var(--blockstitch-glass-border);

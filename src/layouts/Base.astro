@@ -36,11 +36,61 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <script is:inline>
       (function () {
         var t = null;
-        try { t = localStorage.getItem('blockstitch-theme'); } catch (e) {}
+        // The cookie is shared with community.blockworked.com.
+        var m = document.cookie.match(/(?:^|; )bw-theme=(light|dark)/);
+        if (m) t = m[1];
+        else try { t = localStorage.getItem('blockstitch-theme'); } catch (e) {}
         if (t !== 'light' && t !== 'dark') {
           t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         }
         document.documentElement.dataset.theme = t;
+      })();
+    </script>
+    <!-- Fade between blockworked.com and community.blockworked.com. They're
+         separate origins, so CSS cross-document view transitions (which
+         global.css turns on within each site) don't reach across: the page
+         fades its content out before following a link to the other site and
+         leaves a short-lived cookie, and the page on the other side fades in
+         when it finds that cookie. The header is identical on both, so it
+         stays put. The community site serves the same script as /site.js
+         (its src/site-nav.ts); keep the two in step. -->
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        var domain = /(^|\.)blockworked\.com$/.test(location.hostname) ? '; domain=blockworked.com' : '';
+        var arriving = /(?:^|; )bw-xsite=1/.test(document.cookie);
+        if (arriving) document.cookie = 'bw-xsite=; path=/; max-age=0' + domain;
+        if (!window.matchMedia || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (arriving) {
+          root.classList.add('xsite-in');
+          var reveal = function () {
+            requestAnimationFrame(function () {
+              requestAnimationFrame(function () { root.classList.remove('xsite-in'); });
+            });
+          };
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reveal);
+          else reveal();
+        }
+        function isSister(u) {
+          var h = u.hostname;
+          return u.origin !== location.origin &&
+            (h === 'blockworked.com' || /\.blockworked\.com$/.test(h) || h === location.hostname);
+        }
+        document.addEventListener('click', function (e) {
+          if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          var a = e.target.closest && e.target.closest('a[href]');
+          if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+          var u = new URL(a.href, location.href);
+          if (!isSister(u)) return;
+          e.preventDefault();
+          document.cookie = 'bw-xsite=1; path=/; max-age=10; samesite=lax' + domain;
+          root.classList.add('xsite-out');
+          setTimeout(function () { location.href = u.href; }, 180);
+        });
+        // Coming back with the Back button can restore the faded-out page.
+        addEventListener('pageshow', function (e) {
+          if (e.persisted) root.classList.remove('xsite-out', 'xsite-in');
+        });
       })();
     </script>
   </head>

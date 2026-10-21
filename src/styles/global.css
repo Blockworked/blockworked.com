@@ -18,7 +18,15 @@ html {
   scrollbar-color: var(--blockstitch-scrollbar-thumb) transparent;
 }
 :root[data-theme="light"] { color-scheme: light; }
+/* Moving between pages: a cross-fade within the site (the header keeps its
+   place, see SiteHeader), and a fade of everything under the header when
+   crossing to or from community.blockworked.com (see the script in Base). */
+@view-transition { navigation: auto; }
+main, .site-footer { transition: opacity 180ms var(--blockstitch-ease-standard); }
+.xsite-in main, .xsite-in .site-footer,
+.xsite-out main, .xsite-out .site-footer { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
