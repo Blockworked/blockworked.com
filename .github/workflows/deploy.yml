@@ -21,8 +21,8 @@ concurrency:
 env:
   # The home page's live editor is Blockwork's own Qt editor built for the
   # browser (qt-demo/). These pick the sources it's built from.
-  BLOCKWORK_REF: qml
-  BLOCKSTITCH_REF: qml
+  BLOCKWORK_REF: master
+  BLOCKSTITCH_REF: master
   LUCIDE_QT_REF: main
   QT_VERSION: 6.12.0
   # The Emscripten version that Qt build was made with (QT_EMCC_RECOMMENDED_VERSION).
@@ -82,6 +82,8 @@ jobs:
 
   deploy:
     needs: build
+    # A manual run on another branch only checks that the site builds.
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

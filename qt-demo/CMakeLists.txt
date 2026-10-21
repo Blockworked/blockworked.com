@@ -31,13 +31,13 @@ endfunction()
 
 # ---- com.blockworked.Blockstitch: every file the crate's build.rs registers ----
 set(bs "${BLOCKSTITCH_DIR}/qml/Blockstitch")
-set_source_files_properties("${bs}/Theme.qml" "${bs}/BlockRegistry.qml" "${bs}/Icons.qml"
+set_source_files_properties("${bs}/Theme.qml" "${bs}/BlockRegistry.qml" "${bs}/Icons.qml" "${bs}/Motion.qml"
     PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 add_aliased_qml_files(blockstitch_qml
-    "${bs}/Theme.qml" "${bs}/BlockRegistry.qml" "${bs}/Icons.qml" "${bs}/LucideIcon.qml"
+    "${bs}/Theme.qml" "${bs}/BlockRegistry.qml" "${bs}/Icons.qml" "${bs}/Motion.qml" "${bs}/LucideIcon.qml"
     "${bs}/BlockSurface.qml" "${bs}/BlockDragArea.qml" "${bs}/BwButton.qml" "${bs}/BwTextField.qml"
     "${bs}/BwComboBox.qml" "${bs}/BwCheckBox.qml" "${bs}/BwMenuItem.qml" "${bs}/BwMenu.qml"
-    "${bs}/BwDialog.qml" "${bs}/BwSwitch.qml" "${bs}/ValueChip.qml" "${bs}/InstructionBlock.qml"
+    "${bs}/BwDialog.qml" "${bs}/BwSwitch.qml" "${bs}/BwSlider.qml" "${bs}/SmoothScroll.qml" "${bs}/ValueChip.qml" "${bs}/InstructionBlock.qml"
     "${bs}/InstructionList.qml" "${bs}/PaletteBlock.qml" "${bs}/PaletteValue.qml" "${bs}/CollectionPanel.qml"
     "${bs}/NameDialog.qml" "${bs}/PalettePanel.qml" "${bs}/BlockCanvas.qml")
 qt_add_qml_module(blockstitch
@@ -56,6 +56,7 @@ set_source_files_properties("${lucide}/Icons.qml" PROPERTIES QT_QML_SINGLETON_TY
 add_aliased_qml_files(blockwork_qml
     "${bw}/EditorPage.qml" "${bw}/SectionCard.qml" "${bw}/WheelPan.qml" "${bw}/MakeBlockDialog.qml"
     "${bw}/AppSelectorDialog.qml" "${bw}/ActivityPanel.qml" "${bw}/TemplateList.qml" "${bw}/LibraryPanel.qml"
+    "${bw}/AppDialog.qml"
     "${lucide}/Icons.qml" "${lucide}/LucideIcon.qml"
     # Desktop window chrome and the screen picker, replaced for the page.
     "${CMAKE_CURRENT_SOURCE_DIR}/shims/TitleBarDrag.qml" "${CMAKE_CURRENT_SOURCE_DIR}/shims/WindowControls.qml"
