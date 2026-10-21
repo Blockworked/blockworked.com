@@ -97,3 +97,7 @@ uses goes into the `blockwork` module list in `qt-demo/CMakeLists.txt`.
 keeps serving the previous version to the browser (the change appears for a
 moment, then reverts). Restart `pnpm dev` if a style edit doesn't stick — the
 production build is unaffected.
+
+## License
+
+[AGPL-3.0](LICENSE).
