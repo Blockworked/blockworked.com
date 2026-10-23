@@ -46,8 +46,11 @@ jobs:
 
       - name: Install Qt for WebAssembly
         run: |
-          # The GL/xkb/font libraries are for the offscreen check below.
-          sudo apt-get install -y ninja-build libgl1 libegl1 libxkbcommon0 libfontconfig1
+          # The GL/xkb/font libraries are for the offscreen check below; its
+          # native configure also needs the GL headers (Qt6Gui's WrapOpenGL).
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgl1 libegl1 libxkbcommon0 libfontconfig1 \
+            libgl-dev libegl-dev libopengl-dev
           if [ ! -d ~/Qt/$QT_VERSION/wasm_singlethread ]; then
             pip install aqtinstall
             # A desktop Qt of the same version supplies the host tools.
