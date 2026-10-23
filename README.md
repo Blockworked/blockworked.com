@@ -34,13 +34,19 @@ One-time setup on GitHub:
   win over its app-window globals (fixed-height body, bare `button` styling).
 - `qt-demo/` — the home page editor: Blockwork's `EditorPage.qml` and
   blockstitch's QML components, built for the browser with Qt for WebAssembly.
-  The QML comes straight from the Blockwork, blockstitch and lucide-qt checkouts,
-  so the page always shows the app's real editor. The website-only files are:
+  The QML comes straight from Blockwork, blockstitch and lucide-qt, through each
+  repository's own CMake entry point (`blockstitch/cmake/BlockstitchQml.cmake`,
+  `Blockwork/blockwork-qt/cmake/BlockworkEditorQml.cmake`), which read the same
+  manifests the apps' Cargo builds use, so the page always shows the app's real
+  editor and lists none of its files. `sources.env` pins the Blockwork commit;
+  `deps.sh` fetches it and the blockstitch and lucide-qt commits its `Cargo.lock`
+  pins. The website-only files are:
   - `DemoBackend.qml` stands in for the Blockwork daemon: it answers EditorPage's
     `invoke(...)` commands (`add_strand`, `merge_tail`, `take_value`, …) and its
     AppBridge calls by porting them from `commands.rs` and blockstitch-core onto
     in-memory macros, and evaluates reporters for click-to-preview. Nothing runs
-    and nothing persists; buttons that need the app say so in a notice bar.
+    and nothing persists; buttons that need the app say so in a notice bar, and a
+    command it doesn't know shows a "not supported" notice instead of doing nothing.
   - `DemoMain.qml` puts a window on each Qt screen: the editor, then the
     feature-card illustrations (`PreviewStage.qml`, drawn by blockstitch's real
     `InstructionBlock`; "snap" is the looping drag-and-snap one).
@@ -81,17 +87,21 @@ git clone https://github.com/emscripten-core/emsdk.git ~/emsdk
 QT_WASM=~/Qt/6.12.0/wasm_singlethread EMSDK=~/emsdk QT_HOST_PATH=/usr qt-demo/build.sh
 ```
 
-`QT_HOST_PATH` is the desktop Qt (`/usr` for a system Qt 6.12). The QML is read
-from `../Blockwork`, `../blockstitch` and `../lucide-qt` unless `BLOCKWORK_DIR`,
-`BLOCKSTITCH_DIR` and `LUCIDE_QT_DIR` say otherwise. The deploy workflow clones
-those repos (the `BLOCKWORK_REF`/`BLOCKSTITCH_REF`/`LUCIDE_QT_REF` branches set at
-the top of `deploy.yml`) and builds the editor before the site, so editor changes
-reach the site on the next deploy; re-run it from the Actions tab to pick them up
-sooner.
+`QT_HOST_PATH` is the desktop Qt (`/usr` for a system Qt 6.12). By default the
+QML comes from `qt-demo/deps/`, which `deps.sh` fills at the pinned revisions;
+set all of `BLOCKWORK_DIR`, `BLOCKSTITCH_DIR` and `LUCIDE_QT_DIR` to build from
+your own checkouts (it warns when they differ from the pins). To move the page
+to a newer editor, change `BLOCKWORK_REV` in `qt-demo/sources.env`; blockstitch
+and lucide-qt follow that commit's `Cargo.lock`. The deploy workflow builds from
+the pins, so editor changes reach the site only when the pin moves.
 
-When EditorPage starts calling a daemon command the backend doesn't know, it's
-ignored; add it to `commands` in `DemoBackend.qml`. A new QML file EditorPage
-uses goes into the `blockwork` module list in `qt-demo/CMakeLists.txt`.
+`QT_DESKTOP=~/Qt/6.12.0/gcc_64 qt-demo/check.sh` builds the page natively, loads
+it offscreen and fails on any QML warning (a module or file the editor needs
+that the build lacks) or on an editor command `DemoBackend.qml` neither handles
+(`commands`) nor declares (`needsApp` for app-only actions, `unsupported` for
+edits the demo can't do yet); the deploy workflow runs it before the WebAssembly
+build. A new QML file EditorPage uses goes into Blockwork's
+`blockwork-qt/qml/module.json`, not here.
 
 **Dev-server CSS:** after editing a page's `<style>`, `astro dev` occasionally
 keeps serving the previous version to the browser (the change appears for a

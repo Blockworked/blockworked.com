@@ -18,62 +18,19 @@ endforeach()
 find_package(Qt6 6.10 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 QuickDialogs2 QuickShapes)
 qt_standard_project_setup(REQUIRES 6.10)
 
-# Adds files from another checkout to a QML module under their own names.
-function(add_aliased_qml_files out)
-    set(files)
-    foreach(path ${ARGN})
-        get_filename_component(name "${path}" NAME)
-        set_source_files_properties("${path}" PROPERTIES QT_RESOURCE_ALIAS "${name}")
-        list(APPEND files "${path}")
-    endforeach()
-    set(${out} ${files} PARENT_SCOPE)
-endfunction()
-
-# ---- com.blockworked.Blockstitch: every file the crate's build.rs registers ----
-set(bs "${BLOCKSTITCH_DIR}/qml/Blockstitch")
-set_source_files_properties("${bs}/Theme.qml" "${bs}/BlockRegistry.qml" "${bs}/Icons.qml" "${bs}/Motion.qml"
-    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-add_aliased_qml_files(blockstitch_qml
-    "${bs}/Theme.qml" "${bs}/BlockRegistry.qml" "${bs}/Icons.qml" "${bs}/Motion.qml" "${bs}/LucideIcon.qml"
-    "${bs}/BlockSurface.qml" "${bs}/BlockDragArea.qml" "${bs}/BwButton.qml" "${bs}/BwTextField.qml"
-    "${bs}/BwComboBox.qml" "${bs}/BwCheckBox.qml" "${bs}/BwMenuItem.qml" "${bs}/BwMenu.qml"
-    "${bs}/BwDialog.qml" "${bs}/BwSwitch.qml" "${bs}/BwSlider.qml" "${bs}/SmoothScroll.qml" "${bs}/ValueChip.qml" "${bs}/InstructionBlock.qml"
-    "${bs}/InstructionList.qml" "${bs}/PaletteBlock.qml" "${bs}/PaletteValue.qml" "${bs}/CollectionPanel.qml"
-    "${bs}/NameDialog.qml" "${bs}/PalettePanel.qml" "${bs}/BlockCanvas.qml")
-qt_add_qml_module(blockstitch
-    URI com.blockworked.Blockstitch
-    VERSION 1.0
-    STATIC
-    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qml/com/blockworked/Blockstitch"
-    QML_FILES ${blockstitch_qml}
-    NO_LINT)
-target_link_libraries(blockstitch PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::QuickShapes)
-
-# ---- com.blockworked.Blockwork: what EditorPage uses, minus the desktop-only bits ----
-set(bw "${BLOCKWORK_DIR}/blockwork-qt/qml")
-set(lucide "${LUCIDE_QT_DIR}/qml/Lucide")
-set_source_files_properties("${lucide}/Icons.qml" PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-add_aliased_qml_files(blockwork_qml
-    "${bw}/EditorPage.qml" "${bw}/SectionCard.qml" "${bw}/WheelPan.qml" "${bw}/MakeBlockDialog.qml"
-    "${bw}/AppSelectorDialog.qml" "${bw}/ActivityPanel.qml" "${bw}/TemplateList.qml" "${bw}/LibraryPanel.qml"
-    "${bw}/AppDialog.qml"
-    "${lucide}/Icons.qml" "${lucide}/LucideIcon.qml"
-    # Desktop window chrome and the screen picker, replaced for the page.
-    "${CMAKE_CURRENT_SOURCE_DIR}/shims/TitleBarDrag.qml" "${CMAKE_CURRENT_SOURCE_DIR}/shims/WindowControls.qml"
-    "${CMAKE_CURRENT_SOURCE_DIR}/shims/ScreenOverlay.qml")
-qt_add_qml_module(blockwork
-    URI com.blockworked.Blockwork
-    VERSION 1.0
-    STATIC
-    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qml/com/blockworked/Blockwork"
-    QML_FILES ${blockwork_qml}
-    NO_LINT)
-target_link_libraries(blockwork PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2)
-# The toolbar's logo (":/icons/blockwork.png" in the app).
-qt_add_resources(blockwork "blockwork_icons"
-    PREFIX "/icons"
-    BASE "${BLOCKWORK_DIR}/res/icons"
-    FILES "${BLOCKWORK_DIR}/res/icons/blockwork.png")
+# Both modules come from their repositories' own CMake entry points, which
+# read the same manifests the apps' Cargo builds use, so this file lists none
+# of their files.
+include("${BLOCKSTITCH_DIR}/cmake/BlockstitchQml.cmake")
+include("${BLOCKWORK_DIR}/blockwork-qt/cmake/BlockworkEditorQml.cmake")
+blockstitch_add_qml_module(blockstitch)
+# The desktop window chrome and the screen picker, replaced for the page.
+blockwork_add_editor_qml_module(blockwork
+    LUCIDE_QT_DIR "${LUCIDE_QT_DIR}"
+    HOST_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/shims/TitleBarDrag.qml"
+        "${CMAKE_CURRENT_SOURCE_DIR}/shims/WindowControls.qml"
+        "${CMAKE_CURRENT_SOURCE_DIR}/shims/ScreenOverlay.qml")
 
 # ---- the app ----
 qt_add_executable(blockwork-demo main.cpp)

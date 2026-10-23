@@ -5,3 +5,5 @@ node_modules/
 qt-demo/build/
 qt-demo/deps/
 public/demo/
+qt-demo/build-native/
+__pycache__/

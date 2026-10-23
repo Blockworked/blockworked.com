@@ -6,17 +6,24 @@
 # Needs Qt for WebAssembly (single-threaded, so GitHub Pages can serve it
 # without cross-origin isolation headers), the emsdk version that Qt build
 # wants, and a desktop Qt of the same version for the host tools. The QML
-# comes from Blockwork, blockstitch and lucide-qt checkouts, by default next
-# to this repository.
+# comes from Blockwork, blockstitch and lucide-qt at the revisions pinned by
+# sources.env (fetched into qt-demo/deps/ by deps.sh). Set BLOCKWORK_DIR,
+# BLOCKSTITCH_DIR and LUCIDE_QT_DIR to build from your own checkouts instead.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(dirname "$here")"
 : "${QT_WASM:?set QT_WASM to the Qt wasm_singlethread directory}"
 : "${EMSDK:?set EMSDK to the emsdk checkout}"
-BLOCKWORK_DIR="${BLOCKWORK_DIR:-$repo/../Blockwork}"
-BLOCKSTITCH_DIR="${BLOCKSTITCH_DIR:-$repo/../blockstitch}"
-LUCIDE_QT_DIR="${LUCIDE_QT_DIR:-$repo/../lucide-qt}"
+if [ -z "${BLOCKWORK_DIR:-}${BLOCKSTITCH_DIR:-}${LUCIDE_QT_DIR:-}" ]; then
+    "$here/deps.sh"
+    BLOCKWORK_DIR="$here/deps/Blockwork" BLOCKSTITCH_DIR="$here/deps/blockstitch" LUCIDE_QT_DIR="$here/deps/lucide-qt"
+else
+    : "${BLOCKWORK_DIR:?set all three of BLOCKWORK_DIR, BLOCKSTITCH_DIR and LUCIDE_QT_DIR, or none}"
+    : "${BLOCKSTITCH_DIR:?set all three of BLOCKWORK_DIR, BLOCKSTITCH_DIR and LUCIDE_QT_DIR, or none}"
+    : "${LUCIDE_QT_DIR:?set all three of BLOCKWORK_DIR, BLOCKSTITCH_DIR and LUCIDE_QT_DIR, or none}"
+    "$here/deps.sh" --verify "$BLOCKWORK_DIR" "$BLOCKSTITCH_DIR" "$LUCIDE_QT_DIR"
+fi
 BUILD_DIR="${BUILD_DIR:-$here/build}"
 OUT_DIR="$repo/public/demo"
 

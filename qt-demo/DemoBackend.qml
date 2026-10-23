@@ -30,10 +30,14 @@ QtObject {
         property bool installedAppsLoading: false
         property string installedAppsError: qsTr("Choosing an installed app needs the Blockwork app.")
         property int installedAppsSerial: 0
+        // AppBridge's error line; set when a command isn't supported here.
+        property string lastError: ""
         function invokeCommand(command, argumentsJson) { backend.invoke(command, JSON.parse(argumentsJson || "{}")); }
+        // Reply calls (name pools, models, devices, files) have no answer on the page.
         function callCommand(key, command, argumentsJson) {
             replyKey = key; replyJson = "null";
             replyError = qsTr("That needs the Blockwork app.");
+            console.warn("DemoBackend: reply call", command, "needs the app");
             replySerial++;
         }
         function previewValue(key, valueJson) {
@@ -73,7 +77,7 @@ QtObject {
     }
     function emptyMacro(name) {
         return { id: newId(), name: name, description: "", strands: [], recording_target_strand_id: null, speed_multiplier: 1,
-                 floating_values: [], comments: [], variables: [], lists: [], block_defs: [], settings: defaultSettings() };
+                 floating_values: [], comments: [], variables: [], lists: [], signals: [], block_defs: [], settings: defaultSettings() };
     }
     function starterMacro() {
         const m = emptyMacro(qsTr("My macro"));
@@ -129,7 +133,13 @@ QtObject {
         args = args || {};
         const handler = commands[command];
         if (!handler) {
-            if (needsApp[command]) notice(needsApp[command]);
+            // Never drop a command silently: app-only ones explain themselves,
+            // anything else is reported as unsupported.
+            if (needsApp[command]) { notice(needsApp[command]); return; }
+            const text = unsupported[command] || qsTr("The website demo doesn't support \u201c%1\u201d.").arg(command);
+            console.warn("DemoBackend: unsupported command", command);
+            bridge.lastError = text;
+            notice(text);
             return;
         }
         const before = current() ? JSON.stringify(current()) : null;
@@ -154,8 +164,30 @@ QtObject {
         save_macro: qsTr("Edits here stay in this tab. Download Blockwork to keep your macros."),
         open_settings: qsTr("Settings live in the Blockwork app."),
         emergency_stop: qsTr("Nothing is running on the website."),
-        set_macro_restricted: qsTr("Permissions live in the Blockwork app.")
+        set_macro_restricted: qsTr("Permissions live in the Blockwork app."),
+        set_macro_permission: qsTr("Permissions live in the Blockwork app."),
+        new_macro_from_template: qsTr("Templates live in the Blockwork app."),
+        stop_recording: qsTr("Recording needs the Blockwork app."),
+        set_recording_countdown: qsTr("Recording needs the Blockwork app."),
+        toggle_record_mouse_movement: qsTr("Recording needs the Blockwork app."),
+        toggle_record_mouse_relative: qsTr("Recording needs the Blockwork app."),
+        toggle_breakpoint: qsTr("Breakpoints need the Blockwork app. Nothing runs on the website."),
+        clear_breakpoints: qsTr("Breakpoints need the Blockwork app. Nothing runs on the website."),
+        debug_action: qsTr("Nothing is running on the website."),
+        resume_triggers: qsTr("Triggers need the Blockwork app. Nothing runs on the website."),
+        clear_run_log: qsTr("Nothing runs on the website, so there's no run log.")
     })
+    // Editor edits the demo can't do yet. Named here so they get a clear notice
+    // (and pass the contract check) until the shared core runs on the page.
+    readonly property var unsupported: ({
+        move_value: qsTr("Dragging a value out of its slot isn't in the website demo yet.")
+    })
+    // What this backend answers, for check-contract.py (main.cpp --contract).
+    // Reply calls always answer with an error.
+    function capabilities() {
+        return JSON.stringify({ handled: Object.keys(commands), needs_app: Object.keys(needsApp),
+                                unsupported: Object.keys(unsupported), calls: "error" });
+    }
 
     // ---- instruction tree (InstructionKind::body / resolve_body_mut) ----
     function bodyRef(ins, slot) {

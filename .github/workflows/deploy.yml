@@ -20,10 +20,7 @@ concurrency:
 
 env:
   # The home page's live editor is Blockwork's own Qt editor built for the
-  # browser (qt-demo/). These pick the sources it's built from.
-  BLOCKWORK_REF: master
-  BLOCKSTITCH_REF: master
-  LUCIDE_QT_REF: main
+  # browser (qt-demo/). Its sources are pinned in qt-demo/sources.env.
   QT_VERSION: 6.12.0
   # The Emscripten version that Qt build was made with (QT_EMCC_RECOMMENDED_VERSION).
   EMSDK_VERSION: 5.0.5
@@ -35,11 +32,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Checkout the editor's sources
-        run: |
-          for repo in "Blockwork:$BLOCKWORK_REF" "blockstitch:$BLOCKSTITCH_REF" "lucide-qt:$LUCIDE_QT_REF"; do
-            git clone --depth 1 --branch "${repo#*:}" "https://github.com/Blockworked/${repo%%:*}.git" "qt-demo/deps/${repo%%:*}"
-          done
+      # Blockwork at the pinned commit; blockstitch and lucide-qt at what its Cargo.lock pins.
+      - name: Fetch the editor's sources
+        run: qt-demo/deps.sh
 
       - name: Cache Qt and Emscripten
         uses: actions/cache@v4
@@ -51,7 +46,8 @@ jobs:
 
       - name: Install Qt for WebAssembly
         run: |
-          sudo apt-get install -y ninja-build
+          # The GL/xkb/font libraries are for the offscreen check below.
+          sudo apt-get install -y ninja-build libgl1 libegl1 libxkbcommon0 libfontconfig1
           if [ ! -d ~/Qt/$QT_VERSION/wasm_singlethread ]; then
             pip install aqtinstall
             # A desktop Qt of the same version supplies the host tools.
@@ -64,15 +60,20 @@ jobs:
             ~/emsdk/emsdk activate $EMSDK_VERSION
           fi
 
+      # A native build of the same page, loaded offscreen: fails on any QML
+      # warning (a module or file the editor needs but the build lacks) and on
+      # any editor command DemoBackend neither handles nor declares.
+      - name: Check the editor's modules and commands
+        run: qt-demo/check.sh
+        env:
+          QT_DESKTOP: /home/runner/Qt/${{ env.QT_VERSION }}/gcc_64
+
       - name: Build the editor
         run: qt-demo/build.sh
         env:
           QT_WASM: /home/runner/Qt/${{ env.QT_VERSION }}/wasm_singlethread
           QT_HOST_PATH: /home/runner/Qt/${{ env.QT_VERSION }}/gcc_64
           EMSDK: /home/runner/emsdk
-          BLOCKWORK_DIR: qt-demo/deps/Blockwork
-          BLOCKSTITCH_DIR: qt-demo/deps/blockstitch
-          LUCIDE_QT_DIR: qt-demo/deps/lucide-qt
 
       # Installs the pnpm version pinned in package.json's `packageManager`,
       # runs `pnpm run build` (astro check && astro build), and uploads dist/
