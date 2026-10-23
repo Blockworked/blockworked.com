@@ -15,7 +15,7 @@ foreach(dir BLOCKWORK_DIR BLOCKSTITCH_DIR LUCIDE_QT_DIR)
     endif()
 endforeach()
 
-find_package(Qt6 6.10 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 QuickDialogs2 QuickShapes)
+find_package(Qt6 6.10 REQUIRED COMPONENTS Core Gui Qml QmlCore Quick QuickControls2 QuickDialogs2 QuickShapes QuickLayouts)
 qt_standard_project_setup(REQUIRES 6.10)
 
 # Both modules come from their repositories' own CMake entry points, which
@@ -41,7 +41,11 @@ qt_add_qml_module(blockwork-demo
     NO_LINT)
 target_link_libraries(blockwork-demo PRIVATE
     Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2 Qt6::QuickShapes
-    blockstitchplugin blockworkplugin)
+    Qt6::QmlCore blockstitchplugin blockworkplugin)
+# EditorPage imports QtCore (Settings); a static Qt (the wasm build) only finds it with the plugin linked.
+if(TARGET Qt6::qtqmlcoreplugin)
+    target_link_libraries(blockwork-demo PRIVATE Qt6::qtqmlcoreplugin)
+endif()
 
 if(EMSCRIPTEN)
     # Grows on demand from a small start, so the page doesn't reserve a big
