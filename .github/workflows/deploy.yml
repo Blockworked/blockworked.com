@@ -60,6 +60,11 @@ jobs:
             ~/emsdk/emsdk activate $EMSDK_VERSION
           fi
 
+      # The editor core (Blockwork's blockwork-web) is Rust, built natively
+      # for the check and for Emscripten for the page.
+      - name: Install the Rust target
+        run: rustup target add wasm32-unknown-emscripten
+
       # A native build of the same page, loaded offscreen: fails on any QML
       # warning (a module or file the editor needs but the build lacks) and on
       # any editor command DemoBackend neither handles nor declares.

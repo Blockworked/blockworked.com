@@ -5,8 +5,9 @@
 #
 # Needs Qt for WebAssembly (single-threaded, so GitHub Pages can serve it
 # without cross-origin isolation headers), the emsdk version that Qt build
-# wants, and a desktop Qt of the same version for the host tools. The QML
-# comes from Blockwork, blockstitch and lucide-qt at the revisions pinned by
+# wants, a desktop Qt of the same version for the host tools, and Rust with
+# the wasm32-unknown-emscripten target for the editor core. The QML and core
+# come from Blockwork, blockstitch and lucide-qt at the revisions pinned by
 # sources.env (fetched into qt-demo/deps/ by deps.sh). Set BLOCKWORK_DIR,
 # BLOCKSTITCH_DIR and LUCIDE_QT_DIR to build from your own checkouts instead.
 set -euo pipefail
@@ -30,6 +31,12 @@ OUT_DIR="$repo/public/demo"
 # shellcheck disable=SC1091
 EMSDK_QUIET=1 source "$EMSDK/emsdk_env.sh"
 
+# The editor core (blockwork-web) from the same Blockwork checkout, linked
+# into the page. `web` is the release profile with panic = "abort".
+CARGO_TARGET_DIR="$BUILD_DIR/cargo" cargo build --locked --manifest-path "$BLOCKWORK_DIR/Cargo.toml" \
+    -p blockwork-web --target wasm32-unknown-emscripten --profile web
+core_lib="$BUILD_DIR/cargo/wasm32-unknown-emscripten/web/libblockwork_web.a"
+
 host_args=()
 [ -n "${QT_HOST_PATH:-}" ] && host_args+=("-DQT_HOST_PATH=$QT_HOST_PATH")
 
@@ -37,7 +44,8 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$QT_WASM/lib/cmake/Qt6/qt.toolchain.cmake" -S "$he
     "${host_args[@]}" \
     -DBLOCKWORK_DIR="$(realpath "$BLOCKWORK_DIR")" \
     -DBLOCKSTITCH_DIR="$(realpath "$BLOCKSTITCH_DIR")" \
-    -DLUCIDE_QT_DIR="$(realpath "$LUCIDE_QT_DIR")"
+    -DLUCIDE_QT_DIR="$(realpath "$LUCIDE_QT_DIR")" \
+    -DBLOCKWORK_WEB_LIB="$core_lib"
 cmake --build "$BUILD_DIR"
 
 rm -rf "$OUT_DIR"

@@ -111,6 +111,28 @@ QtObject {
                 }
             }
 
+            // The core couldn't set up a document: say why, offer a fresh one.
+            Rectangle {
+                anchors.fill: parent; z: 120
+                visible: backend.failure.length > 0
+                color: "#e6202124"
+                MouseArea { anchors.fill: parent }
+                Column {
+                    anchors.centerIn: parent; width: Math.min(parent.width - 48, 420); spacing: 12
+                    Text {
+                        width: parent.width; wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter
+                        color: Theme.text; font.pixelSize: 14
+                        text: qsTr("The editor stopped: %1").arg(backend.failure)
+                    }
+                    Button {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: backend.core.failure.length === 0
+                        text: qsTr("Start over")
+                        onClicked: backend.start()
+                    }
+                }
+            }
+
             Rectangle {
                 id: noticeBar
                 anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom

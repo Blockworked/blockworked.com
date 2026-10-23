@@ -39,8 +39,12 @@ export function setEditorScale(scale: number) {
   instance?.setEditorScale?.(scale);
 }
 
-/** Loads and starts the editor once. Resolves when Qt has drawn its windows. */
-export async function startQtDemo(): Promise<void> {
+/**
+ * Loads and starts the editor once. Resolves when Qt has drawn its windows;
+ * `onStopped` hears if the editor stops after that (a crash in Qt or in the
+ * editor core aborts the whole module, so only a reload brings it back).
+ */
+export async function startQtDemo(onStopped?: (reason: string) => void): Promise<void> {
   if (started) return;
   started = true;
   const containers = SCREENS.map(name => document.querySelector<HTMLElement>(`[data-qt-screen="${name}"]`));
@@ -92,6 +96,7 @@ export async function startQtDemo(): Promise<void> {
 
   await loadScript(`${BASE}qtloader.js`);
   await loadScript(`${BASE}blockwork-demo.js`);
+  let loaded = false;
   await new Promise<void>((resolve, reject) => {
     window.qtLoad!({
       locateFile: (path: string) => BASE + path,
@@ -105,12 +110,15 @@ export async function startQtDemo(): Promise<void> {
           return module;
         },
         onLoaded: () => {
+          loaded = true;
           setTimeout(sweepFocus, 0);
           setTimeout(sweepFocus, 500);
           resolve();
         },
         onExit: (status: { text?: string; crashed?: boolean }) => {
-          if (status.crashed) reject(new Error(status.text || 'The editor stopped'));
+          if (!status.crashed) return;
+          if (loaded) onStopped?.(status.text || 'The editor stopped');
+          else reject(new Error(status.text || 'The editor stopped'));
         },
       },
     }).catch(reject);

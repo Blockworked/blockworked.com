@@ -1,7 +1,9 @@
 # Builds Blockwork's editor for the browser (Qt for WebAssembly). The QML
 # comes straight from the Blockwork, blockstitch and lucide-qt checkouts,
 # so the page always shows the app's real editor; only the daemon is
-# replaced (DemoBackend.qml) and a few desktop-only pieces are shimmed.
+# replaced: DemoBackend.qml is a thin facade over Blockwork's own editor core
+# (blockwork-web, built by build.sh/check.sh and linked in as a static
+# library), and a few desktop-only pieces are shimmed.
 # Run through build.sh, which also copies the output into public/demo/.
 cmake_minimum_required(VERSION 3.21)
 project(blockwork_demo LANGUAGES CXX)
@@ -9,9 +11,10 @@ project(blockwork_demo LANGUAGES CXX)
 set(BLOCKWORK_DIR "" CACHE PATH "Blockwork checkout")
 set(BLOCKSTITCH_DIR "" CACHE PATH "blockstitch checkout")
 set(LUCIDE_QT_DIR "" CACHE PATH "lucide-qt checkout")
-foreach(dir BLOCKWORK_DIR BLOCKSTITCH_DIR LUCIDE_QT_DIR)
+set(BLOCKWORK_WEB_LIB "" CACHE FILEPATH "libblockwork_web.a built from BLOCKWORK_DIR")
+foreach(dir BLOCKWORK_DIR BLOCKSTITCH_DIR LUCIDE_QT_DIR BLOCKWORK_WEB_LIB)
     if(NOT EXISTS "${${dir}}")
-        message(FATAL_ERROR "${dir} is not set to a checkout")
+        message(FATAL_ERROR "${dir} is not set (build.sh and check.sh set it)")
     endif()
 endforeach()
 
@@ -37,8 +40,16 @@ qt_add_executable(blockwork-demo main.cpp)
 qt_add_qml_module(blockwork-demo
     URI com.blockworked.Demo
     VERSION 1.0
+    SOURCES core.h core.cpp
     QML_FILES DemoMain.qml DemoBackend.qml PreviewStage.qml
     NO_LINT)
+target_include_directories(blockwork-demo PRIVATE "${BLOCKSTITCH_DIR}/include")
+target_link_libraries(blockwork-demo PRIVATE "${BLOCKWORK_WEB_LIB}")
+if(NOT EMSCRIPTEN)
+    # What a native Rust staticlib needs from the C runtime.
+    find_package(Threads REQUIRED)
+    target_link_libraries(blockwork-demo PRIVATE Threads::Threads ${CMAKE_DL_LIBS} m)
+endif()
 target_link_libraries(blockwork-demo PRIVATE
     Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2 Qt6::QuickShapes
     Qt6::QmlCore blockstitchplugin blockworkplugin)

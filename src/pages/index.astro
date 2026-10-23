@@ -48,6 +48,10 @@ import { REPO_URL } from '../lib/releases';
             <div class="editor-scale-wrap" data-editor-scale-wrap>
               <div class="qt-host" data-qt-screen="editor"></div>
               <div class="editor-loading dot-grid" data-editor-loading>Loading the editor…</div>
+              <div class="editor-loading editor-stopped dot-grid" data-editor-stopped hidden>
+                The editor stopped.
+                <button type="button" data-editor-reload>Reload to start over</button>
+              </div>
             </div>
             <!-- The editor would swallow every scroll or swipe that lands on it,
                  so it stays locked until clicked (see the script below). -->
@@ -165,8 +169,15 @@ import { REPO_URL } from '../lib/releases';
   // instance.
   const loading = document.querySelector<HTMLElement>('[data-editor-loading]');
   const qtSections = document.querySelectorAll<HTMLElement>('#try, .features');
+  // A crash after loading takes the whole editor down; say so over it.
+  const stoppedCard = document.querySelector<HTMLElement>('[data-editor-stopped]');
+  document.querySelector('[data-editor-reload]')?.addEventListener('click', () => location.reload());
+  const stopped = (reason: string) => {
+    console.error(reason);
+    if (stoppedCard) stoppedCard.hidden = false;
+  };
   const start = () => {
-    startQtDemo()
+    startQtDemo(stopped)
       .then(() => loading?.remove())
       .catch(error => {
         console.error(error);
@@ -382,6 +393,18 @@ import { REPO_URL } from '../lib/releases';
   /* Qt sizes each screen to its host element and follows it as it resizes. */
   .qt-host { position: absolute; inset: 0; }
   .editor-loading { position: absolute; inset: 0; z-index: 1; }
+  /* Over the unlock scrim too: the editor underneath is gone. */
+  .editor-stopped { z-index: 40; gap: 8px; }
+  .editor-stopped[hidden] { display: none; }
+  .editor-stopped button {
+    border: 1px solid var(--blockstitch-text-dim);
+    border-radius: 6px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
   /* A scrim over the editor until it's clicked, so scrolling the page past it
      still works. `editor-active` is set by the script. */
   .editor-unlock {

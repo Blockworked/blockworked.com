@@ -6,7 +6,8 @@
 The required commands come from a scan of the QML the page is built from:
 Blockwork's editor group (its blockwork-qt/qml/module.json), this directory's
 own QML and shims. What the backend answers comes from the built page itself
-(DemoBackend.capabilities()), not from reading its source. A command name the
+(DemoBackend.capabilities(), which lists what the linked editor core answers),
+not from reading its source. A command name the
 scan can't resolve to string literals fails the check, so a new dynamic call
 site has to be taught here rather than slipping through; at run time the
 backend still reports any command it doesn't know.
@@ -17,7 +18,8 @@ import re
 import sys
 from pathlib import Path
 
-CALLS = re.compile(r"\b(invoke|daemonCall|callCommand|invokeCommand)\(\s*")
+# `call` is EditorPage.submitEdit's local wrapper around daemonCall.
+CALLS = re.compile(r"\b(invoke|daemonCall|callCommand|invokeCommand|call)\(\s*")
 LITERAL = re.compile(r'"([a-z_]+)"')
 # Identifiers that only forward a caller's command (`function daemonCall(command, ...)`)
 # or that hold names collected from `createCommand: "..."` properties.
@@ -100,10 +102,14 @@ def main():
     handled = set(contract.get("handled", []))
     needs_app = set(contract.get("needs_app", []))
     unsupported = set(contract.get("unsupported", []))
+    calls_handled = set(contract.get("calls_handled", []))
+    if contract.get("failure"):
+        problems.append(f"the editor core failed: {contract['failure']}")
 
     required, unresolved = scan(files)
     problems += [f"can't tell which command this sends: {u}" for u in unresolved]
-    counts = {"handled": 0, "needs the app (notice)": 0, "unsupported (notice)": 0, "reply call (error)": 0}
+    counts = {"handled": 0, "needs the app (notice)": 0, "unsupported (notice)": 0,
+              "reply call (core)": 0, "reply call (error)": 0}
     for name in sorted(required):
         entry = required[name]
         if "invoke" in entry["via"]:
@@ -116,6 +122,11 @@ def main():
             else:
                 problems.append(f"{name} ({', '.join(entry['at'])}) is neither handled nor declared by DemoBackend")
         if "call" in entry["via"]:
+            if name in calls_handled:
+                if name not in handled:
+                    problems.append(f"{name}: answered as a reply call but the core doesn't handle it")
+                counts["reply call (core)"] += 1
+                continue
             if contract.get("calls") != "error":
                 problems.append(f"{name}: reply calls must answer with an error")
             counts["reply call (error)"] += 1
