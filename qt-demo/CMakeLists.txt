@@ -40,8 +40,8 @@ qt_add_executable(blockwork-demo main.cpp)
 qt_add_qml_module(blockwork-demo
     URI com.blockworked.Demo
     VERSION 1.0
-    SOURCES core.h core.cpp
-    QML_FILES DemoMain.qml DemoBackend.qml PreviewStage.qml
+    SOURCES core.h core.cpp packhost.h packhost.cpp
+    QML_FILES DemoMain.qml DemoBackend.qml PreviewStage.qml PackView.qml
     NO_LINT)
 target_include_directories(blockwork-demo PRIVATE "${BLOCKSTITCH_DIR}/include")
 target_link_libraries(blockwork-demo PRIVATE "${BLOCKWORK_WEB_LIB}")

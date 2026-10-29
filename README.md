@@ -51,6 +51,12 @@ One-time setup on GitHub:
     feature-card illustrations (`PreviewStage.qml`, drawn by blockstitch's real
     `InstructionBlock`; "snap" is the looping drag-and-snap one).
   - `shims/` replaces the desktop window chrome and the screen picker.
+  - `PackView.qml` is the community site's pack viewer, served as
+    `public/packview/` from the same build (`window.blockworkEntry = "PackView"`):
+    a pack on blockstitch's own `BlockCanvas`, read-only, and the pack's blocks
+    rendered palette-style to PNGs for the site's lists. The embedding page talks
+    to it with postMessage (see `public/packview/index.html`); natively,
+    `blockwork-demo --pack <file> [--render out.json] [--shot out.png]` does the same.
 - `src/lib/qtDemo.ts` — starts the editor once the page scrolls near it. One Qt
   instance draws every live block on the page: each `[data-qt-screen]` element is
   a Qt screen, in the order `DemoMain.qml` expects. It also keeps Qt from taking
