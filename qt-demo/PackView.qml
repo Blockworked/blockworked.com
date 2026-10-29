@@ -90,6 +90,8 @@ QtObject {
         Column {
             id: stage
             spacing: 8
+            // Nothing hovers or presses these, so no grab catches a highlight.
+            enabled: false
             Repeater {
                 id: stageItems
                 model: root.macro ? root.macro.block_defs.filter(def => !def.read_only) : []
@@ -182,5 +184,20 @@ QtObject {
         }
     }
     // A theme change restyles on the next frames; give it a moment.
-    readonly property Timer settle: Timer { interval: 120; onTriggered: root.renderer.grab() }
+    readonly property Timer settle: Timer {
+        interval: 120
+        property int waits: 0
+        // Icons load on their own; wait (up to ~5 s) until none is still loading.
+        onTriggered: {
+            if (waits < 40 && root.loading(stage)) { waits++; restart(); return; }
+            waits = 0;
+            root.renderer.grab();
+        }
+    }
+    function loading(item) {
+        if (item.status === Image.Loading || (item.status === Image.Null && item.source && String(item.source).length)) return true;
+        const kids = item.children || [];
+        for (let i = 0; i < kids.length; ++i) if (loading(kids[i])) return true;
+        return false;
+    }
 }
