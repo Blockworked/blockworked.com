@@ -17,7 +17,7 @@
     <- {type: "blockwork-failed", reason}
 -->
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #27282b; }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; touch-action: none; background: #27282b; }
   body.light { background: #f5f6f8; }
   #screen { position: absolute; inset: 0; }
   #status { position: absolute; inset: 0; display: grid; place-items: center; font: 14px system-ui, sans-serif; color: #96979c; }
@@ -36,6 +36,8 @@
   let module = null;
   let qtReady = false;
   let pending = null;
+  // Scrolls over the canvas pan and zoom it; none may chain to the embedding page.
+  document.addEventListener('wheel', event => event.preventDefault(), { capture: true, passive: false });
   const status = document.getElementById('status');
   const tell = message => { if (parentOrigin) window.parent.postMessage(message, parentOrigin); };
   const setTheme = theme => document.body.classList.toggle('light', theme === 'light');

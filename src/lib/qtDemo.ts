@@ -70,6 +70,8 @@ export async function startQtDemo(onStopped?: (reason: string) => void): Promise
     const target = event.composedPath()[0];
     if (target instanceof HTMLElement) target.blur();
   };
+  // Wheel and touchpad scrolls over the editor pan and zoom its canvas, not the page.
+  editor.addEventListener('wheel', event => event.preventDefault(), { capture: true, passive: false });
   previews.forEach(el => el.addEventListener('focusin', refuseFocus));
   editor.addEventListener('focusin', event => { if (!editorClicked) refuseFocus(event); });
   // A background tab gets no focus events, so also check once Qt is up.
