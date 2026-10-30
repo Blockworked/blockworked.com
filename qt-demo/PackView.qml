@@ -95,24 +95,33 @@ QtObject {
             Repeater {
                 id: stageItems
                 model: root.macro ? root.macro.block_defs.filter(def => !def.read_only) : []
-                delegate: Loader {
+                // The outline's stroke and the connector tab reach past a block's
+                // own bounds, so each one is grabbed with a margin around it.
+                delegate: Item {
                     id: entry
                     required property var modelData
-                    sourceComponent: modelData.shape === "ReturnsValue" || modelData.shape === "ReturnsBool" ? reporter : call
-                    Component {
-                        id: call
-                        PaletteBlock {
-                            instruction: root.callInstruction(entry.modelData)
-                            variables: root.macro.variables || []; lists: root.macro.lists || []
-                            blockDefinitions: root.macro.block_defs; blockColor: entry.modelData.color || Theme.block
+                    readonly property int margin: 3
+                    readonly property Item item: block.item
+                    width: block.width + 2 * margin; height: block.height + 2 * margin
+                    Loader {
+                        id: block
+                        x: entry.margin; y: entry.margin
+                        sourceComponent: entry.modelData.shape === "ReturnsValue" || entry.modelData.shape === "ReturnsBool" ? reporter : call
+                        Component {
+                            id: call
+                            PaletteBlock {
+                                instruction: root.callInstruction(entry.modelData)
+                                variables: root.macro.variables || []; lists: root.macro.lists || []
+                                blockDefinitions: root.macro.block_defs; blockColor: entry.modelData.color || Theme.block
+                            }
                         }
-                    }
-                    Component {
-                        id: reporter
-                        PaletteValue {
-                            valueData: ({ kind: "Call", block_id: entry.modelData.id, args: BlockRegistry.freshCallArgs(entry.modelData), branches: [], saved: { kind: "Number", value: 0 } })
-                            editable: false; forceBoolean: entry.modelData.shape === "ReturnsBool"
-                            blockDefinitions: root.macro.block_defs
+                        Component {
+                            id: reporter
+                            PaletteValue {
+                                valueData: ({ kind: "Call", block_id: entry.modelData.id, args: BlockRegistry.freshCallArgs(entry.modelData), branches: [], saved: { kind: "Number", value: 0 } })
+                                editable: false; forceBoolean: entry.modelData.shape === "ReturnsBool"
+                                blockDefinitions: root.macro.block_defs
+                            }
                         }
                     }
                 }
@@ -168,7 +177,7 @@ QtObject {
         }
         function grab() {
             if (index >= stageItems.count) { themes = themes.slice(1); next(); return; }
-            const item = stageItems.itemAt(index).item;
+            const item = stageItems.itemAt(index);
             const theme = themes[0], at = index;
             const done = result => {
                 results[at][theme] = PackHost.png(result.image);
@@ -177,7 +186,7 @@ QtObject {
                 index++;
                 grab();
             };
-            if (!item || item.width <= 0 || !item.grabToImage(done, Qt.size(Math.ceil(item.width) * 2, Math.ceil(item.height) * 2))) {
+            if (!item || !item.item || item.width <= 0 || !item.grabToImage(done, Qt.size(Math.ceil(item.width) * 2, Math.ceil(item.height) * 2))) {
                 index++;
                 grab();
             }
