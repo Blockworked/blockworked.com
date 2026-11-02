@@ -3,10 +3,14 @@ import Base from '../layouts/Base.astro';
 import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
+import { logoAt } from '../lib/logo';
 import {
   ChevronDown, Hand, RotateCw,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
+
+const heroLogo = await logoAt(160);
+const ctaLogo = await logoAt(88);
 ---
 
 <Base>
@@ -14,7 +18,7 @@ import { REPO_URL } from '../lib/releases';
     <div class="container hero-copy">
       <h1 class="hero-brand">
         <span class="hero-lockup">
-          <img src="/logo.png" alt="" width="512" height="512" />
+          <img {...heroLogo} alt="" fetchpriority="high" />
           <span>Blockwork</span>
         </span>
       </h1>
@@ -150,7 +154,7 @@ import { REPO_URL } from '../lib/releases';
   <section class="section" id="download">
     <div class="container">
       <div class="cta panel">
-        <img src="/logo.png" alt="" width="88" height="88" class="cta-logo" />
+        <img {...ctaLogo} alt="" class="cta-logo" loading="lazy" />
         <div class="cta-copy">
           <h2 class="section-heading">Get Blockwork</h2>
           <p class="section-lede">Free and open source. Grab the latest release for your platform.</p>
