@@ -58,6 +58,25 @@ if(TARGET Qt6::qtqmlcoreplugin)
     target_link_libraries(blockwork-demo PRIVATE Qt6::qtqmlcoreplugin)
 endif()
 
+# Link only the QML plugins the page uses. Qt's import scan would also link
+# every Controls style (the page draws Basic only) and QtTest (the shared
+# modules' tests import it). The editor page uses no QtQuick.Effects.
+set_target_properties(blockwork-demo PROPERTIES QT_QML_MODULE_NO_IMPORT_SCAN ON)
+foreach(plugin
+        qtquick2plugin quickwindow qmlplugin modelsplugin qtqmlcoreplugin
+        qtquicktemplates2plugin qtquickcontrols2plugin qtquickcontrols2implplugin
+        qtquickcontrols2basicstyleplugin qtquickcontrols2basicstyleimplplugin
+        qtquickdialogsplugin qtquickdialogs2quickimplplugin qmlfolderlistmodelplugin
+        qquicklayoutsplugin qmlshapesplugin)
+    # A shared Qt (check.sh's native build) loads plugins at run time instead.
+    if(TARGET Qt6::${plugin})
+        get_target_property(plugin_type Qt6::${plugin} TYPE)
+        if(plugin_type STREQUAL "STATIC_LIBRARY")
+            target_link_libraries(blockwork-demo PRIVATE Qt6::${plugin})
+        endif()
+    endif()
+endforeach()
+
 if(EMSCRIPTEN)
     # Grows on demand from a small start, so the page doesn't reserve a big
     # heap up front; modularized so the page starts it only when needed.
