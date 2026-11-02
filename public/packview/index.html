@@ -99,11 +99,16 @@
     });
   }
   const base = '../demo/';
-  load(base + 'qtloader.js')
-    .then(() => load(base + 'blockwork-demo.js'))
+  // Fetch and compile the wasm alongside the two scripts rather than after them.
+  const url = base + 'blockwork-demo.wasm';
+  const wasm = typeof WebAssembly.compileStreaming === 'function'
+    ? WebAssembly.compileStreaming(fetch(url)).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.compile(b)))
+    : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.compile(b));
+  Promise.all([load(base + 'qtloader.js'), load(base + 'blockwork-demo.js')])
     .then(() => window.qtLoad({
       locateFile: path => base + path,
       qt: {
+        module: wasm,
         containerElements: [document.getElementById('screen')],
         entryFunction: async config => {
           module = await window.blockwork_demo_entry(config);

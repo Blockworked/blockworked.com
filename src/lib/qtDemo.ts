@@ -28,6 +28,17 @@ function loadScript(src: string): Promise<void> {
   });
 }
 
+/** Streams the module into the compiler as it downloads, where the server's
+ * MIME type allows that. */
+export function compileWasm(url: string): Promise<WebAssembly.Module> {
+  const response = fetch(url);
+  if (typeof WebAssembly.compileStreaming === 'function') {
+    return WebAssembly.compileStreaming(response).catch(() =>
+      fetch(url).then(r => r.arrayBuffer()).then(bytes => WebAssembly.compile(bytes)));
+  }
+  return response.then(r => r.arrayBuffer()).then(bytes => WebAssembly.compile(bytes));
+}
+
 let started = false;
 let instance: { setEditorScale?: (scale: number) => void } | null = null;
 
@@ -96,13 +107,15 @@ export async function startQtDemo(onStopped?: (reason: string) => void): Promise
   });
   containers.forEach(el => resizes.observe(el!));
 
-  await loadScript(`${BASE}qtloader.js`);
-  await loadScript(`${BASE}blockwork-demo.js`);
+  // Fetch and compile the wasm alongside the two scripts rather than after them.
+  const wasm = compileWasm(`${BASE}blockwork-demo.wasm`);
+  await Promise.all([loadScript(`${BASE}qtloader.js`), loadScript(`${BASE}blockwork-demo.js`)]);
   let loaded = false;
   await new Promise<void>((resolve, reject) => {
     window.qtLoad!({
       locateFile: (path: string) => BASE + path,
       qt: {
+        module: wasm,
         containerElements: containers,
         // Keep the module: qtLoad itself resolves to nothing once app.exec()
         // hands control back to the browser.
