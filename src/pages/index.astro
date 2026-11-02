@@ -11,19 +11,26 @@ import { REPO_URL } from '../lib/releases';
 
 <Base>
   <section class="hero">
-    <div class="container hero-copy">
-      <h1 class="hero-brand">
-        <span class="hero-lockup">
-          <img src="/logo.png" alt="" width="512" height="512" />
-          <span>Blockwork</span>
-        </span>
-      </h1>
-      <p class="hero-tagline">Powerful, understandable & fun <span class="accent">automation</span></p>
-      <div class="hero-actions">
-        <Downloader mode="compact" align="center">
-          <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
-        </Downloader>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1 class="hero-brand">
+          <span class="hero-lockup">
+            <img src="/logo.png" alt="" width="512" height="512" />
+            <span>Blockwork</span>
+          </span>
+        </h1>
+        <p class="hero-tagline">Powerful, understandable and fun automation, built out of blocks.</p>
+        <div class="hero-actions">
+          <Downloader mode="compact">
+            <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
+          </Downloader>
+        </div>
       </div>
+      <!-- A small script as Blockwork's own editor draws it (captured from the app). -->
+      <figure class="hero-script">
+        <img class="on-dark" src="/hero-script-dark.png" alt="A Blockwork script: when F8 is pressed, open Firefox, wait 1000 ms, then type hello." width="438" height="395" />
+        <img class="on-light" src="/hero-script-light.png" alt="" width="438" height="395" />
+      </figure>
     </div>
     <a class="scroll-cue" href="#try" aria-label="Scroll down"><ChevronDown /></a>
   </section>
@@ -290,37 +297,54 @@ import { REPO_URL } from '../lib/releases';
     min-height: calc(100svh - 56px);
     padding: 80px 0 112px;
   }
-  .hero-copy {
+  .hero-grid {
     position: relative;
-    max-width: 1000px;
-    text-align: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(32px, 5vw, 72px);
   }
-  /* The logo and name are the headline: the lockup leads, the tagline follows. */
+  .hero-copy { min-width: 0; }
+  /* The logo and name lead; the tagline is a plain sentence under them. */
   .hero-brand {
-    font-size: clamp(56px, 11vw, 148px);
+    font-size: clamp(52px, 7.5vw, 96px);
     line-height: 1;
-    font-weight: 800;
-    letter-spacing: -0.045em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
   .hero-lockup {
     display: inline-flex;
     align-items: center;
-    gap: 0.22em;
+    gap: 0.24em;
   }
   .hero-brand img {
-    width: 1.05em;
-    height: 1.05em;
+    width: 1em;
+    height: 1em;
     flex-shrink: 0;
   }
   .hero-tagline {
-    margin-top: clamp(20px, 2.4vw, 32px);
-    font-size: clamp(24px, 3vw, 38px);
-    line-height: 1.2;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--blockstitch-text);
+    margin-top: clamp(18px, 2vw, 26px);
+    max-width: 26ch;
+    font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.4;
+    font-weight: 400;
+    color: color-mix(in srgb, var(--blockstitch-text) 85%, var(--blockstitch-text-dim));
+    text-wrap: pretty;
   }
-  .accent { color: var(--blockstitch-accent); }
+  /* The capture carries its own piece of the editor's canvas (#27282b dark,
+     #f5f6f8 light), so the frame is that canvas color with no padding. */
+  .hero-script {
+    margin: 0;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #27282b;
+    border: 1px solid var(--blockstitch-glass-border);
+    box-shadow: var(--blockstitch-shadow-md);
+  }
+  .hero-script img { display: block; width: min(100%, 340px); height: auto; }
+  :root[data-theme="light"] .hero-script { background: #f5f6f8; }
+  :root[data-theme="light"] .hero-script .on-dark,
+  :root:not([data-theme="light"]) .hero-script .on-light { display: none; }
   /* Spacing grows between groups: logo + tagline, then the description, then the actions. */
   .hero-lede {
     margin: clamp(36px, 4.5vw, 56px) auto 0;
@@ -353,7 +377,7 @@ import { REPO_URL } from '../lib/releases';
     50% { transform: translateY(4px); }
   }
 
-  .hero-actions { margin-top: clamp(36px, 4.5vw, 56px); display: flex; justify-content: center; }
+  .hero-actions { margin-top: clamp(28px, 3.5vw, 44px); display: flex; }
   .hero-actions :global(.dl-primary) { gap: 18px; }
   .hero-actions :global(.btn-lg) { min-height: 48px; padding: 0 22px; }
   .try { padding: 24px 0 40px; }
@@ -556,7 +580,7 @@ import { REPO_URL } from '../lib/releases';
     font-size: clamp(22px, 2.4vw, 28px);
     line-height: 1.2;
     font-weight: 700;
-    letter-spacing: -0.015em;
+    letter-spacing: 0;
     color: var(--blockstitch-text);
     text-wrap: balance;
   }
@@ -602,9 +626,11 @@ import { REPO_URL } from '../lib/releases';
   .cta-actions { margin-top: 20px; }
 
   @media (max-width: 520px) {
-    .hero-brand { font-size: 64px; }
-    .hero-lockup { flex-direction: column; gap: 16px; }
-    .hero-brand img { width: 96px; height: 96px; }
+    .hero-brand { font-size: 52px; }
+  }
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: minmax(0, 1fr); }
+    .hero-script { justify-self: start; }
   }
   @media (max-width: 760px) {
     .feature { grid-template-columns: 1fr; gap: 8px; }

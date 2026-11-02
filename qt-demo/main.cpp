@@ -7,6 +7,8 @@
 #include <QtCore/QJsonObject>
 #include <QtCore/QPointer>
 #include <QtCore/QTimer>
+#include <QtGui/QFont>
+#include <QtGui/QFontDatabase>
 #include <QtGui/QGuiApplication>
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlExtensionPlugin>
@@ -74,6 +76,16 @@ static int writeContract(const QString &path, QObject *root, const QList<QQmlErr
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    // Blockwork's typeface, from the editor's resources (res/fonts in Blockwork),
+    // so the page's editor reads like the app.
+    for (const char *name : {"Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Italic"}) {
+        const int id = QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/AtkinsonHyperlegibleNext-%1.ttf").arg(QLatin1String(name)));
+        if (id >= 0 && QStringLiteral("Regular") == QLatin1String(name)) {
+            QFont font = app.font();
+            font.setFamilies(QFontDatabase::applicationFontFamilies(id));
+            app.setFont(font);
+        }
+    }
     QQmlApplicationEngine engine;
     const QStringList args = app.arguments();
     const qsizetype contractAt = args.indexOf("--contract");

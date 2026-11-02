@@ -3,7 +3,7 @@
 // format) on the default branch — richer than the GitHub release bodies,
 // which are generated from it at tag time and are sometimes just a stub.
 import Base from '../layouts/Base.astro';
-import { Tag } from '@lucide/astro';
+import { Check, Tag } from '@lucide/astro';
 import { marked } from 'marked';
 import { RELEASES_URL, REPO, REPO_URL, formatDate } from '../lib/releases';
 
@@ -57,7 +57,7 @@ try {
                   <header class="panel-title release-header">
                     <Tag />
                     {unreleased ? <span class="version">Unreleased</span> : <a class="version" href={`${REPO_URL}/releases/tag/${e.version}`}>{e.version}</a>}
-                    {i === 0 && !unreleased && <span class="badge">Latest</span>}
+                    {i === 0 && !unreleased && <span class="latest"><Check />latest</span>}
                     {e.date && <time datetime={e.date}>{formatDate(`${e.date}T12:00:00`)}</time>}
                   </header>
                   <div class="notes" set:html={e.html || '<p>No notes for this release.</p>'} />
@@ -111,11 +111,17 @@ try {
     box-shadow: var(--blockstitch-glow-accent);
   }
   .release-header { gap: 8px; }
+  /* A version sits in the same box a block's value does. */
   .version {
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: 1px solid var(--blockstitch-border);
+    background: var(--blockstitch-bg);
     color: var(--blockstitch-text);
     text-decoration: none;
     font-size: 13px;
-    letter-spacing: 0.02em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
   a.version:hover { color: var(--blockstitch-accent); }
   .release-header time {
@@ -125,16 +131,17 @@ try {
     font-weight: 400;
     font-size: 12px;
   }
-  .badge {
-    padding: 1px 6px;
-    border-radius: 999px;
-    background: rgba(var(--blockstitch-accent-rgb), 0.16);
-    color: var(--blockstitch-accent);
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: 0;
+  /* The newest release: a tick and a word, not a pill. */
+  .latest {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--blockstitch-text-dim);
+    font-size: 13px;
+    font-weight: 400;
   }
+  .latest :global(svg) { width: 14px; height: 14px; color: #3ccf6e; }
+  :root[data-theme="light"] .latest :global(svg) { color: #18743b; }
 
   .notes {
     padding: 12px 16px 16px;
@@ -142,10 +149,8 @@ try {
   }
   .notes :global(h3) {
     margin: 14px 0 6px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--blockstitch-text-dim);
+    font-size: 14px;
+    color: var(--blockstitch-text);
   }
   .notes :global(h3:first-child) { margin-top: 0; }
   .notes :global(p) { margin: 6px 0; }
