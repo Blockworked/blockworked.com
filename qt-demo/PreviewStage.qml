@@ -20,6 +20,12 @@ Item {
         pieces: [{ kind: "Label", id: "l", text: "log in as" }, { kind: "Input", id: "u", name: "user", value_type: "Any" }]
     }]
     function txt(t) { return { kind: "Text", value: t }; }
+    // ValueChip asks an ancestor (the canvas, in the editor) which custom block
+    // a parameter belongs to, so it can take that block's color.
+    function parameterOrigin(location) {
+        const header = root.stack[0];
+        return header && header.type === "BlockHeader" ? header.block_id : "";
+    }
     readonly property var presets: ({
         // What the recorder produces (blockwork-core's recording/mod.rs): a
         // Press and a Release per key or button, with the real gap between
