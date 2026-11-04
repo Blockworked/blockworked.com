@@ -108,6 +108,7 @@ QtObject {
 
     readonly property var needsApp: ({
         run_macro: qsTr("Running macros needs the Blockwork app. Nothing runs on the website."),
+        run_strand: qsTr("Running macros needs the Blockwork app. Nothing runs on the website."),
         start_recording: qsTr("Recording needs the Blockwork app."),
         save_macro: qsTr("Edits here stay in this tab. Download Blockwork to keep your macros."),
         open_settings: qsTr("Settings live in the Blockwork app."),
