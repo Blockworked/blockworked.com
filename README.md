@@ -6,10 +6,15 @@ home page is Blockwork's own Qt/QML editor, compiled to WebAssembly.
 
 ```bash
 pnpm install
-qt-demo/build.sh  # builds the editor into public/demo/ (see below)
 pnpm dev          # http://localhost:4321
-pnpm build        # astro check && astro build → dist/
+pnpm build        # astro check && astro build -> dist/
 ```
+
+The home page's live editor is built separately into `public/demo/` by
+`qt-demo/build.sh`, which needs Qt for WebAssembly, Emscripten and Rust (see
+below). Pages, styles and copy can be worked on without it: the editor's spot
+then says the demo isn't built. `pnpm build` in CI fails if the changelog
+can't be fetched; a local build renders a fallback instead.
 
 ## Deploying
 
@@ -38,9 +43,9 @@ One-time setup on GitHub:
   repository's own CMake entry point (`blockstitch/cmake/BlockstitchQml.cmake`,
   `Blockwork/blockwork-qt/cmake/BlockworkEditorQml.cmake`), which read the same
   manifests the apps' Cargo builds use, so the page always shows the app's real
-  editor and lists none of its files. `sources.env` pins the Blockwork commit;
-  `deps.sh` fetches it and the blockstitch and lucide-qt commits its `Cargo.lock`
-  pins. The website-only files are:
+  editor and lists none of its files. `sources.env` pins the Blockwork commit
+  and the Qt and Emscripten versions; `deps.sh` fetches it and the blockstitch
+  and lucide-qt commits its `Cargo.lock` pins. The website-only files are:
   - `DemoBackend.qml` stands in for the Blockwork daemon. EditorPage's
     `invoke(...)` commands and AppBridge calls go to Blockwork's own editor core
     (the `blockwork-web` Rust library, linked in through `core.cpp`), so editing,
@@ -84,6 +89,8 @@ One-time setup on GitHub:
 serve it without cross-origin isolation headers), the Emscripten version that Qt
 build wants, a desktop Qt of the same version for the host tools, and Rust with
 the `wasm32-unknown-emscripten` target for the editor core:
+
+The versions below are the ones in `qt-demo/sources.env`.
 
 ```bash
 pip install aqtinstall

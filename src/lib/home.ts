@@ -1,6 +1,6 @@
 // The home page's editor loading, unlock/lock, phone preview scale and the
 // header logo that appears once the hero title scrolls away.
-import { setEditorScale, startQtDemo } from './qtDemo';
+import { DemoMissing, setEditorScale, startQtDemo } from './qtDemo';
 
 export function setupHomePage() {
   // The Qt editor is ~8 MB compressed, so it only starts once the visitor
@@ -20,7 +20,9 @@ export function setupHomePage() {
       .then(() => loading?.remove())
       .catch(error => {
         console.error(error);
-        if (loading) loading.textContent = "The editor couldn't start in this browser.";
+        if (loading) loading.textContent = error instanceof DemoMissing
+          ? 'The editor demo is not built here. Run qt-demo/build.sh.'
+          : "The editor couldn't start in this browser.";
       });
   };
   if (qtSections.length && 'IntersectionObserver' in window) {
@@ -36,7 +38,7 @@ export function setupHomePage() {
 
   // Unlock the demo editor on click, lock it again with Done. On phones this
   // also toggles a fullscreen overlay (see .editor-active under `pointer:
-  // coarse` in the styles below) — lock page scroll behind it while it's up.
+  // coarse` in the styles below), and lock page scroll behind it while it's up.
   const editorWindow = document.querySelector<HTMLElement>('[data-editor-window]');
   const rotateHint = document.querySelector<HTMLElement>('[data-editor-rotate-hint]');
   const coarsePointer = window.matchMedia('(pointer: coarse)');

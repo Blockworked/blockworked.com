@@ -1,6 +1,6 @@
 ---
 // Rendered at build time from Blockwork's CHANGELOG.md (Keep a Changelog
-// format) on the default branch — richer than the GitHub release bodies,
+// format) on its master branch, richer than the GitHub release bodies,
 // which are generated from it at tag time and are sometimes just a stub.
 import Base from '../layouts/Base.astro';
 import { Check, Tag } from '@lucide/astro';
@@ -32,6 +32,9 @@ try {
     };
   });
 } catch (e) {
+  // A deploy must not ship the fallback page; a local build may.
+  const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env;
+  if (env?.CI) throw new Error(`[changelog] couldn't fetch CHANGELOG.md: ${e}`);
   console.warn(`[changelog] couldn't fetch CHANGELOG.md, rendering the fallback: ${e}`);
 }
 ---

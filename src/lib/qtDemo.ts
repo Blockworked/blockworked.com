@@ -18,6 +18,11 @@ declare global {
 
 const BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/demo/`;
 
+/** public/demo/ is empty: qt-demo/build.sh hasn't been run. */
+export class DemoMissing extends Error {
+  constructor() { super('The editor demo is not built (run qt-demo/build.sh).'); }
+}
+
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
@@ -108,6 +113,9 @@ export async function startQtDemo(onStopped?: (reason: string) => void): Promise
   containers.forEach(el => resizes.observe(el!));
 
   // Fetch and compile the wasm alongside the two scripts rather than after them.
+  // A checkout without qt-demo/build.sh's output has no demo to load.
+  const probe = await fetch(`${BASE}qtloader.js`, { method: 'HEAD' }).catch(() => null);
+  if (probe && probe.status === 404) throw new DemoMissing();
   const wasm = compileWasm(`${BASE}blockwork-demo.wasm`);
   await Promise.all([loadScript(`${BASE}qtloader.js`), loadScript(`${BASE}blockwork-demo.js`)]);
   let loaded = false;
