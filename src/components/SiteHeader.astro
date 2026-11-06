@@ -46,7 +46,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     try {
       localStorage.setItem('blockstitch-theme', next);
     } catch {
-      // storage disabled — the toggle still works for this page view
+      // storage disabled: the toggle still works for this page view
     }
     // Shared with community.blockworked.com, which reads the same cookie.
     const domain = /(^|\.)blockworked\.com$/.test(location.hostname) ? '; domain=blockworked.com' : '';

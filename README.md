@@ -34,8 +34,7 @@ One-time setup on GitHub:
 ## Layout
 
 - `src/styles/theme.css` - the color, spacing and motion tokens (with their light
-  theme) and base control styles the site's markup uses, taken from blockstitch's
-  old browser theme. `global.css` loads it into a cascade layer, so site styles
+  theme) and base control styles the site's markup uses. `global.css` loads it into a cascade layer, so site styles
   win over its app-window globals (fixed-height body, bare `button` styling).
 - `qt-demo/` - the home page editor: Blockwork's `EditorPage.qml` and
   blockstitch's QML components, built for the browser with Qt for WebAssembly.
