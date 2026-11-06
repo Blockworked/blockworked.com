@@ -7,3 +7,5 @@ qt-demo/deps/
 public/demo/
 qt-demo/build-native/
 __pycache__/
+.idea/
+.claude/

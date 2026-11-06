@@ -28,11 +28,11 @@ One-time setup on GitHub:
 
 ## Layout
 
-- `src/styles/theme.css` — the color, spacing and motion tokens (with their light
+- `src/styles/theme.css` - the color, spacing and motion tokens (with their light
   theme) and base control styles the site's markup uses, taken from blockstitch's
   old browser theme. `global.css` loads it into a cascade layer, so site styles
   win over its app-window globals (fixed-height body, bare `button` styling).
-- `qt-demo/` — the home page editor: Blockwork's `EditorPage.qml` and
+- `qt-demo/` - the home page editor: Blockwork's `EditorPage.qml` and
   blockstitch's QML components, built for the browser with Qt for WebAssembly.
   The QML comes straight from Blockwork, blockstitch and lucide-qt, through each
   repository's own CMake entry point (`blockstitch/cmake/BlockstitchQml.cmake`,
@@ -41,12 +41,12 @@ One-time setup on GitHub:
   editor and lists none of its files. `sources.env` pins the Blockwork commit;
   `deps.sh` fetches it and the blockstitch and lucide-qt commits its `Cargo.lock`
   pins. The website-only files are:
-  - `DemoBackend.qml` stands in for the Blockwork daemon: it answers EditorPage's
-    `invoke(...)` commands (`add_strand`, `merge_tail`, `take_value`, …) and its
-    AppBridge calls by porting them from `commands.rs` and blockstitch-core onto
-    in-memory macros, and evaluates reporters for click-to-preview. Nothing runs
-    and nothing persists; buttons that need the app say so in a notice bar, and a
-    command it doesn't know shows a "not supported" notice instead of doing nothing.
+  - `DemoBackend.qml` stands in for the Blockwork daemon. EditorPage's
+    `invoke(...)` commands and AppBridge calls go to Blockwork's own editor core
+    (the `blockwork-web` Rust library, linked in through `core.cpp`), so editing,
+    undo and value previews behave as in the app. Nothing runs and nothing
+    persists; buttons that need the app say so in a notice bar, and a command it
+    doesn't know shows a "not supported" notice instead of doing nothing.
   - `DemoMain.qml` puts a window on each Qt screen: the editor, then the
     feature-card illustrations (`PreviewStage.qml`, drawn by blockstitch's real
     `InstructionBlock`; "snap" is the looping drag-and-snap one).
@@ -57,36 +57,40 @@ One-time setup on GitHub:
     rendered palette-style to PNGs for the site's lists. The embedding page talks
     to it with postMessage (see `public/packview/index.html`); natively,
     `blockwork-demo --pack <file> [--render out.json] [--shot out.png]` does the same.
-- `src/lib/qtDemo.ts` — starts the editor once the page scrolls near it. One Qt
+- `src/lib/home.ts` - the home page's script: when the editor starts, unlocking
+  it, and the phone preview scale.
+- `src/lib/qtDemo.ts` - starts the editor once the page scrolls near it. One Qt
   instance draws every live block on the page: each `[data-qt-screen]` element is
   a Qt screen, in the order `DemoMain.qml` expects. It also keeps Qt from taking
   focus (and scrolling the page) until the editor is clicked, and on phones has
   Qt draw the locked editor as a shrunk thumbnail of the desktop layout.
-- `src/lib/site.ts` — the top nav links. community.blockworked.com
+- `src/lib/site.ts` - the top nav links. community.blockworked.com
   (Blockworked/Blockwork-community-blocks) shows the same header and footer and
   runs the same theme and cross-site fade scripts from its `src/site-nav.ts`, a
   copy of `SiteHeader.astro`, `SiteFooter.astro` and the scripts in `Base.astro`;
   change both together. The theme choice is shared through a `bw-theme` cookie
   on `blockworked.com`. Set `PUBLIC_COMMUNITY_URL` to point the Community link
   at a local `wrangler dev`.
-- `src/components/Downloader.astro` — fetches the latest GitHub release in the
+- `src/components/Downloader.astro` - fetches the latest GitHub release in the
   browser and recommends a build for the visitor's OS/arch.
-- `src/pages/changelog.astro` — rendered **at build time** from Blockwork's
+- `src/pages/changelog.astro` - rendered **at build time** from Blockwork's
   `CHANGELOG.md` on `master`.
-- `src/assets/screenshots/` — drop `editor.png`, `recording.png`, `settings.png`
+- `src/assets/screenshots/` - drop `editor.png`, `recording.png`, `settings.png`
   here; missing ones render as placeholders.
 
 ## Building the editor
 
 `qt-demo/build.sh` needs Qt for WebAssembly (single-threaded, so GitHub Pages can
 serve it without cross-origin isolation headers), the Emscripten version that Qt
-build wants, and a desktop Qt of the same version for the host tools:
+build wants, a desktop Qt of the same version for the host tools, and Rust with
+the `wasm32-unknown-emscripten` target for the editor core:
 
 ```bash
 pip install aqtinstall
 aqt install-qt all_os wasm 6.12.0 wasm_singlethread -O ~/Qt
 git clone https://github.com/emscripten-core/emsdk.git ~/emsdk
 ~/emsdk/emsdk install 5.0.5 && ~/emsdk/emsdk activate 5.0.5
+rustup target add wasm32-unknown-emscripten
 ```
 
 ```bash
@@ -111,7 +115,7 @@ build. A new QML file EditorPage uses goes into Blockwork's
 
 **Dev-server CSS:** after editing a page's `<style>`, `astro dev` occasionally
 keeps serving the previous version to the browser (the change appears for a
-moment, then reverts). Restart `pnpm dev` if a style edit doesn't stick — the
+moment, then reverts). Restart `pnpm dev` if a style edit doesn't stick - the
 production build is unaffected.
 
 ## License
