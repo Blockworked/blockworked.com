@@ -18,8 +18,8 @@ foreach(dir BLOCKWORK_DIR BLOCKSTITCH_DIR LUCIDE_QT_DIR BLOCKWORK_WEB_LIB)
     endif()
 endforeach()
 
-find_package(Qt6 6.10 REQUIRED COMPONENTS Core Gui Qml QmlCore Quick QuickControls2 QuickDialogs2 QuickShapes QuickLayouts)
-qt_standard_project_setup(REQUIRES 6.10)
+find_package(Qt6 6.12 REQUIRED COMPONENTS Core Gui Qml QmlCore Quick QuickControls2 QuickDialogs2 QuickShapes QuickLayouts)
+qt_standard_project_setup(REQUIRES 6.12)
 
 # Both modules come from their repositories' own CMake entry points, which
 # read the same manifests the apps' Cargo builds use, so this file lists none
