@@ -3,27 +3,38 @@ import Base from '../layouts/Base.astro';
 import Downloader from '../components/Downloader.astro';
 import Screenshots from '../components/Screenshots.astro';
 import GitHubMark from '../components/GitHubMark.astro';
+import { logoAt } from '../lib/logo';
 import {
   ChevronDown, Hand, RotateCw,
 } from '@lucide/astro';
 import { REPO_URL } from '../lib/releases';
+
+const heroLogo = await logoAt(160);
+const ctaLogo = await logoAt(88);
 ---
 
 <Base>
   <section class="hero">
-    <div class="container hero-copy">
-      <h1 class="hero-brand">
-        <span class="hero-lockup">
-          <img src="/logo.png" alt="" width="512" height="512" />
-          <span>Blockwork</span>
-        </span>
-      </h1>
-      <p class="hero-tagline">Powerful, understandable & fun <span class="accent">automation</span></p>
-      <div class="hero-actions">
-        <Downloader mode="compact" align="center">
-          <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
-        </Downloader>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1 class="hero-brand">
+          <span class="hero-lockup">
+            <img {...heroLogo} alt="" fetchpriority="high" />
+            <span>Blockwork</span>
+          </span>
+        </h1>
+        <p class="hero-tagline">Powerful, understandable &amp; fun automation</p>
+        <div class="hero-actions">
+          <Downloader mode="compact">
+            <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
+          </Downloader>
+        </div>
       </div>
+      <!-- A small script as Blockwork's own editor draws it (captured from the app). -->
+      <figure class="hero-script">
+        <img class="on-dark" src="/hero-script-dark.png" alt="A Blockwork script: when F8 is pressed, type On my way!, wait 500 ms, then log Replied." width="438" height="395" />
+        <img class="on-light" src="/hero-script-light.png" alt="" width="438" height="395" />
+      </figure>
     </div>
     <a class="scroll-cue" href="#try" aria-label="Scroll down"><ChevronDown /></a>
   </section>
@@ -150,7 +161,7 @@ import { REPO_URL } from '../lib/releases';
   <section class="section" id="download">
     <div class="container">
       <div class="cta panel">
-        <img src="/logo.png" alt="" width="88" height="88" class="cta-logo" />
+        <img {...ctaLogo} alt="" class="cta-logo" loading="lazy" />
         <div class="cta-copy">
           <h2 class="section-heading">Get Blockwork</h2>
           <p class="section-lede">Free and open source. Grab the latest release for your platform.</p>
@@ -162,121 +173,8 @@ import { REPO_URL } from '../lib/releases';
 </Base>
 
 <script>
-  import { setEditorScale, startQtDemo } from '../lib/qtDemo';
-
-  // The Qt editor is ~8 MB compressed, so it only starts once the visitor
-  // scrolls toward it or the feature illustrations, which come from the same
-  // instance.
-  const loading = document.querySelector<HTMLElement>('[data-editor-loading]');
-  const qtSections = document.querySelectorAll<HTMLElement>('#try, .features');
-  // A crash after loading takes the whole editor down; say so over it.
-  const stoppedCard = document.querySelector<HTMLElement>('[data-editor-stopped]');
-  document.querySelector('[data-editor-reload]')?.addEventListener('click', () => location.reload());
-  const stopped = (reason: string) => {
-    console.error(reason);
-    if (stoppedCard) stoppedCard.hidden = false;
-  };
-  const start = () => {
-    startQtDemo(stopped)
-      .then(() => loading?.remove())
-      .catch(error => {
-        console.error(error);
-        if (loading) loading.textContent = "The editor couldn't start in this browser.";
-      });
-  };
-  if (qtSections.length && 'IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(entries => {
-      if (!entries.some(e => e.isIntersecting)) return;
-      observer.disconnect();
-      start();
-    }, { rootMargin: '600px 0px' });
-    qtSections.forEach(el => observer.observe(el));
-  } else {
-    start();
-  }
-
-  // Unlock the demo editor on click, lock it again with Done. On phones this
-  // also toggles a fullscreen overlay (see .editor-active under `pointer:
-  // coarse` in the styles below) — lock page scroll behind it while it's up.
-  const editorWindow = document.querySelector<HTMLElement>('[data-editor-window]');
-  const rotateHint = document.querySelector<HTMLElement>('[data-editor-rotate-hint]');
-  const coarsePointer = window.matchMedia('(pointer: coarse)');
-  document.querySelector('[data-editor-unlock]')?.addEventListener('click', () => {
-    editorWindow?.classList.add('editor-active');
-    updateEditorPreviewScale();
-    if (coarsePointer.matches) {
-      document.body.classList.add('editor-fullscreen-lock');
-      // Fullscreen the whole document rather than the editor window, so
-      // the fixed overlay below keeps its gap and scrim.
-      document.documentElement.requestFullscreen?.().catch(() => {});
-    }
-    rotateHint?.classList.remove('dismissed');
-  });
-  document.querySelector('[data-editor-done]')?.addEventListener('click', () => {
-    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-    editorWindow?.classList.remove('editor-active');
-    updateEditorPreviewScale();
-    document.body.classList.remove('editor-fullscreen-lock');
-  });
-  document.querySelector('[data-editor-rotate-dismiss]')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    rotateHint?.classList.add('dismissed');
-  });
-  // Exiting fullscreen through the browser/OS (back gesture, Esc, …) instead
-  // of the Done button should still close the editor.
-  document.addEventListener('fullscreenchange', () => {
-    if (document.fullscreenElement) return;
-    editorWindow?.classList.remove('editor-active');
-    updateEditorPreviewScale();
-    document.body.classList.remove('editor-fullscreen-lock');
-  });
-
-  // Before activation on phones, the editor is laid out at a fixed
-  // desktop-ish width and scaled down to fit the frame's real width (Qt does
-  // the scaling; the frame's height follows `--editor-preview-scale`), so
-  // phones get a proportional wide preview instead of a squeezed one.
-  const EDITOR_PREVIEW_NATURAL_WIDTH = 680;
-  function updateEditorPreviewScale() {
-    if (!editorWindow) return;
-    const scale = Math.min(1, editorWindow.clientWidth / EDITOR_PREVIEW_NATURAL_WIDTH);
-    editorWindow.style.setProperty('--editor-preview-scale', String(scale));
-    const thumbnail = coarsePointer.matches && !editorWindow.classList.contains('editor-active');
-    setEditorScale(thumbnail ? scale : 1);
-  }
-  updateEditorPreviewScale();
-  window.addEventListener('resize', updateEditorPreviewScale);
-
-  // The header's logo is hidden on the home page while the big title is on
-  // screen, and appears once the title has scrolled out of view behind the
-  // header (plus a little extra scroll); scrolling back up hides it again.
-  /** Extra scroll past the point where the title is fully hidden, in px. */
-  const SHOW_AFTER = 40;
-
-  const title = document.querySelector<HTMLElement>('.hero-brand');
-  const header = document.querySelector<HTMLElement>('.site-header');
-  const brand = document.querySelector<HTMLElement>('.site-header .brand-home');
-
-  if (title && header && brand) {
-    let threshold = 0;
-
-    const update = () => {
-      const shown = window.scrollY > threshold;
-      brand.classList.toggle('brand-shown', shown);
-      brand.toggleAttribute('inert', !shown);
-    };
-
-    const measure = () => {
-      const titleBottom = title.getBoundingClientRect().bottom + window.scrollY;
-      threshold = titleBottom - header.getBoundingClientRect().bottom + SHOW_AFTER;
-      update();
-    };
-
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', measure);
-    document.fonts?.ready.then(measure);
-    window.addEventListener('load', measure);
-    measure();
-  }
+  import { setupHomePage } from '../lib/home';
+  setupHomePage();
 </script>
 
 <style>
@@ -290,37 +188,54 @@ import { REPO_URL } from '../lib/releases';
     min-height: calc(100svh - 56px);
     padding: 80px 0 112px;
   }
-  .hero-copy {
+  .hero-grid {
     position: relative;
-    max-width: 1000px;
-    text-align: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(32px, 5vw, 72px);
   }
-  /* The logo and name are the headline: the lockup leads, the tagline follows. */
+  .hero-copy { min-width: 0; }
+  /* The logo and name lead; the tagline is a plain sentence under them. */
   .hero-brand {
-    font-size: clamp(56px, 11vw, 148px);
+    font-size: clamp(52px, 7.5vw, 96px);
     line-height: 1;
-    font-weight: 800;
-    letter-spacing: -0.045em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
   .hero-lockup {
     display: inline-flex;
     align-items: center;
-    gap: 0.22em;
+    gap: 0.24em;
   }
   .hero-brand img {
-    width: 1.05em;
-    height: 1.05em;
+    width: 1em;
+    height: 1em;
     flex-shrink: 0;
   }
   .hero-tagline {
-    margin-top: clamp(20px, 2.4vw, 32px);
-    font-size: clamp(24px, 3vw, 38px);
-    line-height: 1.2;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--blockstitch-text);
+    margin-top: clamp(18px, 2vw, 26px);
+    max-width: 32ch;
+    font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.4;
+    font-weight: 400;
+    color: color-mix(in srgb, var(--blockstitch-text) 85%, var(--blockstitch-text-dim));
+    text-wrap: pretty;
   }
-  .accent { color: var(--blockstitch-accent); }
+  /* The capture carries its own piece of the editor's canvas (#27282b dark,
+     #f5f6f8 light), so the frame is that canvas color with no padding. */
+  .hero-script {
+    margin: 0;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #27282b;
+    border: 1px solid var(--blockstitch-glass-border);
+    box-shadow: var(--blockstitch-shadow-md);
+  }
+  .hero-script img { display: block; width: min(100%, 340px); height: auto; }
+  :root[data-theme="light"] .hero-script { background: #f5f6f8; }
+  :root[data-theme="light"] .hero-script .on-dark,
+  :root:not([data-theme="light"]) .hero-script .on-light { display: none; }
   /* Spacing grows between groups: logo + tagline, then the description, then the actions. */
   .hero-lede {
     margin: clamp(36px, 4.5vw, 56px) auto 0;
@@ -353,7 +268,7 @@ import { REPO_URL } from '../lib/releases';
     50% { transform: translateY(4px); }
   }
 
-  .hero-actions { margin-top: clamp(36px, 4.5vw, 56px); display: flex; justify-content: center; }
+  .hero-actions { margin-top: clamp(28px, 3.5vw, 44px); display: flex; }
   .hero-actions :global(.dl-primary) { gap: 18px; }
   .hero-actions :global(.btn-lg) { min-height: 48px; padding: 0 22px; }
   .try { padding: 24px 0 40px; }
@@ -392,6 +307,7 @@ import { REPO_URL } from '../lib/releases';
   .editor-scale-wrap { position: absolute; inset: 0; }
   /* Qt sizes each screen to its host element and follows it as it resizes. */
   .qt-host { position: absolute; inset: 0; }
+  .qt-host[data-qt-screen="editor"] { overscroll-behavior: contain; touch-action: none; }
   .editor-loading { position: absolute; inset: 0; z-index: 1; }
   /* Over the unlock scrim too: the editor underneath is gone. */
   .editor-stopped { z-index: 40; gap: 8px; }
@@ -555,7 +471,7 @@ import { REPO_URL } from '../lib/releases';
     font-size: clamp(22px, 2.4vw, 28px);
     line-height: 1.2;
     font-weight: 700;
-    letter-spacing: -0.015em;
+    letter-spacing: 0;
     color: var(--blockstitch-text);
     text-wrap: balance;
   }
@@ -601,9 +517,11 @@ import { REPO_URL } from '../lib/releases';
   .cta-actions { margin-top: 20px; }
 
   @media (max-width: 520px) {
-    .hero-brand { font-size: 64px; }
-    .hero-lockup { flex-direction: column; gap: 16px; }
-    .hero-brand img { width: 96px; height: 96px; }
+    .hero-brand { font-size: 52px; }
+  }
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: minmax(0, 1fr); }
+    .hero-script { justify-self: start; }
   }
   @media (max-width: 760px) {
     .feature { grid-template-columns: 1fr; gap: 8px; }
