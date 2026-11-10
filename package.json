@@ -16,7 +16,7 @@
     "@lucide/astro": "^1.45.0",
     "astro": "^7.3.3",
     "marked": "^18.0.13",
-    "sharp": "^0.35.4"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
