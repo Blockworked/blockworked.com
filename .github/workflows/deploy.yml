@@ -1,11 +1,12 @@
-name: Deploy to GitHub Pages
+name: Build and deploy
 
+# Every push and pull request builds and checks the site; only master deploys.
 on:
   push:
-    branches: [master]
+  pull_request:
   # Manual re-run from the Actions tab, e.g. to refresh the changelog page
-  # (rendered at build time from Blockwork's CHANGELOG.md) after a release,
-  # or to pick up editor changes from the Blockwork and blockstitch repos.
+  # (rendered at build time from Blockwork's CHANGELOG.md) after a release.
+  # Editor changes come in by moving BLOCKWORK_REV in qt-demo/sources.env.
   workflow_dispatch:
 
 permissions:
@@ -15,15 +16,8 @@ permissions:
 
 # Never let two deploys race; a newer push supersedes an in-flight one.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  # The home page's live editor is Blockwork's own Qt editor built for the
-  # browser (qt-demo/). Its sources are pinned in qt-demo/sources.env.
-  QT_VERSION: 6.12.0
-  # The Emscripten version that Qt build was made with (QT_EMCC_RECOMMENDED_VERSION).
-  EMSDK_VERSION: 5.0.5
 
 jobs:
   build:
@@ -35,6 +29,12 @@ jobs:
       # Blockwork at the pinned commit; blockstitch and lucide-qt at what its Cargo.lock pins.
       - name: Fetch the editor's sources
         run: qt-demo/deps.sh
+
+      # The home page's live editor is Blockwork's own Qt editor built for the
+      # browser (qt-demo/). Its sources and Qt/Emscripten versions are pinned
+      # in qt-demo/sources.env.
+      - name: Read the pinned versions
+        run: grep -E '^[A-Z_]+=' qt-demo/sources.env >> "$GITHUB_ENV"
 
       - name: Cache Qt and Emscripten
         uses: actions/cache@v4
@@ -91,8 +91,8 @@ jobs:
 
   deploy:
     needs: build
-    # A manual run on another branch only checks that the site builds.
-    if: github.ref == 'refs/heads/master'
+    # Other branches and pull requests only check that the site builds.
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -8,6 +8,10 @@
 export const COMMUNITY_URL: string =
   import.meta.env.PUBLIC_COMMUNITY_URL ?? 'https://community.blockworked.com';
 
+/** The helpdesk, served by the community site's Worker. */
+export const SUPPORT_URL: string =
+  import.meta.env.PUBLIC_SUPPORT_URL ?? 'https://support.blockworked.com';
+
 export interface NavLink {
   href: string;
   label: string;

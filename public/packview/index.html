@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pack viewer</title>
+<!--
+  The community site's pack viewer: Blockwork's own block canvas (the
+  public/demo/ Qt build, started as qt-demo/PackView.qml), embedded by
+  community.blockworked.com in an iframe. The embedding page talks to it
+  with postMessage:
+    -> {type: "blockwork-pack", pack, theme}   show a pack file (theme "dark" or "light")
+    -> {type: "blockwork-theme", theme}
+    -> {type: "blockwork-render"}              draw each block the pack defines as PNGs
+    <- {type: "blockwork-ready"}               send the pack now
+    <- {type: "blockwork-rendered", blocks}    [{id, width, height, dark, light}], base64 PNGs at 2x
+    <- {type: "blockwork-failed", reason}
+-->
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; touch-action: none; background: #27282b; }
+  body.light { background: #f5f6f8; }
+  #screen { position: absolute; inset: 0; }
+  #status { position: absolute; inset: 0; display: grid; place-items: center; font: 14px system-ui, sans-serif; color: #96979c; }
+  body.light #status { color: #616b79; }
+</style>
+</head>
+<body>
+<div id="screen"></div>
+<div id="status">Loading the blocks...</div>
+<script>
+(() => {
+  // Who may embed this and hand it packs.
+  const allowed = origin => origin === 'https://community.blockworked.com'
+    || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  let parentOrigin = null;
+  let module = null;
+  let qtReady = false;
+  let pending = null;
+  // Scrolls over the canvas pan and zoom it; none may chain to the embedding page.
+  document.addEventListener('wheel', event => event.preventDefault(), { capture: true, passive: false });
+  const status = document.getElementById('status');
+  const tell = message => { if (parentOrigin) window.parent.postMessage(message, parentOrigin); };
+  const setTheme = theme => document.body.classList.toggle('light', theme === 'light');
+
+  window.blockworkEntry = 'PackView';
+  window.blockworkPackView = {
+    ready() { qtReady = true; flush(); },
+    rendered(json) { tell({ type: 'blockwork-rendered', ...JSON.parse(json) }); },
+    failed(reason) { status.textContent = reason; status.hidden = false; tell({ type: 'blockwork-failed', reason }); },
+  };
+  function flush() {
+    if (!qtReady || !module || !pending) return;
+    const message = pending;
+    pending = null;
+    if (message.type === 'blockwork-pack') {
+      module.setPackTheme(message.theme === 'light' ? 'light' : 'dark');
+      module.loadPack(typeof message.pack === 'string' ? message.pack : JSON.stringify(message.pack));
+      status.hidden = true;
+    } else if (message.type === 'blockwork-theme') {
+      module.setPackTheme(message.theme === 'light' ? 'light' : 'dark');
+    } else if (message.type === 'blockwork-render') {
+      module.renderPack();
+    }
+  }
+  // Messages wait their turn until Qt is up; later ones go straight through.
+  const queue = [];
+  window.addEventListener('message', event => {
+    if (event.source !== window.parent || !allowed(event.origin)) return;
+    const message = event.data;
+    if (!message || typeof message.type !== 'string' || !message.type.startsWith('blockwork-')) return;
+    parentOrigin = event.origin;
+    if (message.theme) setTheme(message.theme);
+    queue.push(message);
+    drain();
+  });
+  function drain() {
+    while (queue.length && !pending) {
+      pending = queue.shift();
+      flush();
+    }
+  }
+  const ready = window.blockworkPackView.ready;
+  window.blockworkPackView.ready = () => { ready(); drain(); };
+
+  // Tell the embedding page we're here, so it can send the pack.
+  const hello = () => {
+    if (window.parent === window) return;
+    // The parent's origin isn't known yet; it checks ours.
+    window.parent.postMessage({ type: 'blockwork-ready' }, '*');
+  };
+
+  function load(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Couldn't load ${src}`));
+      document.head.appendChild(script);
+    });
+  }
+  const base = '../demo/';
+  // Fetch and compile the wasm alongside the two scripts rather than after them.
+  const url = base + 'blockwork-demo.wasm';
+  const wasm = typeof WebAssembly.compileStreaming === 'function'
+    ? WebAssembly.compileStreaming(fetch(url)).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.compile(b)))
+    : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.compile(b));
+  Promise.all([load(base + 'qtloader.js'), load(base + 'blockwork-demo.js')])
+    .then(() => window.qtLoad({
+      locateFile: path => base + path,
+      qt: {
+        module: wasm,
+        containerElements: [document.getElementById('screen')],
+        entryFunction: async config => {
+          module = await window.blockwork_demo_entry(config);
+          return module;
+        },
+        onLoaded: () => { hello(); drain(); },
+        onExit: exit => {
+          if (!exit.crashed) return;
+          window.blockworkPackView.failed(exit.text || 'The viewer stopped.');
+        },
+      },
+    }))
+    .catch(error => window.blockworkPackView.failed(String(error.message || error)));
+})();
+</script>
+</body>
+</html>
