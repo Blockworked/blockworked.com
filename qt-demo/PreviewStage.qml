@@ -46,7 +46,7 @@ Item {
                          { id: "b", type: "Text", text: { kind: "Param", name: "user" } },
                          { id: "c", type: "Key", key: { kind: "Text", value: "Enter" }, direction: "Click" }],
         "battery": [{ id: "a", type: "WhenBatteryChargedTo", threshold: num(100) },
-                    { id: "b", type: "Notify", title: txt("Fully charged"), message: txt("") }],
+                    { id: "b", type: "Notify", title: txt("Fully charged"), message: txt("Your device is charged to 100%") }],
         "snap": [{ id: "a", type: "Key", key: { kind: "Text", value: "Enter" }, direction: "Click" }]
     })
     // Lucide's hand and hand-grab (ISC), which the lean icon set leaves out.
