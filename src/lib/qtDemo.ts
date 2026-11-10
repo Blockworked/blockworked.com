@@ -18,6 +18,11 @@ declare global {
 
 const BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/demo/`;
 
+/** public/demo/ is empty: qt-demo/build.sh hasn't been run. */
+export class DemoMissing extends Error {
+  constructor() { super('The editor demo is not built (run qt-demo/build.sh).'); }
+}
+
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
@@ -26,6 +31,17 @@ function loadScript(src: string): Promise<void> {
     script.onerror = () => reject(new Error(`Couldn't load ${src}`));
     document.head.appendChild(script);
   });
+}
+
+/** Streams the module into the compiler as it downloads, where the server's
+ * MIME type allows that. */
+export function compileWasm(url: string): Promise<WebAssembly.Module> {
+  const response = fetch(url);
+  if (typeof WebAssembly.compileStreaming === 'function') {
+    return WebAssembly.compileStreaming(response).catch(() =>
+      fetch(url).then(r => r.arrayBuffer()).then(bytes => WebAssembly.compile(bytes)));
+  }
+  return response.then(r => r.arrayBuffer()).then(bytes => WebAssembly.compile(bytes));
 }
 
 let started = false;
@@ -70,6 +86,8 @@ export async function startQtDemo(onStopped?: (reason: string) => void): Promise
     const target = event.composedPath()[0];
     if (target instanceof HTMLElement) target.blur();
   };
+  // Wheel and touchpad scrolls over the editor pan and zoom its canvas, not the page.
+  editor.addEventListener('wheel', event => event.preventDefault(), { capture: true, passive: false });
   previews.forEach(el => el.addEventListener('focusin', refuseFocus));
   editor.addEventListener('focusin', event => { if (!editorClicked) refuseFocus(event); });
   // A background tab gets no focus events, so also check once Qt is up.
@@ -94,13 +112,18 @@ export async function startQtDemo(onStopped?: (reason: string) => void): Promise
   });
   containers.forEach(el => resizes.observe(el!));
 
-  await loadScript(`${BASE}qtloader.js`);
-  await loadScript(`${BASE}blockwork-demo.js`);
+  // Fetch and compile the wasm alongside the two scripts rather than after them.
+  // A checkout without qt-demo/build.sh's output has no demo to load.
+  const probe = await fetch(`${BASE}qtloader.js`, { method: 'HEAD' }).catch(() => null);
+  if (probe && probe.status === 404) throw new DemoMissing();
+  const wasm = compileWasm(`${BASE}blockwork-demo.wasm`);
+  await Promise.all([loadScript(`${BASE}qtloader.js`), loadScript(`${BASE}blockwork-demo.js`)]);
   let loaded = false;
   await new Promise<void>((resolve, reject) => {
     window.qtLoad!({
       locateFile: (path: string) => BASE + path,
       qt: {
+        module: wasm,
         containerElements: containers,
         // Keep the module: qtLoad itself resolves to nothing once app.exec()
         // hands control back to the browser.
