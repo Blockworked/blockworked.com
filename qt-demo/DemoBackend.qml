@@ -16,6 +16,8 @@ QtObject {
     // Why the editor has no document, shown by DemoMain over the editor
     // with a way to start over. Empty while all is well.
     property string failure: ""
+    // Off for the pack viewer, which loads a pack's macro instead (loadMacro).
+    property bool example: true
 
     readonly property Core core: Core {}
 
@@ -106,6 +108,7 @@ QtObject {
 
     readonly property var needsApp: ({
         run_macro: qsTr("Running macros needs the Blockwork app. Nothing runs on the website."),
+        run_strand: qsTr("Running macros needs the Blockwork app. Nothing runs on the website."),
         start_recording: qsTr("Recording needs the Blockwork app."),
         save_macro: qsTr("Edits here stay in this tab. Download Blockwork to keep your macros."),
         open_settings: qsTr("Settings live in the Blockwork app."),
@@ -171,11 +174,18 @@ QtObject {
         try {
             core.reset();
             backend.coreCommands = run("commands");
-            buildExample();
+            if (example) buildExample();
         } catch (e) {
             fail(qsTr("The editor couldn't set up its example: %1").arg(e));
             return;
         }
+        publish();
+    }
+    // Opens a saved macro document (a pack's `blocks`) as the only macro.
+    function loadMacro(doc) {
+        if (failure.length) return;
+        try { run("load", { macros: [doc] }); }
+        catch (e) { fail(e); return; }
         publish();
     }
     Component.onCompleted: start()

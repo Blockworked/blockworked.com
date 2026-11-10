@@ -1,11 +1,14 @@
 ---
+// community.blockworked.com keeps a copy of this in its src/site-nav.ts; change both together.
 import { Moon, Sun, Download } from '@lucide/astro';
 import GitHubMark from './GitHubMark.astro';
+import { logoAt } from '../lib/logo';
 import { REPO_URL } from '../lib/releases';
 import { NAV_LINKS } from '../lib/site';
 
 // Mirrored on community.blockworked.com (see src/lib/site.ts): keep the
 // markup and styles here in step with that copy.
+const brandLogo = await logoAt(28);
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 ---
 
@@ -14,7 +17,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     <!-- On the home page this stays hidden until the big title has scrolled
          out of view (see index.astro). -->
     <a class:list={['brand', { 'brand-home': path === '/' }]} href="/" inert={path === '/' ? true : undefined}>
-      <img src="/logo.png" alt="" width="28" height="28" />
+      <img {...brandLogo} alt="" />
       <span>Blockwork</span>
     </a>
     <nav class="site-nav" aria-label="Main">
@@ -43,7 +46,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     try {
       localStorage.setItem('blockstitch-theme', next);
     } catch {
-      // storage disabled — the toggle still works for this page view
+      // storage disabled: the toggle still works for this page view
     }
     // Shared with community.blockworked.com, which reads the same cookie.
     const domain = /(^|\.)blockworked\.com$/.test(location.hostname) ? '; domain=blockworked.com' : '';
@@ -76,11 +79,10 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     display: flex;
     align-items: center;
     gap: 8px;
-    font-weight: 800;
-    font-size: 16px;
+    font-weight: 700;
+    font-size: 17px;
     line-height: 1;
     text-decoration: none;
-    letter-spacing: -0.045em;
   }
   .site-nav {
     display: flex;

@@ -1,8 +1,6 @@
-/* The parts of blockstitch's old browser theme (blockstitch/src/theme/
-   blockstitch.css) the site's own markup still uses: the color, spacing and
-   motion tokens with their light-theme overrides and the base button and
-   field styles. The editor itself is Blockwork's Qt build now (qt-demo/),
-   which brings its own look. */
+/* The site's design tokens (color, spacing and motion, with light-theme
+   overrides) and its base button and field styles. The editor is Blockwork's
+   Qt build (qt-demo/), which brings its own look. */
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
 }

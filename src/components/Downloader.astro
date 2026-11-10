@@ -2,7 +2,7 @@
 // Latest-release downloader, ported from ethanstokes.dev's Kobweb
 // BlockworkPage: fetches the latest GitHub release in the browser (so the
 // static site never goes stale between deploys), suggests the build for the
-// visitor's OS/arch, and — in `full` mode — lists every asset by platform.
+// visitor's OS/arch, and in `full` mode lists every asset by platform.
 import { Download, Monitor, Laptop, SquareTerminal, ExternalLink } from '@lucide/astro';
 import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
 
@@ -98,7 +98,7 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
       if (hints?.architecture === 'arm') arch = 'arm64';
       else if (hints?.architecture === 'x86') arch = 'x86_64';
     } catch {
-      // Hint unavailable — keep the UA-string guess.
+      // Hint unavailable: keep the UA-string guess.
     }
     // The only macOS build is Apple silicon.
     if (platform === 'macos') arch = 'arm64';
