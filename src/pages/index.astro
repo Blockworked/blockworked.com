@@ -141,12 +141,6 @@ const ctaLogo = await logoAt(88);
           </div>
         </article>
       </div>
-
-      <dl class="specs panel">
-        <div class="panel-row"><dt>Cross-platform</dt><dd>Windows, macOS, and Linux</dd></div>
-        <div class="panel-row"><dt>Privacy</dt><dd>No account. Macros stay local.</dd></div>
-        <div class="panel-row"><dt>Source Code</dt><dd><a href={REPO_URL}>GPL-3.0 on GitHub</a></dd></div>
-      </dl>
     </div>
   </section>
 
@@ -489,16 +483,6 @@ const ctaLogo = await logoAt(88);
   /* Illustrations only: Qt draws real blocks here, but the page keeps every
      pointer event, so scrolling over one scrolls the page. */
   .feature-stage .qt-host { pointer-events: none; }
-
-  .specs { max-width: 560px; margin: 48px auto 0; }
-  .specs .panel-row { padding: 12px 18px; gap: 16px; align-items: baseline; }
-  .specs dt { width: 120px; flex-shrink: 0; font-size: 13px; color: var(--blockstitch-text-dim); }
-  .specs dd { margin: 0; font-size: 14px; color: var(--blockstitch-text); }
-  .specs a { color: var(--blockstitch-accent); text-decoration: none; }
-  .specs a:hover { text-decoration: underline; }
-  @media (max-width: 520px) {
-    .specs .panel-row { flex-direction: column; gap: 2px; }
-  }
 
   .section-alt {
     /* A light tint rather than the full glass fill, so the page background still shows through. */
