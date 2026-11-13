@@ -53,9 +53,14 @@ export function parseAsset(asset: GitHubAsset): ReleaseAsset | null {
   const base = { name: asset.name, url: asset.browser_download_url, size: asset.size, arch };
 
   if (name.includes('windows')) {
-    return name.includes('setup')
-      ? { ...base, platform: 'windows', kind: 'Installer', hint: 'Recommended for most people', rank: 0 }
-      : { ...base, platform: 'windows', kind: 'Portable', hint: 'A single .exe, no installation', rank: 1 };
+    if (name.includes('setup')) {
+      return { ...base, platform: 'windows', kind: 'Installer', hint: 'Recommended for most people', rank: 0 };
+    }
+    if (name.endsWith('.zip')) {
+      return { ...base, platform: 'windows', kind: 'Portable', hint: 'No installation: unzip, then run blockwork.exe inside the Blockwork folder', rank: 1 };
+    }
+    // The MSIX is for the Microsoft Store, and old releases' bare .exe needs Qt beside it.
+    return null;
   }
   if (name.includes('macos') || name.includes('darwin')) {
     return { ...base, platform: 'macos', kind: 'App', hint: 'Unsigned: unzip, move to Applications, then right-click › Open the first time', rank: 0 };
