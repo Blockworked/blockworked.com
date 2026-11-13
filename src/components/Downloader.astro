@@ -12,6 +12,7 @@ interface Props {
 }
 const { mode = 'full', align = 'start' } = Astro.props;
 const AUR_URL = 'https://aur.archlinux.org/packages/blockwork';
+const STORE_URL = 'https://apps.microsoft.com/detail/9PMN4BMXPH54';
 
 const platforms: { id: Platform; icon: typeof Monitor }[] = [
   { id: 'windows', icon: Monitor },
@@ -44,6 +45,15 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
         <section class="panel" data-platform={id}>
           <h3 class="panel-title"><Icon />{PLATFORM_LABELS[id]}</h3>
           <div data-rows></div>
+          {id === 'windows' && (
+            <div class="panel-row dl-row">
+              <div class="panel-row-label">
+                <div class="dl-row-title">Microsoft Store <span class="dl-arch">x64 and ARM64</span></div>
+                <div class="panel-row-hint">Installs and updates through the Store</div>
+              </div>
+              <a class="btn" href={STORE_URL}><ExternalLink /><span class="dl-btn-text">Get it</span></a>
+            </div>
+          )}
           {id === 'linux' && (
             <div class="panel-row dl-row">
               <div class="panel-row-label">
