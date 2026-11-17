@@ -12,6 +12,10 @@ export const COMMUNITY_URL: string =
 export const SUPPORT_URL: string =
   import.meta.env.PUBLIC_SUPPORT_URL ?? 'https://support.blockworked.com';
 
+/** The translation site, also served by the community site's Worker. */
+export const TRANSLATE_URL: string =
+  import.meta.env.PUBLIC_TRANSLATE_URL ?? 'https://translate.blockworked.com';
+
 export interface NavLink {
   href: string;
   label: string;
@@ -23,4 +27,6 @@ export const NAV_LINKS: NavLink[] = [
   { href: '/download', label: 'Download' },
   { href: '/changelog', label: 'Changelog' },
   { href: COMMUNITY_URL, label: 'Community' },
+  { href: `${SUPPORT_URL}/`, label: 'Support' },
+  { href: `${TRANSLATE_URL}/`, label: 'Translate' },
 ];
