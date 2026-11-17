@@ -5,15 +5,17 @@
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import { ImageOff } from '@lucide/astro';
+import { locale } from '../lib/i18n';
+const { t } = locale(Astro.url);
 
 const files = import.meta.glob<{ default: ImageMetadata }>('../assets/screenshots/*.{png,jpg,jpeg,webp}', { eager: true });
 const find = (name: string) =>
   Object.entries(files).find(([path]) => path.split('/').pop()!.replace(/\.\w+$/, '') === name)?.[1].default;
 
 const shots = [
-  { name: 'editor', caption: 'Building a macro in the block editor', wide: true },
-  { name: 'recording', caption: 'Recording keyboard and mouse input' },
-  { name: 'settings', caption: 'Global hotkeys and settings' },
+  { name: 'editor', caption: t('Building a macro in the block editor'), wide: true },
+  { name: 'recording', caption: t('Recording keyboard and mouse input') },
+  { name: 'settings', caption: t('Global hotkeys and settings') },
 ].map(s => ({ ...s, image: find(s.name) }));
 ---
 

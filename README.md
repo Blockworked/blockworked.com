@@ -77,8 +77,20 @@ One-time setup on GitHub:
   at a local `wrangler dev`.
 - `src/components/Downloader.astro` - fetches the latest GitHub release in the
   browser and recommends a build for the visitor's OS/arch.
-- `src/pages/changelog.astro` - rendered **at build time** from Blockwork's
-  `CHANGELOG.md` on `master`.
+- `src/pages/[...lang]/changelog.astro` - rendered **at build time** from Blockwork's
+  `CHANGELOG.md` on `master` (the notes stay in English in every language).
+- Translations: pages read their text through `locale(Astro.url)`'s `t()`
+  (plain, Astro escapes it), `th()` (HTML for `set:html`, with `{name}` values
+  inserted as they are) and `tn()` (plural forms); browser scripts use `ct()`
+  from `src/lib/client-i18n.ts`, and each page carries its language's copies of
+  those strings. `pnpm i18n:extract` writes `locales/website.pot`, which
+  Weblate (translate.blockworked.com, component `blockworked/website`) turns
+  into `locales/<code>.po`; `pnpm build` fails while the template is out of
+  date. A language is built once half its strings are translated: English
+  stays at `/`, the others under `/<tag>/` (`/de/`, `/pt-br/`). The footer gets
+  a language menu, and the choice goes in a `bw-lang` cookie that
+  community.blockworked.com reads too; an English page sends a visitor without
+  that cookie to their browser's best offered language.
 - `src/assets/screenshots/` - drop `editor.png`, `recording.png`, `settings.png`
   here; missing ones render as placeholders.
 

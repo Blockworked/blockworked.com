@@ -2,28 +2,38 @@
 import '../styles/global.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import { LANGUAGES, locale } from '../lib/i18n';
 
 interface Props {
   title?: string;
   description?: string;
 }
 
+const L = locale(Astro.url);
+const { t } = L;
 const {
   title,
-  description = 'Build keyboard and mouse macros by snapping blocks together. Free for Windows, macOS, and Linux.',
+  description = t('Build keyboard and mouse macros by snapping blocks together. Free for Windows, macOS, and Linux.'),
 } = Astro.props;
-const fullTitle = title ? `${title} · Blockwork` : 'Blockwork - Blocky automation';
+const fullTitle = title ? `${title} · Blockwork` : t('Blockwork - Blocky automation');
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const alternates = LANGUAGES.length > 1 ? LANGUAGES.map(l => ({ tag: l.tag, href: new URL(l.prefix + (l.prefix && L.path === '/' ? '/' : L.path), Astro.site).href })) : [];
+// For the head script: each language's prefix, by code and by lower-case tag.
+const prefixes = Object.fromEntries(LANGUAGES.flatMap(l => [[l.code.toLowerCase(), l.prefix], [l.tag.toLowerCase(), l.prefix]]));
+// The page's scripts read their strings from here (src/lib/client-i18n.ts).
+const clientStrings = JSON.stringify(L.client()).replace(/</g, '\\u003c');
 ---
 
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang={L.tag} dir={L.dir} data-theme="dark" data-lang-prefix={L.prefix}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {alternates.map(a => <link rel="alternate" hreflang={a.tag} href={a.href} />)}
+    {alternates.length > 0 && <link rel="alternate" hreflang="x-default" href={alternates[0].href} />}
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
@@ -46,6 +56,32 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         document.documentElement.dataset.theme = t;
       })();
     </script>
+    <!-- Show the page in the language picked on either Blockworked site (the
+         bw-lang cookie), else, on an English page, the browser's best offered
+         one. Only built once there is a language besides English. -->
+    {LANGUAGES.length > 1 && (
+      <script is:inline define:vars={{ prefixes }}>
+        (function () {
+          var here = document.documentElement.dataset.langPrefix || '';
+          var m = document.cookie.match(/(?:^|; )bw-lang=([A-Za-z0-9_@-]{2,20})/);
+          var want = null;
+          var find = function (code) {
+            code = code.toLowerCase().replace(/_/g, '-');
+            if (code in prefixes) return prefixes[code];
+            code = code.split('-')[0];
+            return code in prefixes ? prefixes[code] : null;
+          };
+          if (m) want = find(m[1].replace(/_/g, '-')) || '';
+          else if (!here) {
+            var list = navigator.languages || [navigator.language || ''];
+            for (var i = 0; i < list.length && want === null; i++) want = find(list[i] || '');
+          }
+          if (want === null || want === here) return;
+          var rest = location.pathname.slice(here.length) || '/';
+          location.replace(want + (want && rest === '/' ? '/' : rest) + location.search + location.hash);
+        })();
+      </script>
+    )}
     <!-- Fade between blockworked.com and community.blockworked.com. They're
          separate origins, so CSS cross-document view transitions (which
          global.css turns on within each site) don't reach across: the page
@@ -95,6 +131,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     </script>
   </head>
   <body>
+    {clientStrings !== '{}' && <script is:inline type="application/json" id="bw-i18n" set:html={clientStrings} />}
     <SiteHeader />
     <main>
       <slot />

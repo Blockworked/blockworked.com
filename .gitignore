@@ -9,3 +9,4 @@ qt-demo/build-native/
 __pycache__/
 .idea/
 .claude/
+src/lib/locales.generated.ts

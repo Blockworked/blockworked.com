@@ -5,35 +5,37 @@ import GitHubMark from './GitHubMark.astro';
 import { logoAt } from '../lib/logo';
 import { REPO_URL } from '../lib/releases';
 import { NAV_LINKS } from '../lib/site';
+import { locale } from '../lib/i18n';
 
 // Mirrored on community.blockworked.com (see src/lib/site.ts): keep the
 // markup and styles here in step with that copy.
 const brandLogo = await logoAt(28);
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const { t, href, path: here } = locale(Astro.url);
+const path = here.replace(/\/$/, '') || '/';
 ---
 
 <header class="site-header">
   <div class="container site-header-inner">
     <!-- On the home page this stays hidden until the big title has scrolled
          out of view (see index.astro). -->
-    <a class:list={['brand', { 'brand-home': path === '/' }]} href="/" inert={path === '/' ? true : undefined}>
+    <a class:list={['brand', { 'brand-home': path === '/' }]} href={href('/')} inert={path === '/' ? true : undefined}>
       <img {...brandLogo} alt="" />
       <span>Blockwork</span>
     </a>
     <nav class="site-nav" aria-label="Main">
       {NAV_LINKS.map(l => (
-        <a href={l.href} aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
+        <a href={href(l.href)} aria-current={path === l.href ? 'page' : undefined}>{t(l.label)}</a>
       ))}
     </nav>
     <div class="site-header-actions">
-      <a class="btn btn-icon btn-ghost" href={REPO_URL} title="Blockwork on GitHub" aria-label="Blockwork on GitHub">
+      <a class="btn btn-icon btn-ghost" href={REPO_URL} title={t('Blockwork on GitHub')} aria-label={t('Blockwork on GitHub')}>
         <GitHubMark width="16" height="16" />
       </a>
-      <button class="btn btn-icon btn-ghost theme-toggle" type="button" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">
+      <button class="btn btn-icon btn-ghost theme-toggle" type="button" title={t('Toggle light/dark theme')} aria-label={t('Toggle light/dark theme')}>
         <Sun class="icon-sun" />
         <Moon class="icon-moon" />
       </button>
-      <a class="btn btn-primary header-cta" href="/download"><Download />Download</a>
+      <a class="btn btn-primary header-cta" href={href('/download')}><Download />{t('Download')}</a>
     </div>
   </div>
 </header>

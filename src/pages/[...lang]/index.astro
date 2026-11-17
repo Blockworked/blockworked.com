@@ -1,13 +1,17 @@
 ---
-import Base from '../layouts/Base.astro';
-import Downloader from '../components/Downloader.astro';
-import Screenshots from '../components/Screenshots.astro';
-import GitHubMark from '../components/GitHubMark.astro';
-import { logoAt } from '../lib/logo';
+import Base from '../../layouts/Base.astro';
+import Downloader from '../../components/Downloader.astro';
+import Screenshots from '../../components/Screenshots.astro';
+import GitHubMark from '../../components/GitHubMark.astro';
+import { logoAt } from '../../lib/logo';
 import {
   ChevronDown, Hand, RotateCw,
 } from '@lucide/astro';
-import { REPO_URL } from '../lib/releases';
+import { REPO_URL } from '../../lib/releases';
+import { languagePaths, locale } from '../../lib/i18n';
+
+export const getStaticPaths = languagePaths;
+const { t } = locale(Astro.url);
 
 const heroLogo = await logoAt(160);
 const ctaLogo = await logoAt(88);
@@ -23,20 +27,20 @@ const ctaLogo = await logoAt(88);
             <span>Blockwork</span>
           </span>
         </h1>
-        <p class="hero-tagline">Powerful, understandable &amp; fun automation</p>
+        <p class="hero-tagline">{t('Powerful, understandable & fun automation')}</p>
         <div class="hero-actions">
           <Downloader mode="compact">
-            <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />View source</a>
+            <a slot="actions" class="btn btn-lg" href={REPO_URL}><GitHubMark width="16" height="16" />{t('View source')}</a>
           </Downloader>
         </div>
       </div>
       <!-- A small script as Blockwork's own editor draws it (captured from the app). -->
       <figure class="hero-script">
-        <img class="on-dark" src="/hero-script-dark.png" alt="A Blockwork script: when F8 is pressed, type On my way!, wait 500 ms, then log Replied." width="438" height="395" />
+        <img class="on-dark" src="/hero-script-dark.png" alt={t('A Blockwork script: when F8 is pressed, type On my way!, wait 500 ms, then log Replied.')} width="438" height="395" />
         <img class="on-light" src="/hero-script-light.png" alt="" width="438" height="395" />
       </figure>
     </div>
-    <a class="scroll-cue" href="#try" aria-label="Scroll down"><ChevronDown /></a>
+    <a class="scroll-cue" href="#try" aria-label={t('Scroll down')}><ChevronDown /></a>
   </section>
 
   <section class="try" id="try">
@@ -46,7 +50,7 @@ const ctaLogo = await logoAt(88);
           <div class="editor-titlebar">
             <span class="dot" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span>
             <span class="editor-titlebar-name" aria-hidden="true">Blockwork</span>
-            <button type="button" class="editor-done" data-editor-done>Done</button>
+            <button type="button" class="editor-done" data-editor-done>{t('Done')}</button>
           </div>
           <div class="editor-body">
             <!-- Blockwork's real Qt editor, compiled to WebAssembly (qt-demo/),
@@ -58,22 +62,22 @@ const ctaLogo = await logoAt(88);
                  inside a fullscreen overlay instead. -->
             <div class="editor-scale-wrap" data-editor-scale-wrap>
               <div class="qt-host" data-qt-screen="editor"></div>
-              <div class="editor-loading dot-grid" data-editor-loading>Loading the editor…</div>
+              <div class="editor-loading dot-grid" data-editor-loading>{t('Loading the editor…')}</div>
               <div class="editor-loading editor-stopped dot-grid" data-editor-stopped hidden>
-                The editor stopped.
-                <button type="button" data-editor-reload>Reload to start over</button>
+                {t('The editor stopped.')}
+                <button type="button" data-editor-reload>{t('Reload to start over')}</button>
               </div>
             </div>
             <!-- The editor would swallow every scroll or swipe that lands on it,
                  so it stays locked until clicked (see the script below). -->
             <button type="button" class="editor-unlock" data-editor-unlock>
-              <Hand /><span class="unlock-click">Click to try the editor</span><span class="unlock-tap">Tap to try the editor</span>
+              <Hand /><span class="unlock-click">{t('Click to try the editor')}</span><span class="unlock-tap">{t('Tap to try the editor')}</span>
             </button>
             <!-- Sidebar and canvas both get more room in landscape; only
                  shown once active, on phones, while held upright. -->
             <div class="editor-rotate-hint" data-editor-rotate-hint>
-              <RotateCw /><span>Rotate your device for more room</span>
-              <button type="button" class="editor-rotate-dismiss" data-editor-rotate-dismiss aria-label="Dismiss">✕</button>
+              <RotateCw /><span>{t('Rotate your device for more room')}</span>
+              <button type="button" class="editor-rotate-dismiss" data-editor-rotate-dismiss aria-label={t('Dismiss')}>✕</button>
             </div>
           </div>
         </div>
@@ -81,24 +85,23 @@ const ctaLogo = await logoAt(88);
              `.editor-active` under `pointer: coarse` below), which now
              floats with a gap instead of touching the screen edges. -->
         <div class="editor-mobile-scrim" data-editor-scrim aria-hidden="true"></div>
-        <p class="editor-caption">A live copy of Blockwork's editor. Edits stay in this tab and nothing runs.</p>
+        <p class="editor-caption">{t("A live copy of Blockwork's editor. Edits stay in this tab and nothing runs.")}</p>
       </div>
     </div>
   </section>
 
   <section class="section" id="features">
     <div class="container">
-      <h2 class="section-heading">Everything a macro needs, nothing to memorize</h2>
+      <h2 class="section-heading">{t('Everything a macro needs, nothing to memorize')}</h2>
       <p class="section-lede">
-        Every instruction is a block with its own inputs. Value and condition slots are shaped by type,
-        so you can tell what goes where at a glance.
+        {t('Every instruction is a block with its own inputs. Value and condition slots are shaped by type, so you can tell what goes where at a glance.')}
       </p>
 
       <div class="features">
         <article class="feature">
           <div class="feature-copy">
-            <h3>Record it once, then edit the blocks</h3>
-            <p>Press Record and do the task yourself. Every key and button press and release comes back as its own block, with the real pause between them, ready to trim, retime, or loop.</p>
+            <h3>{t('Record it once, then edit the blocks')}</h3>
+            <p>{t('Press Record and do the task yourself. Every key and button press and release comes back as its own block, with the real pause between them, ready to trim, retime, or loop.')}</p>
           </div>
           <div class="feature-stage" aria-hidden="true">
             <div class="qt-host" data-qt-screen="record"></div>
@@ -106,8 +109,8 @@ const ctaLogo = await logoAt(88);
         </article>
         <article class="feature">
           <div class="feature-copy">
-            <h3>Build by dragging, not typing</h3>
-            <p>Pull blocks from the sidebar and snap them into a stack. Each slot has a shape, so a condition can't end up where a number goes.</p>
+            <h3>{t('Build by dragging, not typing')}</h3>
+            <p>{t("Pull blocks from the sidebar and snap them into a stack. Each slot has a shape, so a condition can't end up where a number goes.")}</p>
           </div>
           <div class="feature-stage" aria-hidden="true">
             <div class="qt-host" data-qt-screen="snap"></div>
@@ -115,8 +118,8 @@ const ctaLogo = await logoAt(88);
         </article>
         <article class="feature">
           <div class="feature-copy">
-            <h3>Loops and variables you can see</h3>
-            <p>Repeat, while and if wrap around the blocks they control. Variables and operators like pick random fill the slots, and clicking one shows its value right now.</p>
+            <h3>{t('Loops and variables you can see')}</h3>
+            <p>{t('Repeat, while and if wrap around the blocks they control. Variables and operators like pick random fill the slots, and clicking one shows its value right now.')}</p>
           </div>
           <div class="feature-stage" aria-hidden="true">
             <div class="qt-host" data-qt-screen="logic"></div>
@@ -124,8 +127,8 @@ const ctaLogo = await logoAt(88);
         </article>
         <article class="feature">
           <div class="feature-copy">
-            <h3>Make your own blocks</h3>
-            <p>Turn a sequence you keep rebuilding into one block with its own inputs and color, then drop it into any macro.</p>
+            <h3>{t('Make your own blocks')}</h3>
+            <p>{t('Turn a sequence you keep rebuilding into one block with its own inputs and color, then drop it into any macro.')}</p>
           </div>
           <div class="feature-stage" aria-hidden="true">
             <div class="qt-host" data-qt-screen="custom-block"></div>
@@ -133,8 +136,8 @@ const ctaLogo = await logoAt(88);
         </article>
         <article class="feature">
           <div class="feature-copy">
-            <h3>Runs when you're not looking</h3>
-            <p>Start a macro from a global hotkey, on a schedule, when a window comes into focus, or when the battery is full.</p>
+            <h3>{t("Runs when you're not looking")}</h3>
+            <p>{t('Start a macro from a global hotkey, on a schedule, when a window comes into focus, or when the battery is full.')}</p>
           </div>
           <div class="feature-stage" aria-hidden="true">
             <div class="qt-host" data-qt-screen="battery"></div>
@@ -146,8 +149,8 @@ const ctaLogo = await logoAt(88);
 
   <section class="section section-alt" id="screenshots">
     <div class="container">
-      <h2 class="section-heading">A canvas for your automations</h2>
-      <p class="section-lede">Pan, zoom, leave comments, and keep as many macros as you like, with light and dark themes.</p>
+      <h2 class="section-heading">{t('A canvas for your automations')}</h2>
+      <p class="section-lede">{t('Pan, zoom, leave comments, and keep as many macros as you like, with light and dark themes.')}</p>
       <Screenshots />
     </div>
   </section>
@@ -157,8 +160,8 @@ const ctaLogo = await logoAt(88);
       <div class="cta panel">
         <img {...ctaLogo} alt="" class="cta-logo" loading="lazy" />
         <div class="cta-copy">
-          <h2 class="section-heading">Get Blockwork</h2>
-          <p class="section-lede">Free and open source. Grab the latest release for your platform.</p>
+          <h2 class="section-heading">{t('Get Blockwork')}</h2>
+          <p class="section-lede">{t('Free and open source. Grab the latest release for your platform.')}</p>
           <div class="cta-actions"><Downloader mode="compact" /></div>
         </div>
       </div>
@@ -167,7 +170,7 @@ const ctaLogo = await logoAt(88);
 </Base>
 
 <script>
-  import { setupHomePage } from '../lib/home';
+  import { setupHomePage } from '../../lib/home';
   setupHomePage();
 </script>
 

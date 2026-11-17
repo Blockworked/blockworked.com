@@ -3,6 +3,8 @@
 // `.github/workflows/release.yml`, e.g. `blockwork-windows-x86_64-setup.exe`,
 // `blockwork-linux-arm64.flatpak`, `blockwork-macos-arm64.app.zip`.
 
+import { ct } from './client-i18n';
+
 export const REPO = 'Blockworked/Blockwork';
 export const REPO_URL = `https://github.com/${REPO}`;
 export const RELEASES_URL = `${REPO_URL}/releases`;
@@ -54,23 +56,23 @@ export function parseAsset(asset: GitHubAsset): ReleaseAsset | null {
 
   if (name.includes('windows')) {
     if (name.includes('setup')) {
-      return { ...base, platform: 'windows', kind: 'Installer', hint: 'Recommended for most people', rank: 0 };
+      return { ...base, platform: 'windows', kind: ct('Installer'), hint: ct('Recommended for most people'), rank: 0 };
     }
     if (name.endsWith('.zip')) {
-      return { ...base, platform: 'windows', kind: 'Portable', hint: 'No installation: unzip, then run blockwork.exe inside the Blockwork folder', rank: 1 };
+      return { ...base, platform: 'windows', kind: ct('Portable'), hint: ct('No installation: unzip, then run blockwork.exe inside the Blockwork folder'), rank: 1 };
     }
     // The MSIX is for the Microsoft Store, and old releases' bare .exe needs Qt beside it.
     return null;
   }
   if (name.includes('macos') || name.includes('darwin')) {
-    return { ...base, platform: 'macos', kind: 'App', hint: 'Unsigned: unzip, move to Applications, then right-click › Open the first time', rank: 0 };
+    return { ...base, platform: 'macos', kind: ct('App'), hint: ct('Unsigned: unzip, move to Applications, then right-click › Open the first time'), rank: 0 };
   }
   if (name.includes('linux')) {
     if (name.endsWith('.appimage')) {
-      return { ...base, platform: 'linux', kind: 'AppImage', hint: 'Runs on most distributions. Mark it executable and launch', rank: 0 };
+      return { ...base, platform: 'linux', kind: 'AppImage', hint: ct('Runs on most distributions. Mark it executable and launch'), rank: 0 };
     }
     if (name.endsWith('.flatpak')) {
-      return { ...base, platform: 'linux', kind: 'Flatpak', hint: 'Sandboxed bundle. Install with flatpak install', rank: 1 };
+      return { ...base, platform: 'linux', kind: 'Flatpak', hint: ct('Sandboxed bundle. Install with flatpak install'), rank: 1 };
     }
   }
   return null;
@@ -81,6 +83,51 @@ export function formatSize(bytes: number): string {
   return mb >= 100 ? `${Math.round(mb)} MB` : `${mb.toFixed(1)} MB`;
 }
 
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+export function formatDate(iso: string, language = 'en-US'): string {
+  return new Date(iso).toLocaleDateString(language, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+export interface ChangelogEntry {
+  version: string;
+  date: string | null;
+  html: string;
+}
+
+let changelogEntries: Promise<ChangelogEntry[]> | null = null;
+
+/** Blockwork's CHANGELOG.md (Keep a Changelog format) on its master branch,
+ *  richer than the GitHub release bodies, which are generated from it at tag
+ *  time and are sometimes just a stub. Fetched once per build, for every
+ *  language's changelog page. */
+export function changelog(): Promise<ChangelogEntry[]> {
+  changelogEntries ??= fetchChangelog();
+  return changelogEntries;
+}
+
+async function fetchChangelog(): Promise<ChangelogEntry[]> {
+  const { marked } = await import('marked');
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/${REPO}/master/CHANGELOG.md`);
+    if (!res.ok) throw new Error(`GitHub responded ${res.status}`);
+    // The site avoids em-dashes, including in text pulled from Blockwork's changelog.
+    const md = (await res.text()).replace(/\s*\u2014\s*/g, ', ');
+    // "## [0.5.3] - 2026-09-14" starts each entry; anything before the first is the preamble.
+    const heading = /^## \[([^\]]+)\](?:\s*-\s*(\d{4}-\d{2}-\d{2}))?\s*$/gm;
+    const matches = [...md.matchAll(heading)];
+    return matches.map((m, i) => {
+      const body = md.slice(m.index! + m[0].length, matches[i + 1]?.index ?? md.length);
+      return {
+        version: m[1],
+        date: m[2] ?? null,
+        // Drop trailing link-reference definitions ("[0.5.3]: https://…").
+        html: marked.parse(body.replace(/^\[[^\]]+\]:\s+\S+\s*$/gm, '').trim(), { async: false }),
+      };
+    });
+  } catch (e) {
+    // A deploy must not ship the fallback page; a local build may.
+    const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env;
+    if (env?.CI) throw new Error(`[changelog] couldn't fetch CHANGELOG.md: ${e}`);
+    console.warn(`[changelog] couldn't fetch CHANGELOG.md, rendering the fallback: ${e}`);
+    return [];
+  }
 }

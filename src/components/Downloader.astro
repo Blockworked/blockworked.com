@@ -5,12 +5,14 @@
 // visitor's OS/arch, and in `full` mode lists every asset by platform.
 import { Download, Monitor, Laptop, SquareTerminal, ExternalLink } from '@lucide/astro';
 import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
+import { locale } from '../lib/i18n';
 
 interface Props {
   mode?: 'compact' | 'full';
   align?: 'start' | 'center';
 }
 const { mode = 'full', align = 'start' } = Astro.props;
+const { t, th, href } = locale(Astro.url);
 const AUR_URL = 'https://aur.archlinux.org/packages/blockwork';
 const STORE_URL = 'https://apps.microsoft.com/detail/9PMN4BMXPH54';
 
@@ -26,14 +28,14 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     <div class="dl-buttons">
       <a class="btn btn-primary btn-lg" href={RELEASES_URL} data-recommended>
         <Download />
-        <span data-recommended-label>Download Blockwork</span>
+        <span data-recommended-label>{t('Download Blockwork')}</span>
       </a>
       <slot name="actions" />
     </div>
     <div class="dl-info">
       {mode === 'compact' && (
         <p class="dl-other">
-          Not on this platform? <a href="/download">See all downloads</a> <a href={RELEASES_URL}>Release history</a>
+          {t('Not on this platform?')} <a href={href('/download')}>{t('See all downloads')}</a> <a href={RELEASES_URL}>{t('Release history')}</a>
         </p>
       )}
     </div>
@@ -48,19 +50,19 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
           {id === 'windows' && (
             <div class="panel-row dl-row">
               <div class="panel-row-label">
-                <div class="dl-row-title">Microsoft Store <span class="dl-arch">x64 and ARM64</span></div>
-                <div class="panel-row-hint">Installs and updates through the Store</div>
+                <div class="dl-row-title">Microsoft Store <span class="dl-arch">{t('x64 and ARM64')}</span></div>
+                <div class="panel-row-hint">{t('Installs and updates through the Store')}</div>
               </div>
-              <a class="btn" href={STORE_URL}><ExternalLink /><span class="dl-btn-text">Get it</span></a>
+              <a class="btn" href={STORE_URL}><ExternalLink /><span class="dl-btn-text">{t('Get it')}</span></a>
             </div>
           )}
           {id === 'linux' && (
             <div class="panel-row dl-row">
               <div class="panel-row-label">
                 <div class="dl-row-title">AUR <span class="dl-arch">Arch Linux</span></div>
-                <div class="panel-row-hint">Builds from source: <code>paru -S blockwork</code></div>
+                <div class="panel-row-hint" set:html={th('Builds from source: {command}', { command: '<code>paru -S blockwork</code>' })} />
               </div>
-              <a class="btn" href={AUR_URL}><ExternalLink /><span class="dl-btn-text">View package</span></a>
+              <a class="btn" href={AUR_URL}><ExternalLink /><span class="dl-btn-text">{t('View package')}</span></a>
             </div>
           )}
         </section>
@@ -75,7 +77,7 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
         <div class="panel-row-hint" data-hint></div>
       </div>
       <span class="panel-row-hint dl-size" data-size></span>
-      <a class="btn" data-link><Download /><span class="dl-btn-text">Download</span></a>
+      <a class="btn" data-link><Download /><span class="dl-btn-text">{t('Download')}</span></a>
     </div>
   </template>
 </div>
@@ -85,6 +87,7 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     PLATFORM_LABELS, RELEASES_URL, REPO, formatSize, parseAsset,
     type Arch, type GitHubRelease, type Platform, type ReleaseAsset,
   } from '../lib/releases';
+  import { ct, localHref } from '../lib/client-i18n';
 
   interface NavigatorUAData {
     platform: string;
@@ -135,7 +138,7 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     return res.json();
   });
 
-  const archLabel = (a: ReleaseAsset) => (a.platform === 'macos' ? 'Apple silicon' : a.arch === 'arm64' ? 'ARM64' : 'x64');
+  const archLabel = (a: ReleaseAsset) => (a.platform === 'macos' ? ct('Apple silicon') : a.arch === 'arm64' ? 'ARM64' : 'x64');
 
   async function init(root: HTMLElement) {
     const recommendedLink = root.querySelector<HTMLAnchorElement>('[data-recommended]')!;
@@ -145,7 +148,7 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     try {
       release = await latestRelease;
     } catch {
-      recommendedLabel.textContent = 'View releases on GitHub';
+      recommendedLabel.textContent = ct('View releases on GitHub');
       recommendedLink.href = RELEASES_URL;
       return;
     }
@@ -156,10 +159,10 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
 
     if (recommended) {
       recommendedLink.href = recommended.url;
-      recommendedLabel.textContent = `Download for ${PLATFORM_LABELS[recommended.platform]}`;
+      recommendedLabel.textContent = ct('Download for {platform}', { platform: PLATFORM_LABELS[recommended.platform] });
     } else {
-      recommendedLink.href = root.dataset.mode === 'full' ? '#all-downloads' : '/download';
-      recommendedLabel.textContent = 'Choose a download';
+      recommendedLink.href = root.dataset.mode === 'full' ? '#all-downloads' : localHref('/download');
+      recommendedLabel.textContent = ct('Choose a download');
     }
 
     const groups = root.querySelector<HTMLElement>('[data-groups]');

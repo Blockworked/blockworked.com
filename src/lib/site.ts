@@ -21,12 +21,15 @@ export interface NavLink {
   label: string;
 }
 
+// Marks a label for scripts/i18n.mjs; SiteHeader translates it.
+const t = (label: string) => label;
+
 export const NAV_LINKS: NavLink[] = [
-  { href: '/#features', label: 'Features' },
-  { href: '/#screenshots', label: 'Screenshots' },
-  { href: '/download', label: 'Download' },
-  { href: '/changelog', label: 'Changelog' },
-  { href: COMMUNITY_URL, label: 'Community' },
-  { href: `${SUPPORT_URL}/`, label: 'Support' },
-  { href: `${TRANSLATE_URL}/`, label: 'Translate' },
+  { href: '/#features', label: t('Features') },
+  { href: '/#screenshots', label: t('Screenshots') },
+  { href: '/download', label: t('Download') },
+  { href: '/changelog', label: t('Changelog') },
+  { href: COMMUNITY_URL, label: t('Community') },
+  { href: `${SUPPORT_URL}/`, label: t('Support') },
+  { href: `${TRANSLATE_URL}/`, label: t('Translate') },
 ];

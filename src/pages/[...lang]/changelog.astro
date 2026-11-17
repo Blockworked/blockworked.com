@@ -2,53 +2,25 @@
 // Rendered at build time from Blockwork's CHANGELOG.md (Keep a Changelog
 // format) on its master branch, richer than the GitHub release bodies,
 // which are generated from it at tag time and are sometimes just a stub.
-import Base from '../layouts/Base.astro';
+import Base from '../../layouts/Base.astro';
 import { Check, Tag } from '@lucide/astro';
-import { marked } from 'marked';
-import { RELEASES_URL, REPO, REPO_URL, formatDate } from '../lib/releases';
+import { RELEASES_URL, REPO_URL, changelog, formatDate } from '../../lib/releases';
+import { languagePaths, locale } from '../../lib/i18n';
 
-interface Entry {
-  version: string;
-  date: string | null;
-  html: string;
-}
-
-let entries: Entry[] = [];
-try {
-  const res = await fetch(`https://raw.githubusercontent.com/${REPO}/master/CHANGELOG.md`);
-  if (!res.ok) throw new Error(`GitHub responded ${res.status}`);
-  // The site avoids em-dashes, including in text pulled from Blockwork's changelog.
-  const md = (await res.text()).replace(/\s*\u2014\s*/g, ', ');
-  // "## [0.5.3] - 2026-09-14" starts each entry; anything before the first is the preamble.
-  const heading = /^## \[([^\]]+)\](?:\s*-\s*(\d{4}-\d{2}-\d{2}))?\s*$/gm;
-  const matches = [...md.matchAll(heading)];
-  entries = matches.map((m, i) => {
-    const body = md.slice(m.index! + m[0].length, matches[i + 1]?.index ?? md.length);
-    return {
-      version: m[1],
-      date: m[2] ?? null,
-      // Drop trailing link-reference definitions ("[0.5.3]: https://…").
-      html: marked.parse(body.replace(/^\[[^\]]+\]:\s+\S+\s*$/gm, '').trim(), { async: false }),
-    };
-  });
-} catch (e) {
-  // A deploy must not ship the fallback page; a local build may.
-  const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env;
-  if (env?.CI) throw new Error(`[changelog] couldn't fetch CHANGELOG.md: ${e}`);
-  console.warn(`[changelog] couldn't fetch CHANGELOG.md, rendering the fallback: ${e}`);
-}
+export const getStaticPaths = languagePaths;
+const { t, th, tag } = locale(Astro.url);
+// The notes themselves stay in English: they come from Blockwork's CHANGELOG.md.
+const entries = await changelog();
 ---
 
-<Base title="Changelog" description="What's new in each Blockwork release.">
+<Base title={t('Changelog')} description={t("What's new in each Blockwork release.")}>
   <section class="section">
     <div class="container narrow">
-      <h1 class="section-heading">What's new</h1>
-      <p class="section-lede">Every Blockwork release, newest first.</p>
+      <h1 class="section-heading">{t("What's new")}</h1>
+      <p class="section-lede">{t('Every Blockwork release, newest first.')}</p>
 
       {entries.length === 0 ? (
-        <p class="fallback">
-          The changelog couldn't be loaded when this page was built. See <a href={RELEASES_URL}>releases on GitHub</a>.
-        </p>
+        <p class="fallback" set:html={th("The changelog couldn't be loaded when this page was built. See {link}.", { link: `<a href="${RELEASES_URL}">${th('releases on GitHub')}</a>` })} />
       ) : (
         <ol class="releases">
           {entries.map((e, i) => {
@@ -59,11 +31,11 @@ try {
                 <article class="panel">
                   <header class="panel-title release-header">
                     <Tag />
-                    {unreleased ? <span class="version">Unreleased</span> : <a class="version" href={`${REPO_URL}/releases/tag/${e.version}`}>{e.version}</a>}
-                    {i === 0 && !unreleased && <span class="latest"><Check />latest</span>}
-                    {e.date && <time datetime={e.date}>{formatDate(`${e.date}T12:00:00`)}</time>}
+                    {unreleased ? <span class="version">{t('Unreleased')}</span> : <a class="version" href={`${REPO_URL}/releases/tag/${e.version}`}>{e.version}</a>}
+                    {i === 0 && !unreleased && <span class="latest"><Check />{t('latest')}</span>}
+                    {e.date && <time datetime={e.date}>{formatDate(`${e.date}T12:00:00`, tag)}</time>}
                   </header>
-                  <div class="notes" set:html={e.html || '<p>No notes for this release.</p>'} />
+                  <div class="notes" set:html={e.html || `<p>${th('No notes for this release.')}</p>`} />
                 </article>
               </li>
             );

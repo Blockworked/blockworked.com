@@ -1,6 +1,7 @@
 // The home page's editor loading, unlock/lock, phone preview scale and the
 // header logo that appears once the hero title scrolls away.
 import { DemoMissing, setEditorScale, startQtDemo } from './qtDemo';
+import { ct } from './client-i18n';
 
 export function setupHomePage() {
   // The Qt editor is ~8 MB compressed, so it only starts once the visitor
@@ -22,7 +23,7 @@ export function setupHomePage() {
         console.error(error);
         if (loading) loading.textContent = error instanceof DemoMissing
           ? 'The editor demo is not built here. Run qt-demo/build.sh.'
-          : "The editor couldn't start in this browser.";
+          : ct("The editor couldn't start in this browser.");
       });
   };
   if (qtSections.length && 'IntersectionObserver' in window) {

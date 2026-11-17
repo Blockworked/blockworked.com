@@ -8,9 +8,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro check && astro build",
-    "preview": "astro preview"
+    "dev": "node scripts/i18n.mjs compile && astro dev",
+    "build": "node scripts/i18n.mjs check && node scripts/i18n.mjs compile && astro check && astro build",
+    "preview": "astro preview",
+    "i18n:extract": "node scripts/i18n.mjs extract"
   },
   "dependencies": {
     "@lucide/astro": "^1.45.0",
