@@ -1,9 +1,19 @@
-name: Check index
+name: Community pack index
 
 on:
   pull_request:
+    paths:
+      - 'apps/community/**'
+      - '.github/workflows/community-index.yml'
   push:
     branches: [master]
+    paths:
+      - 'apps/community/**'
+      - '.github/workflows/community-index.yml'
+
+defaults:
+  run:
+    working-directory: apps/community
 
 jobs:
   index:

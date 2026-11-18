@@ -1,6 +1,6 @@
 # Development and deployment
 
-[Back to README](../README.md). Run commands from the repository root.
+[Back to README](../README.md). Run commands from `apps/community`.
 
 ## Library routes and rendering
 
@@ -18,7 +18,7 @@
   version). `/authors/<public id>` lists one account's packs.
 - The site never draws blocks itself. The source view embeds the pack viewer,
   blockworked.com's web build of the editor (`/packview/`, built from
-  `qt-demo/PackView.qml` in that repo), and `/browse.js` hands it the pack.
+  `apps/website/qt-demo/PackView.qml`), and `/browse.js` hands it the pack.
   Cards and block lists show pictures that viewer drew (`src/renders.ts`):
   opening a version's review page draws and saves them (PNGs per theme in R2
   under `renders/<sha256>/`), and `/admin/renders` draws any still missing.
@@ -34,8 +34,8 @@ account can publish new versions. A new upload stays pending, and the
 listed version stays up until it's approved.
 
 `packs/` and `index.json` hold the starter packs. Blockwork releases that
-still read `index.json` from this repo keep working, and `npm run seed:*`
-loads the same packs into the Worker.
+still read the legacy community repository use the copies at its original
+URLs. `npm run seed:*` loads the monorepo copies into the Worker.
 
 ## Running it
 
@@ -52,7 +52,7 @@ npm run typecheck
 What a pack's blocks can do (the "This pack can" list) comes from
 `src/capabilities.json`, a copy of Blockwork's `blockwork-core/capabilities.json`.
 After a Blockwork change to it, run `node scripts/sync-capabilities.js
-[path/to/Blockwork]`; `npm test` fails while a `../Blockwork` checkout disagrees.
+[path/to/Blockwork]`; `npm test` fails while a `Blockwork` checkout next to the monorepo disagrees.
 
 Locally, copy `.dev.vars.example` to `.dev.vars` and fill it in. It points
 the site, the helpdesk (`localhost:8787/support`) and sign-in at localhost and
@@ -85,9 +85,9 @@ never the site's cookie:
    then `npx wrangler secret put` each of the four client values.
 4. `npm run migrate:remote && npm run seed:remote && npm run deploy`.
 
-After that, every push to master deploys on its own
-(`.github/workflows/deploy.yml`): it typechecks, runs the tests, applies any
-new migrations and deploys the Worker. When a push changes `packs/`, it
+Once `COMMUNITY_DEPLOY_ENABLED` is set to `true` in the monorepo, changes
+to the Worker on `master` trigger the [community deploy workflow](../../../.github/workflows/community-deploy.yml).
+It typechecks, runs the tests, applies any new migrations and deploys the Worker. When a push changes `packs/`, it
 then runs `npm run seed:remote` to publish the starter packs to the live
 library. Manual workflow runs also reseed, so they can retry a failed seed.
 It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (a token from the

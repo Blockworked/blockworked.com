@@ -4,6 +4,8 @@ Product site for [Blockwork](https://github.com/Blockworked/Blockwork), built wi
 [Astro](https://astro.build) and deployed to GitHub Pages. The live editor on the
 home page is Blockwork's own Qt/QML editor, compiled to WebAssembly.
 
+Run these commands from `apps/website`.
+
 ```bash
 pnpm install
 pnpm dev          # http://localhost:4321
@@ -18,8 +20,8 @@ can't be fetched; a local build renders a fallback instead.
 
 ## Deploying
 
-Every push to `master` runs `.github/workflows/deploy.yml`, which builds the site
-and publishes `dist/` to GitHub Pages. It can also be re-run by hand from the
+Website changes on `master` run the [website workflow](../../.github/workflows/website.yml),
+which builds the site and publishes `dist/` to GitHub Pages. It can also be re-run by hand from the
 Actions tab (useful after a Blockwork release, to refresh the changelog page).
 
 One-time setup on GitHub:
@@ -69,7 +71,7 @@ One-time setup on GitHub:
   focus (and scrolling the page) until the editor is clicked, and on phones has
   Qt draw the locked editor as a shrunk thumbnail of the desktop layout.
 - `src/lib/site.ts` - the top nav links. community.blockworked.com
-  (Blockworked/Blockwork-community-blocks) shows the same header and footer and
+  ([the community app](../community)) shows the same header and footer and
   runs the same theme and cross-site fade scripts from its `src/site-nav.ts`, a
   copy of `SiteHeader.astro`, `SiteFooter.astro` and the scripts in `Base.astro`;
   change both together. The theme choice is shared through a `bw-theme` cookie

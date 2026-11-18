@@ -202,9 +202,9 @@ test("uploads get the uploader's name in front of every block ID", () => {
   assert.equal(blockIdentifier("", { identifier: "X" }), "Community:X");
 });
 
-test("the capability table matches Blockwork's when a checkout sits beside this one", { skip: !existsSync(new URL("../../Blockwork/blockwork-core/capabilities.json", import.meta.url)) }, () => {
+test("the capability table matches Blockwork's when a checkout sits beside the monorepo", { skip: !existsSync(new URL("../../../../Blockwork/blockwork-core/capabilities.json", import.meta.url)) }, () => {
   const ours = readFileSync(new URL("../src/capabilities.json", import.meta.url), "utf8");
-  const theirs = readFileSync(new URL("../../Blockwork/blockwork-core/capabilities.json", import.meta.url), "utf8");
+  const theirs = readFileSync(new URL("../../../../Blockwork/blockwork-core/capabilities.json", import.meta.url), "utf8");
   assert.equal(ours, theirs, "run node scripts/sync-capabilities.js");
 });
 

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Create the Weblate project for the two Blockworked sites and wire it up.
 
-Makes project `blockworked` with components `website` (Blockworked/blockworked.com,
-locales/website.pot) and `community` (Blockworked/Blockwork-community,
-locales/community.pot), copying the repository push settings from blockwork/ui,
+Makes project `blockworked` with components `website` and `community` from the
+monorepo, copying the repository push settings from blockwork/ui. It also
 adds the msgmerge add-on so each .po follows its template, turns on suggestion
 voting, and adds both components to the contributor and reader teams. Those
 teams list components, and Weblate then grants their role on those components
@@ -24,9 +23,9 @@ import urllib.request
 PROJECT = {'name': 'Blockworked sites', 'slug': 'blockworked', 'web': 'https://blockworked.com/'}
 COMPONENTS = [
     {'name': 'blockworked.com', 'slug': 'website', 'repo': 'https://github.com/Blockworked/blockworked.com.git',
-     'template': 'locales/website.pot'},
-    {'name': 'Community site', 'slug': 'community', 'repo': 'https://github.com/Blockworked/Blockwork-community.git',
-     'template': 'locales/community.pot'},
+     'directory': 'apps/website/locales', 'template': 'website.pot'},
+    {'name': 'Community site', 'slug': 'community', 'repo': 'weblate://blockworked/website',
+     'directory': 'apps/community/locales', 'template': 'community.pot'},
 ]
 # Repository settings taken from the app's component so the sites push the same way.
 COPIED = ('vcs', 'push_branch', 'merge_style', 'commit_message', 'add_message', 'delete_message',
@@ -73,11 +72,12 @@ def main():
         path = f"/api/components/{PROJECT['slug']}/{component['slug']}/"
         status, body = call(base, token, 'GET', path)
         if status == 404:
+            directory = component['directory']
             status, body = call(base, token, 'POST', f"/api/projects/{PROJECT['slug']}/components/", {
                 **copied, 'name': component['name'], 'slug': component['slug'],
                 'repo': component['repo'], 'branch': args.branch,
-                'file_format': 'po', 'filemask': 'locales/*.po', 'template': '',
-                'new_base': component['template'], 'new_lang': 'add',
+                'file_format': 'po', 'filemask': f'{directory}/*.po', 'template': '',
+                'new_base': f"{directory}/{component['template']}", 'new_lang': 'add',
                 'source_language': {'code': 'en'},
             })
             if status not in (200, 201):

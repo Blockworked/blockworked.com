@@ -1,9 +1,15 @@
-name: Build and deploy
+name: Website
 
-# Every push and pull request builds and checks the site; only master deploys.
+# Build and check website changes. Only master deploys.
 on:
   push:
+    paths:
+      - 'apps/website/**'
+      - '.github/workflows/website.yml'
   pull_request:
+    paths:
+      - 'apps/website/**'
+      - '.github/workflows/website.yml'
   # Manual re-run from the Actions tab, e.g. to refresh the changelog page
   # (rendered at build time from Blockwork's CHANGELOG.md) after a release.
   # Editor changes come in by moving BLOCKWORK_REV in qt-demo/sources.env.
@@ -18,6 +24,10 @@ permissions:
 concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/website
 
 jobs:
   build:
@@ -88,6 +98,8 @@ jobs:
       # (public/demo/ included).
       - name: Build
         uses: withastro/action@v6
+        with:
+          path: apps/website
 
   deploy:
     needs: build

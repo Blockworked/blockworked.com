@@ -1,6 +1,6 @@
 # Pack authoring and official packs
 
-[Back to README](../README.md). Run commands from the repository root.
+[Back to README](../README.md). Run commands from `apps/community`.
 
 ## Adding a pack
 

@@ -1,7 +1,6 @@
 // The top nav shared by blockworked.com and community.blockworked.com, so the
-// two read as one site. The community site (Blockworked/Blockwork-community-
-// blocks) keeps a copy of this list and of the header markup and styles in
-// `src/site-nav.ts`; change both together.
+// two read as one site. The community site (apps/community) keeps its link
+// list, markup and styles in `src/site-nav.ts`. Change both together.
 
 /** The community blocks library. Override with PUBLIC_COMMUNITY_URL to point
  *  the nav at a local `wrangler dev` while testing. */

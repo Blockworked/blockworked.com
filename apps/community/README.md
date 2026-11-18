@@ -21,7 +21,7 @@ can use email, ntfy, and Discord.
 
 ## Run locally
 
-Requires Node.js and npm. Copy `.dev.vars.example` to `.dev.vars` and fill
+Run these commands from `apps/community`. Requires Node.js and npm. Copy `.dev.vars.example` to `.dev.vars` and fill
 in the local sign-in settings.
 
 ```bash
@@ -49,7 +49,8 @@ npm run typecheck
 
 Anyone can host an `index.json` in this format and its pack files over HTTPS.
 People add the library's address in Blockwork's settings. The starter packs
-in `packs/` and the repository's `index.json` remain available to older releases.
+in `packs/` and the matching `index.json` are also available to older
+releases at the original [community repository URLs](https://github.com/Blockworked/Blockwork-community/tree/master).
 
 ## Email accounts and passkeys
 

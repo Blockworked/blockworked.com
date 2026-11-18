@@ -1,18 +1,27 @@
-name: Deploy
+name: Community deploy
 
 on:
   push:
     branches: [master]
+    paths:
+      - 'apps/community/**'
+      - '.github/workflows/community-deploy.yml'
   # Manual re-run from the Actions tab.
   workflow_dispatch:
 
 # Never let two deploys race; a newer push waits for the one in flight.
 concurrency:
-  group: deploy
+  group: community-deploy
   cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: apps/community
 
 jobs:
   deploy:
+    # Enable from the destination repo only after retiring the old deploy workflow.
+    if: github.repository == 'Blockworked/blockworked.com' && github.ref == 'refs/heads/master' && vars.COMMUNITY_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +50,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: apps/community/package-lock.json
 
       - run: npm ci
       # Translators work from locales/community.pot; a string added without re-extracting would stay English.

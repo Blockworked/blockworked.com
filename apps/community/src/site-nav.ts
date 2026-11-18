@@ -1,7 +1,7 @@
 // The top nav, footer and page-to-page fade shared with blockworked.com, so
-// the two sites read as one. This is a copy: blockworked.com
-// (Blockworked/blockworked.com) keeps the originals in src/lib/site.ts (the
-// link list), src/components/SiteHeader.astro and SiteFooter.astro (markup
+// the two sites read as one. The website (apps/website) keeps its versions
+// in src/lib/site.ts (the link list), src/components/SiteHeader.astro and
+// SiteFooter.astro (markup
 // and styles) and src/layouts/Base.astro (the theme and fade scripts). Change
 // both together.
 
@@ -95,7 +95,7 @@ export function siteFooter(place = LIBRARY): string {
 <nav class="footer-links" aria-label="${t('Footer')}">${links}</nav>
 </div><div class="footer-meta">
 <a href="${REPO_URL}">${t('Blockwork on GitHub')}</a><a href="${REPO_URL}/issues">${t('Report an issue')}</a><a href="${REPO_URL}/releases">${t('All releases')}</a>
-<a href="https://github.com/Blockworked/Blockwork-community">${t('Library source')}</a>
+<a href="https://github.com/Blockworked/blockworked.com/tree/master/apps/community">${t('Library source')}</a>
 <a href="${esc(mainUrl)}/privacy">${t('Privacy')}</a><a href="${esc(mainUrl)}/terms">${t('Terms')}</a>
 ${languagePicker()}<p class="copyright">© ${year} Blockworked</p></div></div></footer>`;
 }
