@@ -18,7 +18,7 @@ Pause pushes from the two website components and commit any pending translations
 | `blockworked/website` | `https://github.com/Blockworked/blockworked.com.git` | `apps/website/locales/*.po` | `apps/website/locales/website.pot` |
 | `blockworked/community` | `weblate://blockworked/website` | `apps/community/locales/*.po` | `apps/community/locales/community.pot` |
 
-Both use `master`. Verify the shared repository can push or open translation PRs, that the destination repo's push webhook reaches Weblate, and that both components detect their templates before resuming translation pushes.
+Set the website branch to `master`. Clear the community component’s branch when linking it so it inherits `master` from the website. Verify the shared repository can push or open translation PRs, that the destination repo's push webhook reaches Weblate, and that both components detect their templates before resuming translation pushes.
 
 ## Cloudflare Worker
 

@@ -73,9 +73,14 @@ def main():
         status, body = call(base, token, 'GET', path)
         if status == 404:
             directory = component['directory']
+            repository_settings = dict(copied)
+            if not component['repo'].startswith('weblate://'):
+                repository_settings['branch'] = args.branch
+            else:
+                repository_settings.pop('push_branch', None)
             status, body = call(base, token, 'POST', f"/api/projects/{PROJECT['slug']}/components/", {
-                **copied, 'name': component['name'], 'slug': component['slug'],
-                'repo': component['repo'], 'branch': args.branch,
+                **repository_settings, 'name': component['name'], 'slug': component['slug'],
+                'repo': component['repo'],
                 'file_format': 'po', 'filemask': f'{directory}/*.po', 'template': '',
                 'new_base': f"{directory}/{component['template']}", 'new_lang': 'add',
                 'source_language': {'code': 'en'},
