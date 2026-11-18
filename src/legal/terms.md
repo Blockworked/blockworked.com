@@ -1,6 +1,7 @@
 These terms cover Blockworked's websites and services: blockworked.com, the
 community block library at community.blockworked.com, the helpdesk at
-support.blockworked.com, and translate.blockworked.com. By using them, or by
+support.blockworked.com, and translate.blockworked.com. Blockworked ("we", "us") is a project run by Ethan
+Stokes, an individual in Arkansas, United States, not a company. By using them, or by
 creating an account, you agree to these terms and to our
 [Privacy Policy](/privacy). If you don't agree, please don't use them.
 
@@ -37,8 +38,9 @@ newer version of Blockwork) what you submit, for as long as it is on our
 services and afterwards in backups and in copies people already have.
 
 - **Packs.** Anyone may download a listed pack and use it in Blockwork,
-  including in their own macros. Unless your pack says otherwise, others may
-  also copy, change and share it, crediting you.
+  including in their own macros. Unless your pack says otherwise, anyone may
+  also copy, change and share it, including in their own packs, as long as
+  they credit you.
 - **Translations.** Translations, suggestions and corrections you save on
   translate.blockworked.com are contributed to the project they belong to
   under that project's licence (shown on the page when you save; GPL-3.0-only
@@ -104,6 +106,13 @@ You can stop using our services and delete your account at any time. We may
 suspend or end your access if you break these terms, or stop offering a
 service, telling you in advance where we reasonably can. The sections on what
 you post, no warranty and limitation of liability continue after that.
+
+## Governing law
+
+These terms are governed by the laws of the State of Arkansas and of the
+United States, without regard to conflict-of-law rules. This doesn't take
+away protections that the law of the country you live in gives you and that
+can't be waived.
 
 ## Changes
 

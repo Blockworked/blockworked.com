@@ -1,5 +1,8 @@
 Blockworked ("we", "us") makes Blockwork, an open-source app for building
-keyboard and mouse macros out of blocks, and runs the websites around it:
+keyboard and mouse macros out of blocks, and runs the websites around it.
+Blockworked is not a company: it is a project run by Ethan Stokes, an
+individual in Arkansas, United States, who is responsible for the personal
+information described here. The websites are:
 
 - **blockworked.com**, the main site;
 - **community.blockworked.com**, the community block library;
@@ -100,8 +103,9 @@ are seen only by moderators.
 When you file a ticket or email support@blockworked.com, we keep your
 messages, any images you attach, your name and the email address we reply
 to. Signed-in tickets use your account's verified address. Staff read and
-answer tickets, and new tickets and replies notify staff by email and
-possibly by a push notification. Mail to and from the @blockworked.com
+answer tickets. New tickets and replies, including their text, notify staff
+by email, by push notification to staff phones through ntfy, and in a private
+staff channel on Discord. Mail to and from the @blockworked.com
 mailboxes is handled by Cloudflare Email Routing and our own mail server,
 and replies are sent through SMTP2GO.
 
@@ -174,6 +178,8 @@ We use these services to run Blockwork's sites. Each gets only what it needs:
   translation repositories, and provides GitHub sign-in.
 - **Google** provides Google sign-in.
 - **SMTP2GO** sends our emails.
+- **ntfy** and **Discord** carry support notifications to staff (ticket text
+  and links, never attachments or ticket access keys).
 - **Have I Been Pwned** answers the password breach check described above.
 - **Our own server** runs the Blockworked mailboxes and Weblate.
 
@@ -235,4 +241,5 @@ history of the blockworked.com repository on GitHub.
 ## Contact
 
 Questions or requests: support@blockworked.com, or
-https://support.blockworked.com.
+https://support.blockworked.com. Blockworked is run by Ethan Stokes,
+Arkansas, United States.
