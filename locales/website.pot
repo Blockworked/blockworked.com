@@ -63,6 +63,15 @@ msgstr ""
 msgid "Choose a download"
 msgstr ""
 
+#: src/components/LegalPage.astro
+#, python-brace-format
+msgid "Last updated {date}"
+msgstr ""
+
+#: src/components/LegalPage.astro
+msgid "This page is only available in English."
+msgstr ""
+
 #: src/components/Screenshots.astro
 msgid "Building a macro in the block editor"
 msgstr ""
@@ -105,6 +114,14 @@ msgstr ""
 
 #: src/components/SiteFooter.astro
 msgid "Help translate"
+msgstr ""
+
+#: src/components/SiteFooter.astro
+msgid "Privacy"
+msgstr ""
+
+#: src/components/SiteFooter.astro
+msgid "Terms"
 msgstr ""
 
 #: src/components/SiteFooter.astro
@@ -348,4 +365,20 @@ msgstr ""
 
 #: src/pages/[...lang]/index.astro
 msgid "Free and open source. Grab the latest release for your platform."
+msgstr ""
+
+#: src/pages/[...lang]/privacy.astro
+msgid "Privacy Policy"
+msgstr ""
+
+#: src/pages/[...lang]/privacy.astro
+msgid "What Blockwork, its browser extension and the Blockworked websites collect, and what you can do about it."
+msgstr ""
+
+#: src/pages/[...lang]/terms.astro
+msgid "Terms of Service"
+msgstr ""
+
+#: src/pages/[...lang]/terms.astro
+msgid "The rules for using Blockworked's websites, community library, helpdesk and translation site."
 msgstr ""

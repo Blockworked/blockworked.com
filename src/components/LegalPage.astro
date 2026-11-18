@@ -1,0 +1,83 @@
+---
+// The privacy policy and terms. The text stays in English in every language,
+// since a translation could change what it says; the page around it is translated.
+import Base from '../layouts/Base.astro';
+import { formatDate } from '../lib/releases';
+import { locale } from '../lib/i18n';
+
+interface Props {
+  title: string;
+  description: string;
+  /** When the text last changed, as YYYY-MM-DD. */
+  updated: string;
+}
+
+const { title, description, updated } = Astro.props;
+const { t, code, tag } = locale(Astro.url);
+---
+
+<Base title={title} description={description}>
+  <section class="section">
+    <div class="container narrow">
+      <h1 class="section-heading">{title}</h1>
+      <p class="section-lede">
+        {t('Last updated {date}', { date: formatDate(`${updated}T12:00:00`, tag) })}
+      </p>
+      {code !== 'en' && <p class="english-only">{t('This page is only available in English.')}</p>}
+      <article class="legal panel" lang="en" dir="ltr">
+        <slot />
+      </article>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .narrow { max-width: 760px; }
+  .english-only { margin-top: 12px; color: var(--blockstitch-text-dim); font-size: 14px; }
+  .legal {
+    margin-top: 32px;
+    padding: 8px 24px 24px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .legal :global(h2) {
+    margin: 28px 0 8px;
+    font-size: 19px;
+    color: var(--blockstitch-text);
+  }
+  .legal :global(h3) {
+    margin: 20px 0 6px;
+    font-size: 16px;
+    color: var(--blockstitch-text);
+  }
+  .legal :global(p) { margin: 10px 0; }
+  .legal :global(ul) { padding-left: 22px; margin: 10px 0; }
+  .legal :global(li) { margin: 5px 0; }
+  .legal :global(li::marker) { color: var(--blockstitch-text-dim); }
+  .legal :global(a) { color: var(--blockstitch-accent); }
+  .legal :global(strong) { color: var(--blockstitch-text); }
+  .legal :global(code) {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--blockstitch-bg3);
+    font-size: 13px;
+  }
+  .legal :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  .legal :global(th),
+  .legal :global(td) {
+    text-align: start;
+    vertical-align: top;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--blockstitch-border);
+  }
+  .legal :global(th) { color: var(--blockstitch-text); font-weight: 600; }
+  @media (max-width: 560px) {
+    .legal { padding: 4px 16px 16px; }
+    .legal :global(table) { display: block; overflow-x: auto; }
+  }
+</style>

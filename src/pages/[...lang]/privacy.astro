@@ -1,0 +1,12 @@
+---
+import LegalPage from '../../components/LegalPage.astro';
+import { Content } from '../../legal/privacy.md';
+import { languagePaths, locale } from '../../lib/i18n';
+
+export const getStaticPaths = languagePaths;
+const { t } = locale(Astro.url);
+---
+
+<LegalPage title={t('Privacy Policy')} description={t("What Blockwork, its browser extension and the Blockworked websites collect, and what you can do about it.")} updated="2026-11-18">
+  <Content />
+</LegalPage>

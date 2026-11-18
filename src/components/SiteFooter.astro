@@ -24,6 +24,8 @@ const footerLogo = await logoAt(22);
       <a href={`${REPO_URL}/issues`}>{t('Report an issue')}</a>
       <a href={RELEASES_URL}>{t('All releases')}</a>
       <a href={`${TRANSLATE_URL}/`}>{t('Help translate')}</a>
+      <a href={href('/privacy')}>{t('Privacy')}</a>
+      <a href={href('/terms')}>{t('Terms')}</a>
     </nav>
     {LANGUAGES.length > 1 && (
       <label class="language-picker">
