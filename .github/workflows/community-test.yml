@@ -1,0 +1,65 @@
+name: Community tests
+
+# Deploys also run these app checks before applying changes.
+on:
+  push:
+    branches-ignore: [master]
+    paths:
+      - 'apps/community/**'
+      - '.github/workflows/community-*.yml'
+  pull_request:
+    paths:
+      - 'apps/community/**'
+      - '.github/workflows/community-*.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/community
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/community/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+
+  # Checks against Blockwork at the commit in .blockwork-rev: the capability
+  # table copy, the slug cases and every official pack run by Blockwork's real
+  # runner.
+  blockwork:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/community/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Fetch Blockwork
+        working-directory: .
+        run: |
+          git init -q ../Blockwork
+          git -C ../Blockwork fetch -q --depth 1 https://github.com/Blockworked/Blockwork "$(cat apps/community/.blockwork-rev)"
+          git -C ../Blockwork -c advice.detachedHead=false checkout -q FETCH_HEAD
+      - run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends pkg-config libssl-dev libxdo-dev libxkbcommon-dev
+      - run: node scripts/sync-capabilities.js --check
+      - run: npm ci
+      # With Blockwork beside it, the tests that compare against its files run.
+      - run: npm test
+      - name: Build Blockwork's runner
+        working-directory: ../Blockwork
+        run: cargo build -p blockwork-core --no-default-features --message-format=json-render-diagnostics > build.json
+      - run: npm run test:runtime -- ../../../Blockwork/build.json

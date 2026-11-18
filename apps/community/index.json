@@ -1,0 +1,91 @@
+{
+  "blockwork_block_index": 1,
+  "name": "Blockwork community blocks",
+  "packs": [
+    {
+      "id": "clipboard-tools",
+      "name": "Clipboard tools",
+      "description": "Remove duplicate or blank clipboard lines and clean whitespace while preserving line breaks.",
+      "author": "Blockworked",
+      "version": "1.1.0",
+      "url": "packs/clipboard-tools.json",
+      "sha256": "3e6e620b4ee2d36201ea06d085e5ab9d39ce15322213e04b7f1e607a5190295d",
+      "blocks": [
+        "remove duplicate clipboard lines",
+        "remove blank clipboard lines",
+        "clean clipboard whitespace"
+      ]
+    },
+    {
+      "id": "mouse-helpers",
+      "name": "Mouse helpers",
+      "description": "Click, double click, right click and drag at a screen position.",
+      "author": "Blockworked",
+      "version": "1.0.3",
+      "url": "packs/mouse-helpers.json",
+      "sha256": "ef7bb4c3cd2d3f72e240cf5562893e535701f47c346af8114b3955532cd902d3",
+      "blocks": [
+        "click at x (x) y (y)",
+        "double click at x (x) y (y)",
+        "right click at x (x) y (y)",
+        "drag from x (from x) y (from y) to x (to x) y (to y)"
+      ]
+    },
+    {
+      "id": "mouse-patterns",
+      "name": "Mouse patterns",
+      "description": "Click grids, drag through a path of points and click relative to a window.",
+      "author": "Blockworked",
+      "version": "1.1.0",
+      "url": "packs/mouse-patterns.json",
+      "sha256": "f5a5ac53a596ccdc79a7427331fbb44c9f22c2cb03139575d3460bcd01908831",
+      "blocks": [
+        "click grid at x (x) y (y) rows (rows) columns (columns) spacing x (dx) y (dy) pause (ms) ms",
+        "drag through points (points) pause (ms) ms",
+        "click in window (window) at offset x (x) y (y)"
+      ]
+    },
+    {
+      "id": "text-extraction",
+      "name": "Text extraction",
+      "description": "Extract text between literal markers, collect matching lines and look up key=value entries.",
+      "author": "Blockworked",
+      "version": "1.1.0",
+      "url": "packs/text-extraction.json",
+      "sha256": "f25eabd4c3b0885e70337de8e8c99d0c933a9d91769721f0eea9b6d1ee32d8b3",
+      "blocks": [
+        "text between (start) and (end) in (text)",
+        "lines containing (needle) in (text)",
+        "value for key (key) in (text)"
+      ]
+    },
+    {
+      "id": "text-helpers",
+      "name": "Text helpers",
+      "description": "Check for empty text and get the last letter.",
+      "author": "Blockworked",
+      "version": "1.0.4",
+      "url": "packs/text-helpers.json",
+      "sha256": "1b84f0885874cd8fe7d9838ac36e6b412d6e380f6afae8789f97579428f0dee2",
+      "blocks": [
+        "(text) is empty?",
+        "last letter of (text)"
+      ]
+    },
+    {
+      "id": "window-layouts",
+      "name": "Window layouts",
+      "description": "Center windows on a monitor, tile two windows side by side, and capture or restore window geometry.",
+      "author": "Blockworked",
+      "version": "1.1.0",
+      "url": "packs/window-layouts.json",
+      "sha256": "054fcc23b155c84c033c05ad22102b5eb38818d8d108784e421e334b9c1fc70f",
+      "blocks": [
+        "center window (window) on monitor (monitor)",
+        "tile windows (left) and (right) on monitor (monitor) gap (gap)",
+        "geometry snapshot of window (window)",
+        "restore window (window) from geometry (snapshot)"
+      ]
+    }
+  ]
+}

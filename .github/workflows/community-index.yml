@@ -1,0 +1,29 @@
+name: Community pack index
+
+on:
+  pull_request:
+    paths:
+      - 'apps/community/**'
+      - '.github/workflows/community-index.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'apps/community/**'
+      - '.github/workflows/community-index.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/community
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild index
+        run: python3 scripts/build-block-index.py
+      - name: Fail if index.json is stale
+        run: git diff --exit-code index.json

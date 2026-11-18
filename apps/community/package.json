@@ -1,0 +1,40 @@
+{
+  "name": "blockwork-library",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/i18n.mjs compile",
+    "dev": "wrangler dev",
+    "predeploy": "node scripts/i18n.mjs compile",
+    "deploy": "wrangler deploy",
+    "migrate:local": "wrangler d1 migrations apply DB --local",
+    "migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "seed:local": "node scripts/seed.js --local",
+    "seed:remote": "node scripts/seed.js --remote",
+    "pretypecheck": "node scripts/i18n.mjs compile",
+    "typecheck": "tsc --noEmit",
+    "pretest": "node scripts/i18n.mjs compile",
+    "test": "node --test test/*.test.ts",
+    "test:runtime": "python3 scripts/test-pack-runtime.py",
+    "pretest:browser": "node scripts/i18n.mjs compile",
+    "test:browser": "node --test test-browser/*.test.ts",
+    "i18n:extract": "node scripts/i18n.mjs extract",
+    "i18n:check": "node scripts/i18n.mjs check"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261019.1",
+    "@playwright/test": "^1.65.0",
+    "miniflare": "^5.20261109.0-beta",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.159.0"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "@simplewebauthn/server": "^14.1.0",
+    "htmlparser2": "^12.0.0",
+    "jose": "^6.2.17",
+    "otpauth": "^9.6.0",
+    "postal-mime": "^2.4.4",
+    "qrcode-generator": "^2.0.4"
+  }
+}
