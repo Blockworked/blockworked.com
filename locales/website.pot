@@ -42,7 +42,7 @@ msgstr ""
 msgid "View package"
 msgstr ""
 
-#: src/components/Downloader.astro src/components/SiteFooter.astro src/components/SiteHeader.astro src/lib/site.ts src/pages/[...lang]/download.astro
+#: src/components/Downloader.astro src/components/SiteHeader.astro src/lib/site.ts src/pages/[...lang]/download.astro
 msgid "Download"
 msgstr ""
 
@@ -88,20 +88,8 @@ msgstr ""
 msgid "Footer"
 msgstr ""
 
-#: src/components/SiteFooter.astro src/lib/site.ts src/pages/[...lang]/changelog.astro
-msgid "Changelog"
-msgstr ""
-
-#: src/components/SiteFooter.astro
-msgid "Community blocks"
-msgstr ""
-
-#: src/components/SiteFooter.astro src/lib/site.ts
-msgid "Support"
-msgstr ""
-
-#: src/components/SiteFooter.astro
-msgid "Source"
+#: src/components/SiteFooter.astro src/components/SiteHeader.astro
+msgid "Blockwork on GitHub"
 msgstr ""
 
 #: src/components/SiteFooter.astro
@@ -110,10 +98,6 @@ msgstr ""
 
 #: src/components/SiteFooter.astro
 msgid "All releases"
-msgstr ""
-
-#: src/components/SiteFooter.astro
-msgid "Help translate"
 msgstr ""
 
 #: src/components/SiteFooter.astro
@@ -126,10 +110,6 @@ msgstr ""
 
 #: src/components/SiteFooter.astro
 msgid "Language"
-msgstr ""
-
-#: src/components/SiteHeader.astro
-msgid "Blockwork on GitHub"
 msgstr ""
 
 #: src/components/SiteHeader.astro
@@ -188,8 +168,16 @@ msgstr ""
 msgid "Screenshots"
 msgstr ""
 
+#: src/lib/site.ts src/pages/[...lang]/changelog.astro
+msgid "Changelog"
+msgstr ""
+
 #: src/lib/site.ts
 msgid "Community"
+msgstr ""
+
+#: src/lib/site.ts
+msgid "Support"
 msgstr ""
 
 #: src/lib/site.ts

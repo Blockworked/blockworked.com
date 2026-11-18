@@ -1,41 +1,41 @@
 ---
 // community.blockworked.com keeps a copy of this in its src/site-nav.ts; change both together.
 import { REPO_URL, RELEASES_URL } from '../lib/releases';
-import { COMMUNITY_URL, SUPPORT_URL, TRANSLATE_URL } from '../lib/site';
+import { NAV_LINKS } from '../lib/site';
 import { LANGUAGES, locale } from '../lib/i18n';
-const { t, href, code } = locale(Astro.url);
 import { logoAt } from '../lib/logo';
+const { t, href, code } = locale(Astro.url);
 const year = new Date().getFullYear();
 const footerLogo = await logoAt(22);
 ---
 
 <footer class="site-footer">
   <div class="container site-footer-inner">
-    <div class="footer-brand">
-      <img {...footerLogo} alt="" loading="lazy" />
-      <span>Blockwork</span>
+    <div class="footer-primary">
+      <a class="footer-brand" href={href('/')}>
+        <img {...footerLogo} alt="" loading="lazy" />
+        <span>Blockwork</span>
+      </a>
+      <nav class="footer-links" aria-label={t('Footer')}>
+        {NAV_LINKS.map(link => <a href={href(link.href)}>{t(link.label)}</a>)}
+      </nav>
     </div>
-    <nav class="footer-links" aria-label={t('Footer')}>
-      <a href={href('/download')}>{t('Download')}</a>
-      <a href={href('/changelog')}>{t('Changelog')}</a>
-      <a href={COMMUNITY_URL}>{t('Community blocks')}</a>
-      <a href={`${SUPPORT_URL}/`}>{t('Support')}</a>
-      <a href={REPO_URL}>{t('Source')}</a>
+    <div class="footer-meta">
+      <a href={REPO_URL}>{t('Blockwork on GitHub')}</a>
       <a href={`${REPO_URL}/issues`}>{t('Report an issue')}</a>
       <a href={RELEASES_URL}>{t('All releases')}</a>
-      <a href={`${TRANSLATE_URL}/`}>{t('Help translate')}</a>
       <a href={href('/privacy')}>{t('Privacy')}</a>
       <a href={href('/terms')}>{t('Terms')}</a>
-    </nav>
-    {LANGUAGES.length > 1 && (
-      <label class="language-picker">
-        <span class="sr">{t('Language')}</span>
-        <select data-language-picker aria-label={t('Language')}>
-          {LANGUAGES.map(l => <option value={l.code} data-prefix={l.prefix} lang={l.tag} selected={l.code === code}>{l.name}</option>)}
-        </select>
-      </label>
-    )}
-    <p class="dim copyright">© {year} Blockworked</p>
+      {LANGUAGES.length > 1 && (
+        <label class="language-picker">
+          <span class="sr">{t('Language')}</span>
+          <select data-language-picker aria-label={t('Language')}>
+            {LANGUAGES.map(l => <option value={l.code} data-prefix={l.prefix} lang={l.tag} selected={l.code === code}>{l.name}</option>)}
+          </select>
+        </label>
+      )}
+      <p class="copyright">© {year} Blockworked</p>
+    </div>
   </div>
 </footer>
 
@@ -56,21 +56,27 @@ const footerLogo = await logoAt(22);
   .site-footer {
     border-top: 1px solid var(--blockstitch-glass-border);
     background: var(--blockstitch-glass-bg);
-    padding: 28px 0;
+    padding: 20px 0;
     font-size: 13px;
+    color: var(--blockstitch-text-dim);
   }
-  .site-footer-inner {
+  .footer-primary,
+  .footer-links,
+  .footer-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px 24px;
+    gap: 8px 20px;
   }
-  .footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-  .dim { color: var(--blockstitch-text-dim); font-weight: 400; }
-  .footer-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
-  .footer-links a { color: var(--blockstitch-text-dim); text-decoration: none; }
-  .footer-links a:hover { color: var(--blockstitch-text); }
-  .copyright { margin-left: auto; }
+  .footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--blockstitch-text); }
+  .site-footer a { text-decoration: none; }
+  .site-footer a:hover { color: var(--blockstitch-text); }
+  .footer-meta {
+    border-top: 1px solid var(--blockstitch-glass-border);
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  .copyright { margin: 0 0 0 auto; }
   .language-picker select {
     font: inherit;
     font-size: 13px;
@@ -82,7 +88,9 @@ const footerLogo = await logoAt(22);
     color: var(--blockstitch-text-dim);
   }
   .language-picker select:hover { color: var(--blockstitch-text); }
-  .language-picker + .copyright { margin-left: 0; }
-  .language-picker { margin-left: auto; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 560px) {
+    .footer-brand, .copyright { flex-basis: 100%; }
+    .copyright { margin-left: 0; }
+  }
 </style>
