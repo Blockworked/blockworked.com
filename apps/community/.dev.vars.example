@@ -1,0 +1,28 @@
+# Local values for `npm run dev`. Copy to .dev.vars (gitignored).
+SITE_URL=http://localhost:8787
+SUPPORT_URL=http://localhost:8787/support
+TRANSLATE_URL=http://localhost:8787/translate
+# Sign-in cookies stay on localhost.
+COOKIE_DOMAIN=
+ADMINS=github:<your GitHub user id>
+# OAuth apps whose callbacks are http://localhost:8787/auth/<provider>/callback.
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# Optional; without it ticket mail is only logged.
+SMTP2GO_API_KEY=
+
+# Optional staff notifications for pack uploads, tickets and requester replies.
+NTFY_TOPIC=
+NTFY_TOKEN=
+NTFY_URL=https://ntfy.sh
+DISCORD_WEBHOOK_URL=
+
+# Translation UI (/translate). Expose only public project/component slugs.
+# WEBLATE_URL=https://your-weblate.example.com
+# WEBLATE_COMPONENTS=blockwork/ui
+# WEBLATE_TRANSLATION_LICENSE=GPL-3.0-only
+# Read-only project token; HMAC secret must match the Weblate adapter.
+# WEBLATE_READ_TOKEN=
+# WEBLATE_SHARED_SECRET=

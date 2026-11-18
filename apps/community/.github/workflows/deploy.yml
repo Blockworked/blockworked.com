@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  # Manual re-run from the Actions tab.
+  workflow_dispatch:
+
+# Never let two deploys race; a newer push waits for the one in flight.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed packs
+        id: packs
+        env:
+          BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || -z "$BEFORE" ]] \
+            || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            files="$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- packs/)"
+            if [[ -n "$files" ]]; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      # Translators work from locales/community.pot; a string added without re-extracting would stay English.
+      - run: npm run i18n:check
+      - run: npm run typecheck
+      - run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Test Weblate authentication adapter
+        run: |
+          python -m pip install -r ops/weblate/requirements-test.txt
+          python -m unittest discover -s ops/weblate
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+
+      # Applies only the migrations D1 hasn't seen yet, so it's a no-op
+      # when none landed. Runs before the deploy so new code finds its tables.
+      - name: Migrate the database
+        run: npm run migrate:remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy the Worker
+        run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Reseed changed community packs
+        if: steps.packs.outputs.changed == 'true'
+        run: npm run seed:remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -1,0 +1,467 @@
+import { t as tt, tn, tp, raw } from './i18n.ts';
+import { notify } from "./notifications.ts";
+import { formImages, imageField, mailImages, storeImages, type ImageAttachment, type StoredImage } from "./support-attachments.ts";
+// The helpdesk at support.blockworked.com. Anyone signed in to the community
+// site can file a ticket, and anyone can email support@. Staff answer here;
+// every answer is emailed to whoever filed the ticket, and they can reply by
+// email or on the ticket's page, which the emailed link opens without signing in.
+
+import { hash, isAdmin, logout, PROVIDERS, randomToken, type User } from "./auth.ts";
+import type { Env } from "./index.ts";
+import { esc, page, type Shell } from "./pages.ts";
+import { blockedAddress, passedTurnstile, record, screen, TURNSTILE_FAILED, turnstileWidget, type Change } from "./moderation.ts";
+import { commentHtml } from "./comments.ts";
+import {
+  fromAddress,
+  isEmail,
+  MAX_BODY,
+  messageId,
+  normalizeEmail,
+  sendMail,
+  tidy,
+} from "./support-mail.ts";
+
+export type Status = "open" | "answered" | "closed" | "spam";
+// A requester never learns their ticket was marked spam.
+const STATUS_LABEL: Record<Status, string> = { open: tp("Waiting on us"), answered: tp("Waiting on you"), closed: "Closed", spam: tp("Waiting on us") };
+const STAFF_LABEL: Record<Status, string> = { open: tp("Needs an answer"), answered: "Answered", closed: "Closed", spam: "Spam" };
+/** New tickets by email from anyone, per hour, before the rest go to Spam unannounced. */
+export const EMAIL_TICKETS_PER_HOUR = 40;
+
+export const NEW_TICKETS_PER_HOUR = 5;
+const MAX_SUBJECT = 200;
+
+export interface Ticket {
+  id: number;
+  subject: string;
+  status: Status;
+  email: string;
+  account_deleted?: number;
+  name: string;
+  user_id: string | null;
+  access_key: string;
+  created_at: number;
+  updated_at: number;
+}
+
+interface TicketMessage {
+  id: number;
+  kind: "requester" | "staff" | "note";
+  user_id: string | null;
+  body: string;
+  email_id: string | null;
+  created_at: number;
+  author: string | null;
+  avatar: string | null;
+}
+
+export function isStaff(env: Env, user: User | null): boolean {
+  if (!user || user.banned) return false;
+  return isAdmin(env, user) || (env.SUPPORT_STAFF ?? "").split(",").map((s) => s.trim()).includes(user.id);
+}
+
+/** The helpdesk's address, without a trailing slash. */
+export function supportUrl(env: Env): string {
+  return (env.SUPPORT_URL || "https://support.blockworked.com").replace(/\/$/, "");
+}
+
+/**
+ * The path under the helpdesk a request is for, or null when it isn't one:
+ * every path on support.blockworked.com, or under SUPPORT_URL's own path when
+ * that shares a host with the library (a local run).
+ */
+export function supportPath(env: Env, url: URL): string | null {
+  const support = new URL(supportUrl(env));
+  if (url.host !== support.host) return null;
+  const base = support.pathname.replace(/\/$/, "");
+  if (!base) return url.pathname;
+  if (url.pathname === base) return "/";
+  return url.pathname.startsWith(`${base}/`) ? url.pathname.slice(base.length) : null;
+}
+
+function link(env: Env, path: string): string {
+  return `${supportUrl(env)}${path}`;
+}
+
+function redirect(location: string): Response {
+  return new Response(null, { status: 303, headers: { Location: location } });
+}
+
+function shell(env: Env, user: User | null, staff: boolean): Shell {
+  const login = link(env, "/login");
+  const nav = user
+    ? `<a href="${link(env, "/")}">${tt('My tickets')}</a><a href="${link(env, "/new")}">${tt('New ticket')}</a><a href="${esc(env.SITE_URL)}/account">${tt('Account settings')}</a>${staff ? `<a href="${link(env, "/queue")}">${tt('Queue')}</a><a href="${esc(env.SITE_URL)}/staff/accounts">${tt('Account recovery')}</a>` : ""}
+       <span class="who">${user.avatar ? `<img class="avatar" src="${esc(user.avatar)}" alt="">` : ""}${esc(user.name)}</span>
+       <form class="inline" method="post" action="${link(env, "/logout")}"><button class="ghost">${tt('Sign out')}</button></form>`
+    : `<a href="${esc(login)}">${tt('Sign in')}</a>`;
+  return { name: "Support", href: link(env, "/"), nav, site: tp("Blockworked Support"), place: { community: `${env.SITE_URL}/`, section: "support" } };
+}
+
+function when(ms: number): string {
+  return new Date(ms).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" });
+}
+
+function statusMark(status: Status, staff: boolean): string {
+  return `<span class="ticket-status s-${status}">${esc((staff ? STAFF_LABEL : STATUS_LABEL)[status])}</span>`;
+}
+
+
+// Pages
+
+export async function supportRoute(req: Request, env: Env, path: string, user: User | null): Promise<Response> {
+  const method = req.method === "HEAD" ? "GET" : req.method;
+  const staff = isStaff(env, user);
+  const url = new URL(req.url);
+  let m: RegExpMatchArray | null;
+  if (method === "GET" && (m = path.match(/^\/attachments\/([a-f0-9-]{36})$/))) {
+    const image = await env.DB.prepare("SELECT a.*, m.ticket_id, m.kind FROM ticket_attachments a JOIN ticket_messages m ON m.id = a.message_id WHERE a.id = ?").bind(m[1]).first<StoredImage & { ticket_id: number; kind: string }>();
+    const ticket = image ? await loadTicket(env, image.ticket_id) : null;
+    if (!image || !ticket || (image.kind === "note" && !staff) || !(await canRead(env, user, staff, ticket, url.searchParams.get("k")))) return notFound(env, user, staff);
+    const object = await env.PACKS.get(`support/${image.id}`);
+    if (!object) return notFound(env, user, staff);
+    return new Response(object.body, { headers: { "Content-Type": image.type, "Cache-Control": "private, no-store", "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(image.name)}`, "Referrer-Policy": "no-referrer" } });
+  }
+  if (method === "GET" && path === "/") return home(env, user, staff);
+  if (method === "GET" && path === "/login") return loginPage(env, user, staff, url.searchParams.get("next") ?? "/");
+  if (path === "/new") {
+    if (!user) return redirect(link(env, `/login?next=${encodeURIComponent("/new")}`));
+    if (method === "GET") return newForm(env, user, staff, "", {}, await savedEmail(env, user));
+    if (method === "POST") return createFromForm(req, env, user, staff);
+  }
+  if (method === "GET" && path === "/queue") {
+    if (!staff) return notFound(env, user, staff);
+    return queue(env, user!, url.searchParams.get("status"));
+  }
+  if (method === "POST" && path === "/logout") return logout(req, env, link(env, "/"));
+  if ((m = path.match(/^\/tickets\/(\d{1,9})(\/reply|\/status)?$/))) {
+    const id = Number(m[1]);
+    const key = method === "GET" ? url.searchParams.get("k") : null;
+    if (method === "GET" && !m[2]) return ticketPage(env, user, staff, id, key);
+    if (method === "POST" && m[2] === "/reply") return reply(req, env, user, staff, id);
+    if (method === "POST" && m[2] === "/status") {
+      if (!staff) return notFound(env, user, staff);
+      return setStatus(req, env, id, user!);
+    }
+  }
+  return notFound(env, user, staff);
+}
+
+/** Sign-in on the helpdesk's own pages. The providers send everyone back to the
+ *  library's address, whose cookie covers this host too, and on to `next` here. */
+function loginPage(env: Env, user: User | null, staff: boolean, next: string): Response {
+  const path = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  if (user) return redirect(link(env, path));
+  const back = encodeURIComponent(link(env, path));
+  const buttons = Object.entries(PROVIDERS)
+    .map(([id, name]) => `<a class="button large" href="${esc(`${env.SITE_URL}/auth/${id}/login?next=${back}`)}">${tt('Sign in with {provider}', { provider: name })}</a>`)
+    .join("");
+  return page(tp("Sign in"),
+    null,
+    false,
+    `<h1>${tt('Sign in')}</h1><p class="muted">${tt('Use your Blockwork community account, or make one by signing in. You can also email {address} without an account.', { address: raw(`<a href="mailto:${esc(fromAddress(env))}">${esc(fromAddress(env))}</a>`) })}</p><div class="signin">${buttons}${env.LOCAL_AUTH_ENABLED === "true" ? `<a class="button large" href="${esc(`${env.SITE_URL}/login?next=${back}`)}">${tt('Sign in with email or a passkey')}</a>` : ""}</div>`,
+    200,
+    shell(env, null, false),
+  );
+}
+
+function notFound(env: Env, user: User | null, staff: boolean): Response {
+  return page(tp("Not found"), user, staff, `<h1>${tt('Not found')}</h1><p>${tt('There\'s nothing here.')}</p>`, 404, shell(env, user, staff));
+}
+
+async function home(env: Env, user: User | null, staff: boolean): Promise<Response> {
+  const email = esc(fromAddress(env));
+  const ways = `<div class="ways">
+    <div class="card"><h3>${tt('File a ticket')}</h3><p class="muted">${tt('Sign in with your community account and tell us what\'s up. You can follow it here.')}</p>
+      <p><a class="button primary" href="${link(env, "/new")}">${tt('New ticket')}</a></p></div>
+    <div class="card"><h3>${tt('Email us')}</h3><p class="muted">${tt('Write to {address}. No account needed; we’ll answer by email.', { address: raw(`<a href="mailto:${email}">${email}</a>`) })}</p></div>
+  </div>`;
+  if (!user) {
+    return page(tp("Support"),
+      null,
+      false,
+      `<h1>${tt('Support')}</h1><p class="muted">${tt('Questions about Blockwork, the community library or your account? Ask here.')}</p>${ways}`,
+      200,
+      shell(env, null, false),
+    );
+  }
+  const { results } = await env.DB.prepare("SELECT * FROM tickets WHERE user_id = ? ORDER BY updated_at DESC LIMIT 200").bind(user.id).all<Ticket>();
+  const list = results.length
+    ? `<ul class="ticket-list">${results.map((t) => ticketRow(env, t, false)).join("")}</ul>`
+    : `<p class="muted">${tt('You haven\'t filed any tickets.')}</p>`;
+  return page(tp("Support"),
+    user,
+    staff,
+    `<h1>${tt('Support')}</h1>${ways}<h2>${tt('Your tickets')}</h2>${list}
+     <p class="muted">Tickets you emailed in are answered by email; their links open them here.</p>`,
+    200,
+    shell(env, user, staff),
+  );
+}
+
+function ticketRow(env: Env, t: Ticket, staff: boolean): string {
+  return `<li><a class="row" href="${link(env, `/tickets/${t.id}`)}"><span class="num">#${t.id}</span><span class="subject">${esc(t.subject)}</span>
+    ${staff ? `<span class="who-from">${esc(t.name || t.email)}</span>` : ""}${statusMark(t.status, staff)}<span class="time">${esc(when(t.updated_at))}</span></a></li>`;
+}
+
+async function newForm(env: Env, user: User, staff: boolean, error = "", draft: { subject?: string; body?: string; email?: string } = {}, savedEmail = ""): Promise<Response> {
+  const attached = await env.DB.prepare("SELECT email FROM email_credentials WHERE user_id = ?").bind(user.id).first<{email:string}>();
+  return page(tp("New ticket"),
+    user,
+    staff,
+    `<h1>${tt('New ticket')}</h1>
+     <form class="support-form comment-form" enctype="multipart/form-data" method="post" action="${link(env, "/new")}">
+       ${error ? `<p class="risky">${esc(error)}</p>` : ""}
+       ${attached ? `<p class="muted">${tt('Replies go to your account email: {email}.', { email: attached.email })}</p>` : `<label class="field" for="email">Email (optional)</label>
+       <input type="email" id="email" name="email" maxlength="254" autocomplete="email" value="${esc(draft.email ?? savedEmail)}">
+       <p class="muted">${tt('Leave blank to read replies in My tickets.')}</p>`}
+       <label class="field" for="subject">${tt('Subject')}</label>
+       <input type="text" id="subject" name="subject" required maxlength="${MAX_SUBJECT}" value="${esc(draft.subject ?? "")}">
+       <label class="field" for="body">${tt('What\'s going on?')}</label>
+       <textarea id="body" name="body" required maxlength="${MAX_BODY}" placeholder="${tt('What you were doing, what happened, and your Blockwork version if it\'s about the app')}">${esc(draft.body ?? "")}</textarea>
+       ${imageField}
+       ${staff ? "" : await turnstileWidget(env)}
+       <p class="form-foot"><span class="muted">${tt('Plain text. Links work.')}</span><button class="primary">${tt('Send')}</button></p>
+     </form>`,
+    error ? 400 : 200,
+    shell(env, user, staff),
+  );
+}
+
+async function savedEmail(env: Env, user: User): Promise<string> {
+  const row = await env.DB.prepare("SELECT support_email FROM users WHERE id = ?").bind(user.id).first<{ support_email: string | null }>();
+  return row?.support_email ?? "";
+}
+
+async function createFromForm(req: Request, env: Env, user: User, staff: boolean): Promise<Response> {
+  const form = await req.formData();
+  const attached = await env.DB.prepare("SELECT email FROM email_credentials WHERE user_id = ?").bind(user.id).first<{email:string}>();
+  const email = attached?.email ?? normalizeEmail(String(form.get("email") ?? ""));
+  const subject = String(form.get("subject") ?? "").replace(/\s+/g, " ").trim();
+  const body = tidy(String(form.get("body") ?? ""));
+  const draft = { email, subject, body };
+  if (user.banned) return newForm(env, user, staff, tp("This account can't file tickets."), draft);
+  if (email && !isEmail(email)) return newForm(env, user, staff, tp("That email address doesn't look right."), draft);
+  if (!subject) return newForm(env, user, staff, tp("Give it a subject."), draft);
+  if (subject.length > MAX_SUBJECT) return newForm(env, user, staff, `Subjects can be up to ${MAX_SUBJECT} characters.`, draft);
+  if (!body) return newForm(env, user, staff, tp("Write something first."), draft);
+  const recent = await env.DB.prepare("SELECT COUNT(*) AS n FROM tickets WHERE user_id = ? AND created_at > ?")
+    .bind(user.id, Date.now() - 3600_000)
+    .first<{ n: number }>();
+  if (!staff && (recent?.n ?? 0) >= NEW_TICKETS_PER_HOUR) return newForm(env, user, staff, tp("That's a lot of tickets in an hour. Try again later."), draft);
+  if (!staff && !(await passedTurnstile(env, req, form.get("cf-turnstile-response")))) return newForm(env, user, staff, TURNSTILE_FAILED, draft);
+  const verdict = staff ? null : await screen(env, req, user, "ticket");
+  if (verdict && !verdict.ok) return newForm(env, user, staff, verdict.error, draft);
+  if (email && !staff && (await blockedAddress(env, email))) return newForm(env, user, staff, tp("That email address can't be used here."), draft);
+  let images: ImageAttachment[];
+  try { images = await formImages(form); } catch (error) { return newForm(env, user, staff, (error as Error).message, draft); }
+  await env.DB.prepare("UPDATE users SET support_email = ? WHERE id = ? AND deactivated_at = 0 AND deleted_at = 0").bind(email, user.id).run();
+  const { ticket } = await openTicket(env, { subject, body, email, name: user.name, userId: user.id, emailId: null, images, spam: !!verdict?.hidden, ipHash: verdict?.ipHash ?? null });
+  return redirect(link(env, `/tickets/${ticket.id}`));
+}
+
+/** Files a ticket and sends the receipt and the staff notice. Returns it and its key. */
+export async function openTicket(
+  env: Env,
+  t: {
+    subject: string; body: string; email: string; name: string; userId: string | null; emailId: string | null; images?: ImageAttachment[];
+    /** Filed straight into Spam: nobody is told, and no receipt goes out. */
+    spam?: boolean;
+    /** Whether to send the requester a receipt. Off for mail whose sender couldn't be verified, so spoofed senders get no backscatter. */
+    receipt?: boolean;
+    ipHash?: string | null;
+  },
+): Promise<{ ticket: Ticket; key: string }> {
+  const now = Date.now();
+  const key = randomToken();
+  const ticket = (await env.DB.prepare(
+    "INSERT INTO tickets (subject, status, email, name, user_id, access_key, created_at, updated_at, ip_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *",
+  )
+    .bind(t.subject, t.spam ? "spam" : "open", t.email, t.name.slice(0, 120), t.userId, key, now, now, t.ipHash ?? null)
+    .first<Ticket>())!;
+  const first = await env.DB.prepare(
+    "INSERT INTO ticket_messages (ticket_id, kind, user_id, body, email_id, created_at) VALUES (?, 'requester', ?, ?, ?, ?) RETURNING id",
+  )
+    .bind(ticket.id, t.userId, t.body, t.emailId, now)
+    .first<{ id: number }>();
+  await storeImages(env, first!.id, t.images ?? []);
+  const receiptId = messageId(env, ticket.id, first!.id);
+  // The receipt is what an emailed reply answers when the ticket came from the site.
+  if (!t.emailId) await env.DB.prepare("UPDATE ticket_messages SET email_id = ? WHERE id = ?").bind(receiptId, first!.id).run();
+  if (t.spam) return { ticket, key };
+  await Promise.all([
+    t.email && t.receipt !== false ? sendMail(env, {
+      to: [t.email],
+      subject: `[#${ticket.id}] ${ticket.subject}`,
+      text: `Thanks for getting in touch. We've got your message and will answer as soon as we can.\n\nTo add anything, reply to this email or open the ticket:\n${keyLink(env, ticket.id, key)}\n\n---\n${t.body}`,
+      attachments: mailImages(t.images ?? []),
+      messageId: receiptId,
+      inReplyTo: t.emailId ?? undefined,
+      references: t.emailId ? [t.emailId] : undefined,
+      automated: true,
+    }) : Promise.resolve(false),
+    notifyStaff(env, ticket, `New ticket from ${t.name || t.email} <${t.email}>`, t.body, t.images),
+  ]);
+  return { ticket, key };
+}
+
+function keyLink(env: Env, id: number, key: string): string {
+  return link(env, `/tickets/${id}?k=${encodeURIComponent(key)}`);
+}
+
+async function notifyStaff(env: Env, ticket: Ticket, headline: string, body: string, images: ImageAttachment[] = []): Promise<void> {
+  await notify(env, { title: `[#${ticket.id}] ${ticket.subject}`, text: `${headline}\n\n${body}`, url: link(env, `/tickets/${ticket.id}`), attachments: mailImages(images) });
+}
+
+/** Whether this visitor may read the ticket: staff, the account that filed it, or the emailed key. */
+async function canRead(env: Env, user: User | null, staff: boolean, t: Ticket, key: string | null): Promise<boolean> {
+  if (staff) return true;
+  if (user && !user.banned && t.user_id === user.id) return true;
+  return !!key && (await hash(key)) === (await hash(t.access_key));
+}
+
+export async function loadTicket(env: Env, id: number): Promise<Ticket | null> {
+  return env.DB.prepare("SELECT t.*, coalesce(u.deleted_at,0) AS account_deleted FROM tickets t LEFT JOIN users u ON u.id = t.user_id WHERE t.id = ?").bind(id).first<Ticket>();
+}
+
+async function ticketPage(env: Env, user: User | null, staff: boolean, id: number, key: string | null, error = "", draft = ""): Promise<Response> {
+  const t = await loadTicket(env, id);
+  if (!t || !(await canRead(env, user, staff, t, key))) return notFound(env, user, staff);
+  const { results } = await env.DB.prepare(
+    `SELECT m.id, m.kind, m.user_id, m.body, m.email_id, m.created_at, u.name AS author, u.avatar AS avatar
+     FROM ticket_messages m LEFT JOIN users u ON u.id = m.user_id WHERE m.ticket_id = ? ORDER BY m.created_at, m.id LIMIT 500`,
+  )
+    .bind(id)
+    .all<TicketMessage>();
+  const attachments = await env.DB.prepare("SELECT a.* FROM ticket_attachments a JOIN ticket_messages m ON m.id = a.message_id WHERE m.ticket_id = ?").bind(id).all<StoredImage>();
+  const items = results
+    .filter((m) => staff || m.kind !== "note")
+    .map((m) => {
+      const name = m.kind === "requester" ? m.author || t.name || t.email : `${m.author || "Blockworked"}${m.kind === "note" ? "" : " (Blockworked)"}`;
+      const pill = m.kind === "note" ? ` <span class="mark">${tt('internal note')}</span>` : m.kind === "staff" && staff ? ` <span class="mark">${tt('staff')}</span>` : "";
+      const avatar = m.avatar
+        ? `<img class="avatar" src="${esc(m.avatar)}" alt="">`
+        : `<span class="avatar blank" aria-hidden="true">${esc((name || "?").slice(0, 1).toUpperCase())}</span>`;
+      const images = attachments.results.filter(a => a.message_id === m.id).map(a => {
+        const url = link(env, `/attachments/${a.id}${key ? `?k=${encodeURIComponent(key)}` : ""}`);
+        return `<a href="${esc(url)}" target="_blank" rel="noreferrer"><img src="${esc(url)}" alt="${esc(a.name)}" loading="lazy" style="max-width:100%;max-height:320px"><span>${esc(a.name)}</span></a>`;
+      }).join("");
+      return `<li class="comment ${m.kind}" id="m-${m.id}">${avatar}<div class="comment-main"><div class="comment-meta"><strong>${esc(name)}</strong>${pill}
+        <a class="muted" href="#m-${m.id}">${esc(when(m.created_at))}</a></div><p class="comment-body">${commentHtml(m.body)}</p><div class="support-images">${images}</div></div></li>`;
+    })
+    .join("");
+  const action = link(env, `/tickets/${t.id}/reply`);
+  const keyField = key ? `<input type="hidden" name="k" value="${esc(key)}">` : "";
+  const replyForm = `<form class="comment-form" enctype="multipart/form-data" method="post" action="${action}" id="reply">${keyField}
+      ${error ? `<p class="risky">${esc(error)}</p>` : ""}
+      <label class="sr" for="body">${tt('Reply')}</label>
+      <textarea id="body" name="body" rows="6" required maxlength="${MAX_BODY}" placeholder="${staff ? `${t.email ? `Your answer is emailed to ${esc(t.email)}` : "Your answer appears in the requester’s My tickets"}` : tp("Add a reply")}">${esc(draft)}</textarea>
+      ${imageField}
+      <p class="form-foot"><span class="muted">${staff ? tp("Plain text. A note stays here and isn't emailed.") : t.status === "closed" ? tp("Replying opens the ticket again.") : tp("Plain text. Links work.")}</span>
+      <span>${staff ? `<button name="kind" value="note">${tt('Add note')}</button> ` : ""}<button class="primary" name="kind" value="${staff ? "staff" : "requester"}">${staff ? "Send answer" : tp("Send reply")}</button></span></p>
+    </form>`;
+  const staffBits = staff
+    ? `<p class="muted meta"><span>From ${esc(t.name ? `${t.name} <${t.email}>` : t.email)}</span>${t.user_id ? `<span>account ${esc(t.user_id)}</span>` : `<span>${tt('by email')}</span>`}<span>opened ${esc(when(t.created_at))}</span></p>
+       <form class="ticket-actions" method="post" action="${link(env, `/tickets/${t.id}/status`)}">
+         ${t.status === "closed" || t.status === "spam" ? `<button name="status" value="open">${t.status === "spam" ? "Not spam" : tt('Reopen')}</button>` : `<button name="status" value="closed">${tt('Close')}</button>`}
+         ${t.status === "open" ? `<button class="ghost" name="status" value="answered">${tt('Mark answered')}</button>` : ""}
+         ${t.status === "spam" ? "" : `<button class="ghost" name="status" value="spam">Spam</button>${t.email ? `<label class="muted"><input type="checkbox" name="block" value="1"> and block ${esc(t.email)}</label>` : ""}`}
+       </form>
+       ${t.user_id && isAdmin(env, user) ? `<p class="muted"><a href="${esc(env.SITE_URL)}/admin/users/${encodeURIComponent(t.user_id)}">Moderate this account</a> (ban, roll back)</p>` : ""}`
+    : `<p class="muted meta"><span>Opened ${esc(when(t.created_at))}</span></p>`;
+  const crumbs = staff ? `<p class="crumbs"><a href="${link(env, "/queue")}">${tt('Queue')}</a></p>` : user ? `<p class="crumbs"><a href="${link(env, "/")}">${tt('My tickets')}</a></p>` : "";
+  return page(
+    `#${t.id} ${t.subject}`,
+    user,
+    staff,
+    `${crumbs}<h1>${esc(t.subject)} <span class="version">#${t.id}</span></h1>
+     <p>${statusMark(t.status, staff)}</p>${staffBits}
+     <ol class="thread comment-list">${items}</ol>${t.account_deleted ? `<p class="muted">${tt('This account was deleted. The ticket is read-only.')}</p>` : replyForm}`,
+    error ? 400 : 200,
+    shell(env, user, staff),
+  );
+}
+
+async function reply(req: Request, env: Env, user: User | null, staff: boolean, id: number): Promise<Response> {
+  const form = await req.formData();
+  const key = String(form.get("k") ?? "") || null;
+  const t = await loadTicket(env, id);
+  if (!t || !(await canRead(env, user, staff, t, key))) return notFound(env, user, staff);
+  if (t.account_deleted) return new Response(tp("This account was deleted. The ticket is read-only."),{status:409});
+  const body = tidy(String(form.get("body") ?? ""));
+  const asked = String(form.get("kind") ?? "");
+  const kind = staff ? (asked === "note" ? "note" : "staff") : "requester";
+  if (!body) return ticketPage(env, user, staff, id, key, tp("Write something first."), "");
+  let images: ImageAttachment[];
+  try { images = await formImages(form); } catch (error) { return ticketPage(env, user, staff, id, key, (error as Error).message, body); }
+  await addMessage(env, t, kind, staff || t.user_id === user?.id ? (user?.id ?? null) : null, body, null, images);
+  const back = key ? `/tickets/${id}?k=${encodeURIComponent(key)}` : `/tickets/${id}`;
+  return redirect(link(env, back));
+}
+
+/** Adds to a ticket's thread, moves its status along and sends whatever email that calls for. */
+export async function addMessage(env: Env, t: Ticket, kind: "requester" | "staff" | "note", userId: string | null, body: string, emailId: string | null, images: ImageAttachment[] = []): Promise<void> {
+  const now = Date.now();
+  const row = await env.DB.prepare(
+    "INSERT INTO ticket_messages (ticket_id, kind, user_id, body, email_id, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
+  )
+    .bind(t.id, kind, userId, body, emailId, now)
+    .first<{ id: number }>();
+  await storeImages(env, row!.id, images);
+  // A reply to a spam ticket stays in Spam, unannounced.
+  const status: Status = t.status === "spam" && kind === "requester" ? "spam" : kind === "requester" ? "open" : kind === "staff" ? "answered" : t.status;
+  await env.DB.prepare("UPDATE tickets SET status = ?, updated_at = ? WHERE id = ?").bind(status, now, t.id).run();
+  if (kind === "requester" && t.status === "spam") return;
+  if (kind === "requester") {
+    await notifyStaff(env, t, `${t.name || t.email} replied${t.status === "closed" ? " and reopened it" : ""}:`, body, images);
+  } else if (kind === "staff" && t.email) {
+    // Threads under everything sent or received so far, so mail apps keep one conversation.
+    const { results } = await env.DB.prepare("SELECT email_id FROM ticket_messages WHERE ticket_id = ? AND email_id IS NOT NULL ORDER BY id")
+      .bind(t.id)
+      .all<{ email_id: string }>();
+    const refs = results.map((r) => r.email_id).slice(-20);
+    const outgoing = messageId(env, t.id, row!.id);
+    await env.DB.prepare("UPDATE ticket_messages SET email_id = ? WHERE id = ?").bind(outgoing, row!.id).run();
+    await sendMail(env, {
+      to: [t.email],
+      subject: `Re: [#${t.id}] ${t.subject}`,
+      text: `${body}\n\n---\nReply to this email to answer, or see the whole conversation:\n${keyLink(env, t.id, t.access_key)}`,
+      attachments: mailImages(images),
+      messageId: outgoing,
+      inReplyTo: refs[refs.length - 1],
+      references: refs,
+    });
+  }
+}
+
+async function setStatus(req: Request, env: Env, id: number, actor: User): Promise<Response> {
+  const form = await req.formData();
+  const status = String(form.get("status") ?? "");
+  if (status !== "open" && status !== "answered" && status !== "closed" && status !== "spam") return new Response(tp("Bad request"), { status: 400 });
+  const t = await loadTicket(env, id);
+  if (!t) return new Response(tp("Not found"), { status: 404 });
+  const changes: Change[] = [{ kind: "ticket", id, before: { status: t.status }, after: { status } }];
+  // Spam from an address can block it, so its next mail is dropped.
+  if (status === "spam" && form.get("block") === "1" && t.email) changes.push({ kind: "block", id: t.email, before: {}, after: { kind: "email", value: t.email, reason: `Spam ticket #${id}` } });
+  if (status === "spam" || t.status === "spam") await record(env, actor.id, status === "spam" ? "ticket-spam" : "ticket-not-spam", { kind: "ticket", id }, t.email, changes);
+  else await env.DB.prepare("UPDATE tickets SET status = ? WHERE id = ?").bind(status, id).run();
+  await env.DB.prepare("UPDATE tickets SET updated_at = ? WHERE id = ?").bind(Date.now(), id).run();
+  return redirect(link(env, status === "spam" ? "/queue" : `/tickets/${id}`));
+}
+
+async function queue(env: Env, user: User, wanted: string | null): Promise<Response> {
+  const status: Status = wanted === "answered" || wanted === "closed" || wanted === "spam" ? wanted : "open";
+  const { results } = await env.DB.prepare(
+    `SELECT * FROM tickets WHERE status = ? ORDER BY ${status === "open" ? "updated_at ASC" : "updated_at DESC"} LIMIT 300`,
+  )
+    .bind(status)
+    .all<Ticket>();
+  const counts = await env.DB.prepare("SELECT status, COUNT(*) AS n FROM tickets GROUP BY status").all<{ status: Status; n: number }>();
+  const count = (s: Status) => counts.results.find((r) => r.status === s)?.n ?? 0;
+  const tabs = (["open", "answered", "closed", "spam"] as Status[])
+    .map((s) => `<a href="${link(env, `/queue?status=${s}`)}"${s === status ? ` aria-current="page"` : ""}>${esc(STAFF_LABEL[s])} <span class="n">${count(s)}</span></a>`)
+    .join("");
+  const list = results.length
+    ? `<ul class="ticket-list">${results.map((t) => ticketRow(env, t, true)).join("")}</ul>`
+    : `<p class="muted">${status === "open" ? tp("Nothing waiting. Nice.") : tp("None.")}</p>`;
+  return page(tp("Queue"), user, true, `<h1>${tt('Support queue')}</h1><nav class="tabs" aria-label="${tt('Status')}">${tabs}</nav>${list}`, 200, shell(env, user, true));
+}

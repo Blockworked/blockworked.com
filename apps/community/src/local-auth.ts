@@ -1,0 +1,254 @@
+import { t, tn, tp } from './i18n.ts';
+import type { Env } from './index.ts';
+import { currentUser, hash, isReservedName, safeNext, PROVIDERS, type User } from './auth.ts';
+import { esc } from './pages.ts';
+import { settingsPage, accountPage as screen } from './account-views.ts';
+import { agreement } from './site-nav.ts';
+import { totpRoute } from './totp.ts';
+import { staffAccounts } from './staff-accounts.ts';
+import { isEmail, normalizeEmail } from './support-mail.ts';
+import { notify, sendAccountToken } from './account-mail.ts';
+import { boundedBody, DUMMY_HASH, finishPrimary, flowToken, hex, limit, makeFlow, newPasswordError, passwordHash,
+  passwordMatches, readFlow, securityProof, redirect, replacePassword, version, type Flow } from './account-security.ts';
+import { passkeyRoute } from './passkeys.ts';
+import { securityUnlock } from './security-unlock.ts';
+import { emailChange } from './email-change.ts';
+import { oauthSettings } from './oauth.ts';
+import { lifecycleRoute } from './account-lifecycle.ts';
+import { profileRoute } from './profile.ts';
+import { ACCOUNT_JS } from './account-ui.ts';
+import { blockedAddress, passedTurnstile, signupsOpen, TURNSTILE_FAILED, turnstileWidget } from './moderation.ts';
+
+const field = (body: Record<string, unknown>, name: string) => typeof body[name] === 'string' ? body[name] as string : '';
+function input(name: string, label: string, type = 'text', autocomplete = name): string {
+  return `<p><label>${esc(label)}<br><input name="${esc(name)}" type="${type}" autocomplete="${autocomplete}" required ${type === 'password' ? 'minlength="15" maxlength="128"' : 'maxlength="254"'}></label></p>`;
+}
+
+
+function error(env: Env, text = tp('Verification expired or failed. Sign in and try again.'), status = 400): Response {
+  return screen(null, env, tp('Account security'), `<p role="alert">${esc(text)}</p><p><a href="${text.startsWith('Unlock') ? '/account/unlock' : '/login'}">${text.startsWith('Unlock') ? tp('Unlock security settings') : tp('Sign in')}</a></p>`, status);
+}
+
+function mailNotice(env: Env): Response {
+  return screen(null, env, tp('Check your email'), `<p>${t('If this address is eligible, an email with the next steps will arrive shortly.')}</p><p><a href="/login">${t('Back to sign in')}</a></p>`);
+}
+
+async function settings(req: Request, env: Env, user: User): Promise<Response> {
+  const email = await env.DB.prepare('SELECT email FROM email_credentials WHERE user_id = ?').bind(user.id).first<{email: string}>();
+  const keys = await env.DB.prepare('SELECT id, label FROM passkeys WHERE user_id = ? ORDER BY created_at').bind(user.id).all<{id: string; label: string}>();
+  const app = await env.DB.prepare('SELECT 1 FROM totp_credentials WHERE user_id = ?').bind(user.id).first();
+  const codes = await env.DB.prepare('SELECT count(*) AS n FROM backup_codes WHERE user_id = ?').bind(user.id).first<{n: number}>();
+  const sessions = await env.DB.prepare('SELECT kind, label, created_at FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY created_at DESC LIMIT 50')
+    .bind(user.id, Date.now()).all<{kind: string; label: string; created_at: number}>();
+  const identities = await env.DB.prepare('SELECT provider, label FROM oauth_identities WHERE user_id = ?').bind(user.id).all<{provider: keyof typeof PROVIDERS; label: string}>();
+  const activity = await env.DB.prepare('SELECT action,detail,created_at FROM account_security_events WHERE user_id = ? ORDER BY id DESC LIMIT 10').bind(user.id).all<{action: string; detail: string; created_at: number}>();
+  const pending = await env.DB.prepare('SELECT new_email,old_confirmed,new_confirmed FROM email_changes WHERE user_id = ? AND expires_at > ? AND auth_version = (SELECT auth_version FROM users WHERE id = ?)').bind(user.id, Date.now(), user.id).first<{new_email: string; old_confirmed: number; new_confirmed: number}>();
+  return settingsPage(user, env, 'Security', `
+    <p>${t('Security settings are unlocked for this browser. Settings lock after 30 minutes of inactivity or one hour total.')}</p><form method="post" action="/account/lock"><button>${t('Lock security settings')}</button></form>
+    <section class="card"><h2>${t('Email and password')}</h2>${email ? `<p>${esc(email.email)}</p><form method="post" action="/account/password">${input('password', tp('New password'), 'password', 'new-password')}<button>${t('Change password')}</button></form>
+      <h3>${t('Change linked email')}</h3><form method="post" action="/account/email-change/start">${input('email', tp('New email address'), 'email')}<button>${t('Request email change')}</button></form>
+      ${pending ? `<p>${t('Pending: {email}', { email: pending.new_email })} · ${pending.old_confirmed ? t('Current address: confirmed') : t('Current address: waiting')} · ${pending.new_confirmed ? t('New address: confirmed') : t('New address: waiting')}</p><form method="post" action="/account/email-change/finish"><button ${pending.old_confirmed && pending.new_confirmed ? '' : 'disabled'}>${t('Finish email change')}</button></form>` : ''}` :
+      `<p>${t('Add verified email credentials to this account. This preserves your packs and support tickets.')}</p><form method="post" action="/account/email">${input('email', 'Email', 'email')}<button>${t('Verify email')}</button></form>`}
+    <p>${t('Use a unique password with at least 15 characters. Password managers and pasting are supported.')}</p></section>
+    <section class="card"><h2>${t('Connected sign-in accounts')}</h2>
+    ${Object.entries(PROVIDERS).map(([provider, name]) => {
+      const connected = identities.results.find(i => i.provider === provider);
+      return `<div class="connection-row"><p>${esc(name)}: ${connected ? esc(connected.label) : t('Not connected')}</p><form ${connected ? '' : 'data-oauth-connect'} method="post" action="/account/oauth/${provider}/${connected ? 'disconnect' : 'connect'}"><button>${connected ? 'Disconnect' : 'Connect'} ${esc(name)}</button></form></div>`;
+    }).join('')}
+    </section>
+    <section class="card"><h2>${t('Passkeys')}</h2><p>${t('Use a passkey to sign in directly, or as a second step after your password or Google/GitHub sign-in.')}</p>
+    <ul>${keys.results.map(k => `<li>${esc(k.label)} <form class="inline" method="post" action="/account/passkey/delete"><input type="hidden" name="id" value="${esc(k.id)}"><button>${t('Remove')}</button></form></li>`).join('') || `<li>${t('No passkeys yet.')}</li>`}</ul>
+    <p><label>${t('Passkey name')} <input id="passkey-label" type="text" maxlength="80" value="My passkey"></label></p><button type="button" data-passkey="register">${t('Add passkey')}</button>
+    <p>${t('Keep at least one passkey or authenticator app. Add a replacement before removing a lost device.')}</p></section>
+    <section class="card"><h2>${t('Authenticator app')}</h2><p>${app ? tp('Enabled. Your app generates a new six-digit code every 30 seconds.') : tp('Use six-digit codes from an authenticator app as a second sign-in step.')}</p>
+    <div class="settings-actions"><form method="post" action="/account/totp/setup"><button>${app ? tp('Replace authenticator app') : tp('Set up authenticator app')}</button></form>
+    ${app ? `<form method="post" action="/account/totp/delete"><button>${t('Remove authenticator app')}</button></form>` : ''}</div></section>
+    <section class="card"><h2>${t('Backup codes')}</h2><p>${codes?.n ?? 0} unused codes. Save these somewhere safe, separate from your device. Each works once after your password or Google/GitHub sign-in.</p>
+    <form method="post" action="/account/backup"><button ${keys.results.length || app ? '' : 'disabled'}>${t('Generate new backup codes')}</button></form><p>${t('Generating codes invalidates all previous codes.')}</p></section>
+    <section class="card"><h2>${t('Signed-in sessions')}</h2><ul>${sessions.results.map(s => `<li>${s.kind === 'app' ? 'App' : 'Browser'} ${esc(s.label)}${s.created_at ? ` — ${esc(new Date(s.created_at).toISOString().slice(0, 10))}` : ''}</li>`).join('')}</ul>
+    <form method="post" action="/account/revoke"><button>${t('Sign out all browsers and apps')}</button></form></section>
+    <section class="card"><h2>${t('Recent account changes')}</h2><ul>${activity.results.map(event => {
+      const label = event.action === 'email_changed' ? tp('Linked email changed') : event.action === 'oauth_connected' ? tp('Sign-in connected') : tp('Sign-in disconnected');
+      return `<li>${esc(label)}${event.detail ? `: ${esc(PROVIDERS[event.detail as keyof typeof PROVIDERS] || event.detail)}` : ''} · ${esc(new Date(event.created_at).toISOString())}</li>`;
+    }).join('') || `<li>${t('No recent changes.')}</li>`}</ul></section>
+    <section class="card"><h2>${t('Account status')}</h2><a class="button" href="/account/lifecycle">${t('Deactivate or delete account')}</a></section>
+    <p id="auth-status" role="status"></p><script src="/account.js" defer></script>`);
+}
+
+/** Local credentials are explicitly enabled after mail, migrations and CPU limits are configured. */
+export async function localAuth(req: Request, env: Env, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response | null> {
+  const url = new URL(req.url), path = url.pathname;
+  if (!(path === '/account.js' || path === '/account' || path.startsWith('/account/') || path.startsWith('/auth/email/') || path.startsWith('/auth/passkey/') || path.startsWith('/auth/backup/') || path.startsWith('/auth/totp/') || path.startsWith('/staff/accounts') || path === '/auth/second-factor')) return null;
+  if (env.LOCAL_AUTH_ENABLED !== 'true') return error(env, tp('Email accounts and passkeys are not enabled yet.'), 503);
+  // Credential ceremonies only run on the canonical origin, never on a sibling helpdesk host.
+  if (url.origin !== new URL(env.SITE_URL).origin) return new Response(tp('Not found'), {status: 404});
+  if (req.method === 'GET' && path === '/account.js') return new Response(ACCOUNT_JS, {headers: {'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=300'}});
+  if (req.method !== 'GET' && req.method !== 'POST') return new Response('Method not allowed', {status: 405, headers: {Allow: 'GET, POST'}});
+  if (req.method === 'POST' && req.headers.get('Origin') !== new URL(env.SITE_URL).origin) return error(env, 'Cross-site request refused.', 403);
+  const user = await currentUser(req, env);
+  if (path === '/account/reactivate' || path.startsWith('/account/lifecycle')) return lifecycleRoute(req,env,user,ctx);
+  if (path === '/account' || path === '/account/profile' || path === '/account/profile/picture') return profileRoute(req, env, user);
+  if (path.startsWith('/staff/accounts')) return staffAccounts(req, env, user, ctx);
+  if (path.startsWith('/account/unlock') || path === '/account/lock') return securityUnlock(req, env, user);
+  if (req.method === 'GET' && path.startsWith('/account/email-change/')) return emailChange(req, env, user);
+  if (req.method === 'GET') {
+    if (path === '/account/security') {
+      if (!user) return redirect('/login?next=%2Faccount%2Fsecurity');
+      return await securityProof(req, env, user) ? settings(req, env, user) : redirect('/account/unlock');
+    }
+    if (path === '/auth/email/signup') return screen(user, env, tp('Create an account'), `<form method="post">${input('name', tp('Display name'), 'text', 'nickname')}${input('email', 'Email', 'email')}${await turnstileWidget(env)}<button class="primary">${t('Verify email')}</button></form><p>${t('You will set a password after verifying your email.')}</p>${agreement()}`);
+    if (path === '/auth/email/forgot') return screen(user, env, tp('Reset password'), `<form method="post">${input('email', 'Email', 'email')}${await turnstileWidget(env)}<button>${t('Send reset link')}</button></form><p>${t('Resetting your password signs out all browsers and apps. Your passkeys, authenticator app and backup codes stay in place.')}</p>`);
+    if (path === '/auth/email/verify' || path === '/auth/email/reset') {
+      const purpose = path.endsWith('reset') ? 'reset' : 'verify';
+      const token = url.searchParams.get('token') ?? '';
+      const flow = await readFlow(env, token, purpose);
+      if (!flow) return error(env);
+      return screen(user, env, purpose === 'reset' ? tp('Set a new password') : tp('Verify email and set password'), `<form method="post" action="${path}"><input type="hidden" name="token" value="${esc(token)}">${input('password', tp('New password'), 'password', 'new-password')}<button class="primary">${t('Save password')}</button></form><p>${t('Use a unique password with at least 15 characters.')}</p>`);
+    }
+    if (path === '/auth/second-factor') {
+      const pending = await readFlow(env, flowToken(req), 'second-factor');
+      if (!pending) return error(env);
+      const hasKey = await env.DB.prepare('SELECT 1 FROM passkeys WHERE user_id = ?').bind(pending.user_id).first();
+      const hasApp = await env.DB.prepare('SELECT 1 FROM totp_credentials WHERE user_id = ?').bind(pending.user_id).first();
+      return screen(null, env, tp('Verify your sign-in'), `${hasKey ? `<button type="button" data-passkey="login">${t('Use a passkey')}</button>` : ''}
+        ${hasApp ? `<form id="totp-form"><p><label>${t('Six-digit code')} <input name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label></p><button>${t('Verify authenticator code')}</button></form>` : ''}
+        <h2>${t('Lost access to your second factor?')}</h2><form id="backup-form"><p><label>${t('Backup code')} <input name="code" type="text" autocomplete="one-time-code" required maxlength="64"></label></p><button>${t('Use backup code')}</button></form>
+        <p>${t('After signing in with a backup code, add a replacement passkey or authenticator app in Account security.')}</p><p id="auth-status" role="status"></p><script src="/account.js" defer></script>`);
+    }
+    return error(env, tp('Not found'), 404);
+  }
+  const ip = req.headers.get('CF-Connecting-IP') ?? 'local';
+  if (!await limit(env, 'auth-ip', ip, 40)) return error(env, tp('Too many attempts. Try again in 15 minutes.'), 429);
+  let body: Record<string, unknown>;
+  try { body = await boundedBody(req); } catch { return error(env, tp('Invalid or oversized request.'), 413); }
+  if (path.startsWith('/account/email-change/')) return emailChange(req, env, user, body);
+  if (path.startsWith('/account/oauth/')) return oauthSettings(req, env, user, path, body);
+  if (path.startsWith('/account/totp/') || path === '/auth/totp/verify') return totpRoute(req, env, path, body, user);
+  if (path.startsWith('/auth/passkey/') || path === '/auth/backup/verify') return passkeyRoute(req, env, path, body);
+  const deliver = async (job: Promise<void>) => {
+    if (ctx) ctx.waitUntil(job.catch(() => { console.error('Account email could not be queued'); }));
+    else await job;
+  };
+  const email = normalizeEmail(field(body, 'email'));
+  const password = field(body, 'password');
+  if (path === '/auth/email/login') {
+    if (!isEmail(email) || !password || new TextEncoder().encode(password).length > 512) return error(env, tp('Email or password is incorrect.'), 401);
+    if (!await limit(env, 'password-email', email, 10)) return error(env, tp('Too many attempts. Try again in 15 minutes.'), 429);
+    const row = await env.DB.prepare('SELECT e.*, u.auth_version, u.banned FROM email_credentials e JOIN users u ON u.id = e.user_id WHERE email = ?')
+      .bind(email).first<{user_id: string; password_hash: string; auth_version: number; banned: number}>();
+    const valid = await passwordMatches(password, row?.password_hash ?? DUMMY_HASH);
+    if (!valid || !row || row.banned) return error(env, tp('Email or password is incorrect.'), 401);
+    return finishPrimary(env, row.user_id, row.auth_version, safeNext(field(body, 'next') || '/account/security', env));
+  }
+  if (path === '/auth/email/signup' || path === '/auth/email/forgot' || path === '/account/email') {
+    if (!env.SMTP2GO_API_KEY) return error(env, tp('Account email is temporarily unavailable.'), 503);
+    if (!isEmail(email)) return error(env, tp('Enter a valid email address.'));
+    if (path !== '/account/email' && !await passedTurnstile(env, req, field(body, 'cf-turnstile-response'))) return error(env, TURNSTILE_FAILED, 400);
+    if (path === '/auth/email/signup' && !await signupsOpen(env)) return error(env, tp('New accounts are paused for a while. Try again later.'), 503);
+    // A blocked address or domain is told the same as everyone, and sent nothing.
+    if (path !== '/auth/email/forgot' && await blockedAddress(env, email)) return mailNotice(env);
+    if (!await limit(env, 'mail-email', email, 4, 3600) || !await limit(env, 'mail-ip', ip, 10, 3600)) return mailNotice(env);
+    const known = await env.DB.prepare('SELECT user_id FROM email_credentials WHERE email = ?').bind(email).first<{user_id: string}>();
+    if (path === '/auth/email/forgot') {
+      if (known && await version(env, known.user_id) >= 0) await deliver(sendAccountToken(env, email, 'reset', known.user_id, {}, tp('Reset your Blockworked password')));
+    } else if (path === '/account/email') {
+      if (!user || !await securityProof(req, env, user)) return error(env, tp('Unlock Account security before adding email credentials.'), 401);
+      const attached = await env.DB.prepare('SELECT 1 FROM email_credentials WHERE user_id = ?').bind(user.id).first();
+      if (!known && !attached) await deliver(sendAccountToken(env, email, 'verify', user.id, {email, link: true}, tp('Verify your Blockworked email')));
+    } else {
+      const name = field(body, 'name').trim();
+      if (!name || name.length > 80 || /[\u0000-\u001f\u007f]/.test(name) || isReservedName(name)) return error(env, tp('Choose a display name between 1 and 80 characters. Team names are reserved.'));
+      if (!known) await deliver(sendAccountToken(env, email, 'verify', null, {email, name}, tp('Verify your Blockworked email')));
+    }
+    return mailNotice(env);
+  }
+  if (path === '/auth/email/verify' || path === '/auth/email/reset' || path === '/account/password') {
+    if (!await limit(env, 'password-set-ip', ip, 8)) return error(env, tp('Too many attempts. Try again in 15 minutes.'), 429);
+    let flow: Flow | null;
+    if (path === '/account/password') {
+      if (!user || !await securityProof(req, env, user)) return error(env, tp('Unlock Account security before changing your password.'), 401);
+      const token = await makeFlow(env, 'password-change', user.id, {});
+      if (!await securityProof(req, env, user)) return error(env);
+      flow = await readFlow(env, token, 'password-change');
+    } else flow = await readFlow(env, field(body, 'token'), path.endsWith('reset') ? 'reset' : 'verify');
+    if (!flow) return error(env);
+    const data = JSON.parse(flow.data);
+    if (data.link && (!user || user.id !== flow.user_id || !await securityProof(req, env, user))) return error(env, tp('Sign in to the account that requested this email address, then reopen the link.'), 401);
+    const invalid = await newPasswordError(password);
+    if (invalid) return error(env, invalid);
+    const encoded = await passwordHash(password);
+    if (flow.purpose !== 'verify') {
+      if (!await replacePassword(env, flow, encoded)) return error(env);
+      await notify(env, flow.user_id!, tp('Your Blockworked password changed. All browsers and apps have been signed out. Your passkeys, authenticator app and backup codes remain active.'));
+      return screen(null, env, tp('Password updated'), `<p>${t('All browsers and apps have been signed out. Sign in with your new password and, if enrolled, a passkey, authenticator-app code or backup code.')}</p><p><a href="/login">${t('Sign in')}</a></p>`);
+    }
+    // GET/email scanners never consume links. Account creation and link consumption are atomic.
+    const id = flow.user_id ?? `local:${crypto.randomUUID()}`;
+    const guard = 'EXISTS (SELECT 1 FROM auth_flows WHERE token_hash = ? AND expires_at > ?)';
+    const now = Date.now();
+    const statements = [];
+    if (!data.link) statements.push(env.DB.prepare(`INSERT INTO users (id, name, created_at, public_id) SELECT ?, ?, ?, lower(hex(randomblob(6))) WHERE ${guard}`)
+      .bind(id, data.name, now, flow.token_hash, now));
+    statements.push(env.DB.prepare(`INSERT INTO email_credentials (user_id, email, password_hash) SELECT ?, ?, ? WHERE ${guard}`)
+      .bind(id, data.email, encoded, flow.token_hash, now));
+    statements.push(env.DB.prepare('DELETE FROM auth_flows WHERE token_hash = ?').bind(flow.token_hash));
+    try {
+      const results = await env.DB.batch(statements);
+      if (results[0].meta.changes !== 1) return error(env);
+    } catch { return error(env, tp('This link can no longer be used. Try signing in or resetting your password.')); }
+    // Verification does not automatically log in, avoiding MFA downgrade when linking credentials.
+    return screen(null, env, tp('Email verified'), `<p>${t('Your email and password are ready. You can now sign in.')}</p><p><a href="/login">${t('Sign in')}</a></p>`);
+  }
+  if (path.startsWith('/account/')) {
+    if (!user || !await securityProof(req, env, user)) return error(env, tp('Unlock Account security before changing security settings.'), 401);
+    const token = await makeFlow(env, 'security-change', user.id, {});
+    if (!await securityProof(req, env, user)) return error(env);
+    const flow = await readFlow(env, token, 'security-change');
+    if (!flow) return error(env);
+    const guard = 'EXISTS (SELECT 1 FROM auth_flows WHERE token_hash = ? AND expires_at > ?)';
+    const now = Date.now();
+    if (path === '/account/backup') {
+      if (!await env.DB.prepare('SELECT 1 FROM passkeys WHERE user_id = ? UNION ALL SELECT 1 FROM totp_credentials WHERE user_id = ? LIMIT 1').bind(user.id, user.id).first()) return error(env, 'Add a passkey or authenticator app first.');
+      const codes = Array.from({length: 10}, () => hex(crypto.getRandomValues(new Uint8Array(16))));
+      const results = await env.DB.batch([
+        env.DB.prepare(`DELETE FROM backup_codes WHERE user_id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+        ...await Promise.all(codes.map(async code => env.DB.prepare(`INSERT INTO backup_codes (code_hash, user_id) SELECT ?, ? WHERE ${guard}`).bind(await hash(code), user.id, flow.token_hash, now))),
+        env.DB.prepare('DELETE FROM auth_flows WHERE token_hash = ?').bind(flow.token_hash),
+      ]);
+      if (results[1].meta.changes !== 1) return error(env);
+      await notify(env, user.id, tp('New Blockworked backup codes were generated. All previous backup codes are invalid.'));
+      return screen(user, env, tp('Save your backup codes'), `<p>${t('These codes are shown once. Save them in a secure place. Each works once with your password or Google/GitHub sign-in.')}</p><pre>${codes.map(code => code.match(/.{4}/g)!.join('-')).join('\n')}</pre><p><a href="/account/security">${t('I saved my codes')}</a></p>`);
+    }
+    if (path === '/account/passkey/delete') {
+      const count = await env.DB.prepare('SELECT count(*) AS n FROM passkeys WHERE user_id = ?').bind(user.id).first<{n: number}>();
+      const hasApp = await env.DB.prepare('SELECT 1 FROM totp_credentials WHERE user_id = ?').bind(user.id).first();
+      const primary = await env.DB.prepare('SELECT 1 FROM email_credentials WHERE user_id = ? UNION ALL SELECT 1 FROM oauth_identities WHERE user_id = ? LIMIT 1').bind(user.id, user.id).first();
+      if (count?.n === 1 && !primary) return error(env, tp('Add a password or provider sign-in before removing your last passkey.'));
+      if (!count || (count.n <= 1 && !hasApp)) return error(env, tp('Add a replacement passkey or authenticator app before removing the last one.'));
+      const results = await env.DB.batch([
+        env.DB.prepare(`DELETE FROM passkeys WHERE id = ? AND user_id = ? AND ((SELECT count(*) FROM passkeys WHERE user_id = ?) > 1 OR EXISTS (SELECT 1 FROM totp_credentials WHERE user_id = ?)) AND ((SELECT count(*) FROM passkeys WHERE user_id = ?) > 1 OR EXISTS (SELECT 1 FROM email_credentials WHERE user_id = ?) OR EXISTS (SELECT 1 FROM oauth_identities WHERE user_id = ?)) AND ${guard}`)
+          .bind(field(body, 'id'), user.id, user.id, user.id, user.id, user.id, user.id, flow.token_hash, now),
+        // The first statement must succeed; a second guard ties invalidation to the removed ID.
+        env.DB.prepare(`UPDATE users SET auth_version = auth_version + 1 WHERE id = ? AND ${guard} AND NOT EXISTS (SELECT 1 FROM passkeys WHERE id = ?)`)
+          .bind(user.id, flow.token_hash, now, field(body, 'id')),
+        env.DB.prepare(`DELETE FROM sessions WHERE user_id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+        env.DB.prepare(`DELETE FROM app_codes WHERE user_id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+        env.DB.prepare(`DELETE FROM auth_flows WHERE user_id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+      ]);
+      if (results[0].meta.changes !== 1) return error(env);
+      await notify(env, user.id, 'A passkey was removed from your Blockworked account. All browsers and apps have been signed out.');
+      return redirect('/login?next=%2Faccount%2Fsecurity');
+    }
+    if (path === '/account/revoke') {
+      const results = await env.DB.batch([
+        env.DB.prepare(`UPDATE users SET auth_version = auth_version + 1 WHERE id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+        env.DB.prepare(`DELETE FROM sessions WHERE user_id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+        env.DB.prepare(`DELETE FROM app_codes WHERE user_id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+        env.DB.prepare(`DELETE FROM auth_flows WHERE user_id = ? AND ${guard}`).bind(user.id, flow.token_hash, now),
+      ]);
+      if (results[0].meta.changes !== 1) return error(env);
+      return redirect('/login');
+    }
+  }
+  return error(env, tp('Not found'), 404);
+}
