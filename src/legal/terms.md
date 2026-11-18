@@ -60,8 +60,8 @@ Don't use our services to:
 - share other people's personal information without their consent;
 - cheat or break the rules of other services in ways that harm others, or
   break the law;
-- get around Turnstile, rate limits, bans or other protections, or scrape,
-  overload or attack our services;
+- get around our security measures or bans, or overload or attack our
+  services;
 - misuse the report button or the helpdesk.
 
 ## Moderation
