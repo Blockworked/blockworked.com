@@ -3,6 +3,7 @@ import { validateImages, type ImageAttachment } from "./support-attachments.ts";
 // receiveEmail, which files it as a reply to its ticket or as a new ticket.
 
 import PostalMime from "postal-mime";
+import { Parser } from "htmlparser2";
 import type { Env } from "./index.ts";
 import { addMessage, EMAIL_TICKETS_PER_HOUR, loadTicket, NEW_TICKETS_PER_HOUR, openTicket, type Ticket } from "./support.ts";
 import { blockedAddress } from "./moderation.ts";
@@ -110,16 +111,24 @@ async function findTicket(env: Env, from: string, inReplyTo: string, references:
   return null;
 }
 
+const BLOCK_BREAK = /^(p|div|li|tr|h[1-6])$/;
+
 export function htmlToText(html: string): string {
-  return html
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|li|tr|h\d)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&");
+  const parts: string[] = [];
+  let hidden = false;
+  const parser = new Parser({
+    onopentag(name) {
+      if (name === "script" || name === "style") hidden = true;
+      else if (!hidden && name === "br") parts.push("\n");
+    },
+    ontext(text) {
+      if (!hidden) parts.push(text.replaceAll("\u00a0", " "));
+    },
+    onclosetag(name, implied) {
+      if (name === "script" || name === "style") hidden = false;
+      else if (!hidden && !implied && BLOCK_BREAK.test(name)) parts.push("\n");
+    },
+  });
+  parser.end(html);
+  return parts.join("");
 }

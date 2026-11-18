@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { cleanSubject, isAutomated, isEmail, stripQuoted, ticketFromSubject } from "../src/support-mail.ts";
+import { htmlToText } from "../src/support-inbound.ts";
 import { safeNext } from "../src/auth.ts";
 
 test("a reply's ticket number comes from its subject tag", () => {
@@ -19,6 +20,13 @@ test("only the new part of an emailed reply is kept", () => {
   assert.equal(stripQuoted(outlook), "Works now.");
   assert.equal(stripQuoted("> only a quote"), "> only a quote");
   assert.equal(stripQuoted("Inline:\n> what version?\n2.1\n> anything else?\nNo"), "Inline:\n> what version?\n2.1\n> anything else?\nNo");
+});
+
+test("HTML email keeps text, entities and line breaks without script or style content", () => {
+  const html = '<p>One&nbsp;&amp; two<br>Three <strong>four</strong></p>'
+    + '<style>p { color: red }</style><script>console.log("hidden")</script>'
+    + '<div title="a > b">&lt;five&gt; &#x1f44b;</div>';
+  assert.equal(htmlToText(html), "One & two\nThree four\n<five> 👋\n");
 });
 
 test("auto-replies never open tickets", () => {

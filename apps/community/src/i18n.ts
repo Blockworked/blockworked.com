@@ -16,33 +16,35 @@ export const LANGUAGE_COOKIE = 'bw-lang';
 /** A value that is already HTML and goes into a message as is. */
 export class Html { readonly html: string; constructor(html: string) { this.html = html; } toString() { return this.html; } }
 export const raw = (html: string) => new Html(html);
+type PlainVars = Record<string, string | number>;
 type Vars = Record<string, string | number | Html>;
 
 function escape(value: unknown): string {
   return String(value ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 }
-function fill(text: string, vars: Vars | undefined, html: boolean): string {
-  const body = html ? escape(text) : text;
-  if (!vars) return body;
-  return body.replace(/\{([a-zA-Z]+)\}/g, (whole, name: string) => {
-    if (!Object.hasOwn(vars, name)) return whole;
-    const v = vars[name];
-    if (v instanceof Html) return html ? v.html : v.html.replace(/<[^>]*>/g, '');
-    return html ? escape(typeof v === 'number' ? v.toLocaleString(current().catalog?.tag ?? 'en') : v) : String(v);
+function interpolate<T>(text: string, vars: Record<string, T> | undefined, format: (value: T) => string): string {
+  if (!vars) return text;
+  return text.replace(/\{([a-zA-Z]+)\}/g, (whole, name: string) =>
+    Object.hasOwn(vars, name) ? format(vars[name]) : whole);
+}
+function fillHtml(text: string, vars?: Vars): string {
+  return interpolate(escape(text), vars, value => {
+    if (value instanceof Html) return value.html;
+    return escape(typeof value === 'number' ? value.toLocaleString(current().catalog?.tag ?? 'en') : value);
   });
 }
 function current(): Current { return store.getStore() ?? { code: 'en' }; }
 function lookup(id: string): string | undefined { return current().catalog?.messages[id]?.[0]; }
 
 /** The translation of a message, escaped for HTML. Placeholders look like {name}. */
-export function t(id: string, vars?: Vars): string { return fill(lookup(id) ?? id, vars, true); }
+export function t(id: string, vars?: Vars): string { return fillHtml(lookup(id) ?? id, vars); }
 /** The same as plain text, for titles, headers and attributes that escape themselves. */
-export function tp(id: string, vars?: Vars): string { return fill(lookup(id) ?? id, vars, false); }
+export function tp(id: string, vars?: PlainVars): string { return interpolate(lookup(id) ?? id, vars, String); }
 /** A message with plural forms; {n} is the count. */
 export function tn(one: string, other: string, n: number, vars?: Vars): string {
   const catalog = current().catalog, forms = catalog?.messages[one];
   const text = forms ? forms[Math.min(forms.length - 1, catalog!.plural(n))] : n === 1 ? one : other;
-  return fill(text, { n, ...vars }, true);
+  return fillHtml(text, { n, ...vars });
 }
 
 /** The current language: its code, BCP 47 tag and direction. */

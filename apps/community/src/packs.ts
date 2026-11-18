@@ -52,7 +52,7 @@ export function slug(text: string): string {
       out += "-";
     }
   }
-  return out.replace(/-+$/, "");
+  return out.endsWith("-") ? out.slice(0, -1) : out;
 }
 
 export function blockName(def: any): string {

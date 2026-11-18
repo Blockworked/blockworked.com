@@ -12,6 +12,9 @@ on:
       - 'apps/community/**'
       - '.github/workflows/community-*.yml'
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: apps/community

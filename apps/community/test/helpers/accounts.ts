@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { readdirSync, readFileSync } from 'node:fs';
-import { generateKeyPairSync, createHash, sign } from 'node:crypto';
+import { generateKeyPairSync, hash, sign } from 'node:crypto';
 import { isoCBOR } from '@simplewebauthn/server/helpers';
 import type { Env } from '../../src/index.ts';
 import { login, callback } from '../../src/oauth.ts';
@@ -59,7 +59,7 @@ export function authenticator(rp = 'community.example.com') {
   const publicCose = isoCBOR.encode(new Map([[1, 2], [3, -7], [-1, 1], [-2, Buffer.from(jwk.x!, 'base64url')], [-3, Buffer.from(jwk.y!, 'base64url')]]));
   let count = 0;
   const client = (type: string, challenge: string, origin: string) => Buffer.from(JSON.stringify({type, challenge, origin, crossOrigin: false}));
-  const auth = (flags: number, counter: number) => { const n = Buffer.alloc(4); n.writeUInt32BE(counter); return Buffer.concat([createHash('sha256').update(rp).digest(), Buffer.from([flags]), n]); };
+  const auth = (flags: number, counter: number) => { const n = Buffer.alloc(4); n.writeUInt32BE(counter); return Buffer.concat([hash('sha256', rp, 'buffer'), Buffer.from([flags]), n]); };
   return {
     id: id64,
     registration(challenge: string, origin = 'https://' + rp, verified = true) {
@@ -70,7 +70,7 @@ export function authenticator(rp = 'community.example.com') {
     assertion(challenge: string, origin = 'https://' + rp, verified = true) {
       const data = client('webauthn.get', challenge, origin);
       const authData = auth(1 | (verified ? 4 : 0), ++count);
-      const signature = sign('sha256', Buffer.concat([authData, createHash('sha256').update(data).digest()]), privateKey);
+      const signature = sign('sha256', Buffer.concat([authData, hash('sha256', data, 'buffer')]), privateKey);
       return {id: id64, rawId: id64, type: 'public-key', clientExtensionResults: {}, response: {clientDataJSON: data.toString('base64url'), authenticatorData: authData.toString('base64url'), signature: signature.toString('base64url')}};
     },
   };
