@@ -27,7 +27,7 @@ export const TRANSLATE_CSS = `
 .translation-source { margin-top: 0; }
 .translation-source .muted { font-size: 13px; margin: 10px 0 0; }
 .translation-source h2 { margin: 0 0 6px; color: var(--muted); font-size: 13px; font-weight: 600; }
-.translation-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 17px; line-height: 1.55; margin: 4px 0; }
+.translation-text { unicode-bidi: plaintext; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 17px; line-height: 1.55; margin: 4px 0; }
 .translation-context { margin: 12px 0; color: var(--muted); font-size: 13px; }
 .translation-context summary { cursor: pointer; width: max-content; }
 .translation-context p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0; }
@@ -35,7 +35,7 @@ export const TRANSLATE_CSS = `
 .translation-target h2 { margin: 0 0 4px; font-size: 17px; }
 .translation-target > p { font-size: 13px; margin: 0 0 12px; }
 .translation-target label { display: block; margin: 14px 0 6px; font-size: 13px; font-weight: 600; }
-.translation-target textarea { display: block; resize: vertical; width: 100%; min-height: 96px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg2); color: var(--fg); font: inherit; font-size: 17px; line-height: 1.55; }
+.translation-target textarea { unicode-bidi: plaintext; display: block; resize: vertical; width: 100%; min-height: 96px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg2); color: var(--fg); font: inherit; font-size: 17px; line-height: 1.55; }
 .translation-target textarea:disabled { opacity: .65; }
 .translation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 20px 0; }
 .translation-skip { margin-left: auto; font-size: 13px; color: var(--muted); }
@@ -225,6 +225,10 @@ export const TRANSLATE_JS = `
   });
   form.addEventListener('submit', () => { dirty = false; });
   const areas = [...form.querySelectorAll('textarea')];
+  // Keep the language's direction while a box is empty, then let the typed text decide (see textDir).
+  const direct = a => { if (a.dataset.dir) a.dir = /\\p{L}/u.test(a.value) ? 'auto' : a.dataset.dir; };
+  areas.forEach(direct);
+  form.addEventListener('input', event => { if (event.target.tagName === 'TEXTAREA') direct(event.target); });
   let last = areas[0];
   areas.forEach(a => a.addEventListener('focus', () => { last = a; }));
   const put = (area, text) => {
@@ -239,7 +243,7 @@ export const TRANSLATE_JS = `
     const fill = event.target.closest && event.target.closest('[data-copy-source], [data-fill]');
     if (!fill) return;
     const values = JSON.parse(fill.dataset.copySource || fill.dataset.fill);
-    areas.forEach((a, i) => { if (!a.disabled) a.value = values[Math.min(i, values.length - 1)] ?? ''; });
+    areas.forEach((a, i) => { if (!a.disabled) { a.value = values[Math.min(i, values.length - 1)] ?? ''; direct(a); } });
     if (areas[0]) { areas[0].focus(); areas[0].dispatchEvent(new Event('input', {bubbles: true})); }
   });
   if (areas.every(a => a.disabled)) document.querySelectorAll('.ph').forEach(b => { b.disabled = true; });

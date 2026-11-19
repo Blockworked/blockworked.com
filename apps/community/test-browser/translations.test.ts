@@ -117,6 +117,11 @@ test('Blockworked contributor browses languages, signs saves, and retains failed
     await page.goto(translateOrigin+'/blockwork/ui/ar');
     await expect(page.locator('#translation-form textarea')).toHaveCount(6);
     await expect(page.getByLabel('Plural form 1',{exact:true})).toHaveAttribute('dir','rtl');
+    // Latin text typed into an Arabic box runs left to right; Arabic text and an empty box stay right to left.
+    const arBox=page.getByLabel('Plural form 1',{exact:true}), flow=()=>arBox.evaluate(el=>getComputedStyle(el).direction);
+    await arBox.fill('test'); await expect(arBox).toHaveAttribute('dir','auto'); assert.equal(await flow(),'ltr');
+    await arBox.fill('اختبار'); assert.equal(await flow(),'rtl');
+    await arBox.fill(''); await expect(arBox).toHaveAttribute('dir','rtl');
     await page.setViewportSize({width:390,height:844});
     await expect(page.getByRole('button',{name:'Save and next'})).toBeVisible();
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'mobile page should not overflow');
