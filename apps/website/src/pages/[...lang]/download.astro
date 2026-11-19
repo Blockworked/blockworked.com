@@ -10,11 +10,10 @@ const link = (url: string, text: string) => `<a href="${url}">${text}</a>`;
 ---
 
 <Base title={t('Download')} description={t('Download Blockwork for Windows, macOS, or Linux.')}>
-  <section class="section download">
-    <div class="container narrow">
-      <img src="/logo.png" alt="" width="72" height="72" class="logo" />
-      <h1 class="section-heading">{t('Get Blockwork')}</h1>
-      <p class="section-lede" set:html={th('Free and open source under the GPL-3.0. Every build below comes straight from the latest {release}.', { release: link(`${REPO_URL}/releases/latest`, th('GitHub release')) })} />
+  <section class="page">
+    <div class="container page-column">
+      <h1>{t('Get Blockwork')}</h1>
+      <p class="lede" set:html={th('Free and open source under the GPL-3.0. Every build below comes straight from the latest {release}.', { release: link(`${REPO_URL}/releases/latest`, th('GitHub release')) })} />
       <div class="dl-wrap">
         <Downloader mode="full" />
       </div>
@@ -24,14 +23,32 @@ const link = (url: string, text: string) => `<a href="${url}">${text}</a>`;
 </Base>
 
 <style>
-  .narrow { max-width: 760px; }
-  .logo { margin-bottom: 20px; filter: drop-shadow(var(--blockstitch-shadow-md)); }
-  .section-lede a, .build-note a { color: var(--blockstitch-accent); text-decoration: none; }
-  .section-lede a:hover, .build-note a:hover { text-decoration: underline; }
+  /* The same column and heading as the community and translation pages. */
+  .page { padding: 64px 0 96px; }
+  .page-column { max-width: 920px; }
+  h1 {
+    font-size: clamp(32px, 5vw, 44px);
+    line-height: 1.15;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+  .lede {
+    margin-top: 10px;
+    max-width: 60ch;
+    font-size: 17px;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--blockstitch-text) 78%, var(--blockstitch-text-dim));
+    text-wrap: pretty;
+  }
+  .lede :global(a), .build-note :global(a) { color: var(--blockstitch-accent); text-decoration: none; }
+  .lede :global(a:hover), .build-note :global(a:hover) { text-decoration: underline; }
   .dl-wrap { margin-top: 28px; }
   .build-note {
-    margin-top: 32px;
-    font-size: 13px;
+    margin-top: 40px;
+    font-size: 14px;
     color: var(--blockstitch-text-dim);
+  }
+  @media (max-width: 560px) {
+    .page { padding: 40px 0 72px; }
   }
 </style>

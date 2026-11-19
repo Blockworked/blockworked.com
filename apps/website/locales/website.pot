@@ -22,6 +22,14 @@ msgid "Release history"
 msgstr ""
 
 #: src/components/Downloader.astro
+msgid "Latest release"
+msgstr ""
+
+#: src/components/Downloader.astro src/pages/[...lang]/changelog.astro
+msgid "What's new"
+msgstr ""
+
+#: src/components/Downloader.astro
 msgid "x64 and ARM64"
 msgstr ""
 
@@ -30,24 +38,20 @@ msgid "Installs and updates through the Store"
 msgstr ""
 
 #: src/components/Downloader.astro
-msgid "Get it"
-msgstr ""
-
-#: src/components/Downloader.astro
 #, python-brace-format
 msgid "Builds from source: {command}"
 msgstr ""
 
 #: src/components/Downloader.astro
-msgid "View package"
-msgstr ""
-
-#: src/components/Downloader.astro src/components/SiteHeader.astro src/lib/site.ts src/pages/[...lang]/download.astro
-msgid "Download"
+msgid "Suggested for this computer"
 msgstr ""
 
 #: src/components/Downloader.astro
 msgid "Apple silicon"
+msgstr ""
+
+#: src/components/Downloader.astro
+msgid "Intel"
 msgstr ""
 
 #: src/components/Downloader.astro
@@ -114,6 +118,10 @@ msgstr ""
 
 #: src/components/SiteHeader.astro
 msgid "Toggle light/dark theme"
+msgstr ""
+
+#: src/components/SiteHeader.astro src/lib/site.ts src/pages/[...lang]/download.astro
+msgid "Download"
 msgstr ""
 
 #: src/layouts/Base.astro
@@ -189,10 +197,6 @@ msgid "What's new in each Blockwork release."
 msgstr ""
 
 #: src/pages/[...lang]/changelog.astro
-msgid "What's new"
-msgstr ""
-
-#: src/pages/[...lang]/changelog.astro
 msgid "Every Blockwork release, newest first."
 msgstr ""
 
@@ -203,6 +207,10 @@ msgstr ""
 
 #: src/pages/[...lang]/changelog.astro
 msgid "releases on GitHub"
+msgstr ""
+
+#: src/pages/[...lang]/changelog.astro
+msgid "Versions"
 msgstr ""
 
 #: src/pages/[...lang]/changelog.astro

@@ -3,7 +3,7 @@
 // BlockworkPage: fetches the latest GitHub release in the browser (so the
 // static site never goes stale between deploys), suggests the build for the
 // visitor's OS/arch, and in `full` mode lists every asset by platform.
-import { Download, Monitor, Laptop, SquareTerminal, ExternalLink } from '@lucide/astro';
+import { Check, Download, ExternalLink } from '@lucide/astro';
 import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
 import { locale } from '../lib/i18n';
 
@@ -16,11 +16,7 @@ const { t, th, href } = locale(Astro.url);
 const AUR_URL = 'https://aur.archlinux.org/packages/blockwork';
 const STORE_URL = 'https://apps.microsoft.com/detail/9PMN4BMXPH54';
 
-const platforms: { id: Platform; icon: typeof Monitor }[] = [
-  { id: 'windows', icon: Monitor },
-  { id: 'macos', icon: Laptop },
-  { id: 'linux', icon: SquareTerminal },
-];
+const platforms: Platform[] = ['windows', 'macos', 'linux'];
 ---
 
 <div class:list={['dl', { 'dl-center': align === 'center' }]} data-downloader data-mode={mode}>
@@ -42,49 +38,68 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
   </div>
 
   {mode === 'full' && (
+    <p class="dl-release" data-release hidden>
+      <span>{t('Latest release')}</span>
+      <a class="dl-version" data-release-version href={href('/changelog')}></a>
+      <time data-release-date></time>
+      <a href={href('/changelog')}>{t("What's new")}</a>
+    </p>
+  )}
+
+  {mode === 'full' && (
     <div class="dl-groups" data-groups hidden>
-      {platforms.map(({ id, icon: Icon }) => (
-        <section class="panel" data-platform={id}>
-          <h3 class="panel-title"><Icon />{PLATFORM_LABELS[id]}</h3>
-          <div data-rows></div>
-          {id === 'windows' && (
-            <div class="panel-row dl-row">
-              <div class="panel-row-label">
-                <div class="dl-row-title">Microsoft Store <span class="dl-arch">{t('x64 and ARM64')}</span></div>
-                <div class="panel-row-hint">{t('Installs and updates through the Store')}</div>
-              </div>
-              <a class="btn" href={STORE_URL}><ExternalLink /><span class="dl-btn-text">{t('Get it')}</span></a>
-            </div>
-          )}
-          {id === 'linux' && (
-            <div class="panel-row dl-row">
-              <div class="panel-row-label">
-                <div class="dl-row-title">AUR <span class="dl-arch">Arch Linux</span></div>
-                <div class="panel-row-hint" set:html={th('Builds from source: {command}', { command: '<code>paru -S blockwork</code>' })} />
-              </div>
-              <a class="btn" href={AUR_URL}><ExternalLink /><span class="dl-btn-text">{t('View package')}</span></a>
-            </div>
-          )}
+      {platforms.map(id => (
+        <section class="dl-platform" data-platform={id}>
+          <h2>{PLATFORM_LABELS[id]}</h2>
+          <ul class="dl-list" data-rows>
+            {id === 'windows' && (
+              <li data-static>
+                <a class="dl-row" href={STORE_URL}>
+                  <span class="dl-row-main">
+                    <span class="dl-row-title">Microsoft Store <span class="dl-arch">{t('x64 and ARM64')}</span></span>
+                    <span class="dl-hint">{t('Installs and updates through the Store')}</span>
+                  </span>
+                  <ExternalLink class="dl-icon" />
+                </a>
+              </li>
+            )}
+            {id === 'linux' && (
+              <li data-static>
+                <a class="dl-row" href={AUR_URL}>
+                  <span class="dl-row-main">
+                    <span class="dl-row-title">AUR <span class="dl-arch">Arch Linux</span></span>
+                    <span class="dl-hint" set:html={th('Builds from source: {command}', { command: '<code>paru -S blockwork</code>' })} />
+                  </span>
+                  <ExternalLink class="dl-icon" />
+                </a>
+              </li>
+            )}
+          </ul>
         </section>
       ))}
     </div>
   )}
 
   <template data-row-template>
-    <div class="panel-row dl-row">
-      <div class="panel-row-label">
-        <div class="dl-row-title"><span data-kind></span> <span class="dl-arch" data-arch></span></div>
-        <div class="panel-row-hint" data-hint></div>
-      </div>
-      <span class="panel-row-hint dl-size" data-size></span>
-      <a class="btn" data-link><Download /><span class="dl-btn-text">{t('Download')}</span></a>
-    </div>
+    <li>
+      <a class="dl-row" data-link>
+        <span class="dl-row-main">
+          <span class="dl-row-title">
+            <span data-kind></span> <span class="dl-arch" data-arch></span>
+            <span class="dl-suggested" data-suggested hidden><Check />{t('Suggested for this computer')}</span>
+          </span>
+          <span class="dl-hint" data-hint></span>
+        </span>
+        <span class="dl-size" data-size></span>
+        <Download class="dl-icon" />
+      </a>
+    </li>
   </template>
 </div>
 
 <script>
   import {
-    PLATFORM_LABELS, RELEASES_URL, REPO, formatSize, parseAsset,
+    PLATFORM_LABELS, RELEASES_URL, REPO, formatDate, formatSize, parseAsset,
     type Arch, type GitHubRelease, type Platform, type ReleaseAsset,
   } from '../lib/releases';
   import { ct, localHref } from '../lib/client-i18n';
@@ -105,7 +120,9 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     else if (src.includes('mac')) platform = 'macos';
     else if (src.includes('linux') || src.includes('x11') || src.includes('cros')) platform = 'linux';
 
-    let arch: Arch = /arm64|aarch64/.test(ua) ? 'arm64' : 'x86_64';
+    // Every Mac browser reports "Intel Mac OS X", so a Mac is taken to be
+    // Apple silicon unless the architecture hint says otherwise.
+    let arch: Arch = platform === 'macos' || /arm64|aarch64/.test(ua) ? 'arm64' : 'x86_64';
     try {
       const hints = await uaData?.getHighEntropyValues(['architecture']);
       if (hints?.architecture === 'arm') arch = 'arm64';
@@ -113,8 +130,6 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     } catch {
       // Hint unavailable: keep the UA-string guess.
     }
-    // The only macOS build is Apple silicon.
-    if (platform === 'macos') arch = 'arm64';
     return { platform, arch };
   }
 
@@ -138,7 +153,8 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     return res.json();
   });
 
-  const archLabel = (a: ReleaseAsset) => (a.platform === 'macos' ? ct('Apple silicon') : a.arch === 'arm64' ? 'ARM64' : 'x64');
+  const archLabel = (a: ReleaseAsset) =>
+    a.platform === 'macos' ? (a.arch === 'arm64' ? ct('Apple silicon') : ct('Intel')) : a.arch === 'arm64' ? 'ARM64' : 'x64';
 
   async function init(root: HTMLElement) {
     const recommendedLink = root.querySelector<HTMLAnchorElement>('[data-recommended]')!;
@@ -165,6 +181,17 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
       recommendedLabel.textContent = ct('Choose a download');
     }
 
+    const releaseLine = root.querySelector<HTMLElement>('[data-release]');
+    if (releaseLine) {
+      const version = releaseLine.querySelector<HTMLAnchorElement>('[data-release-version]')!;
+      version.textContent = release.tag_name;
+      version.href += `#${release.tag_name}`;
+      const date = releaseLine.querySelector<HTMLTimeElement>('[data-release-date]')!;
+      date.dateTime = release.published_at.slice(0, 10);
+      date.textContent = formatDate(release.published_at, document.documentElement.lang || 'en-US');
+      releaseLine.hidden = false;
+    }
+
     const groups = root.querySelector<HTMLElement>('[data-groups]');
     const template = root.querySelector<HTMLTemplateElement>('[data-row-template]');
     if (!groups || !template) return;
@@ -173,9 +200,12 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
     for (const section of groups.querySelectorAll<HTMLElement>('[data-platform]')) {
       const id = section.dataset.platform as Platform;
       const rows = section.querySelector<HTMLElement>('[data-rows]')!;
+      // Builds for the visitor's architecture first; on someone else's platform,
+      // its most common one (Apple silicon for Macs).
+      const prefer: Arch = id === platform || id !== 'macos' ? arch : 'arm64';
       const list = assets
         .filter(a => a.platform === id)
-        .sort((a, b) => Number(a.arch !== arch) - Number(b.arch !== arch) || a.rank - b.rank);
+        .sort((a, b) => Number(a.arch !== prefer) - Number(b.arch !== prefer) || a.rank - b.rank);
       if (list.length === 0) {
         section.hidden = true;
         continue;
@@ -191,8 +221,8 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
         const link = row.querySelector<HTMLAnchorElement>('[data-link]')!;
         link.href = asset.url;
         link.title = asset.name;
-        if (asset === recommended) link.classList.add('btn-primary');
-        rows.append(row);
+        if (asset === recommended) row.querySelector<HTMLElement>('[data-suggested]')!.hidden = false;
+        rows.insertBefore(row, rows.querySelector('[data-static]'));
       }
     }
     groups.hidden = false;
@@ -228,23 +258,91 @@ const platforms: { id: Platform; icon: typeof Monitor }[] = [
   .dl-other a { color: var(--blockstitch-accent); text-decoration: none; }
   .dl-other a:hover { text-decoration: underline; }
 
+  .dl-release {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 14px;
+    row-gap: 4px;
+    font-size: 14px;
+    color: var(--blockstitch-text-dim);
+  }
+  .dl-release[hidden] { display: none; }
+  .dl-release a { color: var(--blockstitch-accent); text-decoration: none; }
+  .dl-release a:hover { text-decoration: underline; }
+  /* The version sits in the same box a block's value does. */
+  .dl-release .dl-version {
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1px solid var(--blockstitch-border);
+    background: var(--blockstitch-bg2);
+    color: var(--blockstitch-text);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .dl-release .dl-version:hover { color: var(--blockstitch-accent); text-decoration: none; }
+
   .dl-groups {
-    display: grid;
-    gap: var(--blockstitch-spacing);
-    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    margin-top: 56px;
   }
-  .dl-groups h3 { margin: 0; }
-  .dl-row-title { font-weight: 600; font-size: 14px; }
-  /* The release rows sit in their own wrapper, so the last one drops its
-     divider; keep it when a static row (the AUR entry) follows. */
-  [data-rows]:has(+ .panel-row) > :global(.panel-row:last-child) {
-    border-bottom: 1px solid var(--blockstitch-glass-border);
+  .dl-platform h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
   }
-  .dl-arch { font-weight: 400; color: var(--blockstitch-text-dim); font-size: 13px; }
-  .dl-size { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  /* Hairline rows, like the translation and block lists on the community site. */
+  .dl-list {
+    list-style: none;
+    border-top: 1px solid var(--blockstitch-glass-border);
+  }
+  .dl-list > :global(li) { border-bottom: 1px solid var(--blockstitch-glass-border); }
+  .dl-list :global(.dl-row) {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 6px;
+    color: var(--blockstitch-text);
+    text-decoration: none;
+    transition: background var(--blockstitch-dur-fast) var(--blockstitch-ease-standard);
+  }
+  .dl-list :global(.dl-row:hover) { background: var(--blockstitch-hover-overlay); }
+  .dl-list :global(.dl-row:focus-visible) { outline: 2px solid var(--blockstitch-accent); outline-offset: -2px; border-radius: 4px; }
+  .dl-list :global(.dl-row-main) { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .dl-list :global(.dl-row-title) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; font-weight: 600; font-size: 15px; }
+  .dl-list :global(.dl-arch) { font-weight: 400; color: var(--blockstitch-text-dim); font-size: 14px; }
+  .dl-list :global(.dl-hint) { font-size: 13px; color: var(--blockstitch-text-dim); }
+  .dl-list :global(.dl-size) {
+    font-size: 13px;
+    color: var(--blockstitch-text-dim);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .dl-list :global(.dl-icon) { width: 18px; height: 18px; flex-shrink: 0; color: var(--blockstitch-text-dim); }
+  .dl-list :global(.dl-row:hover .dl-icon) { color: var(--blockstitch-accent); }
+  /* The build for this computer: a tick and a few words, not a pill. */
+  .dl-list :global(.dl-suggested) {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: center;
+    margin-left: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--blockstitch-text-dim);
+  }
+  .dl-list :global(.dl-suggested[hidden]) { display: none; }
+  .dl-list :global(.dl-suggested svg) { width: 13px; height: 13px; color: #3ccf6e; }
+  :root[data-theme="light"] .dl-list :global(.dl-suggested svg) { color: #18743b; }
 
   @media (max-width: 560px) {
-    .dl-size { display: none; }
-    .dl-btn-text { display: none; }
+    .dl-list :global(.dl-row) { align-items: flex-start; gap: 12px; padding: 12px 2px; }
+    .dl-list :global(.dl-suggested) { flex-basis: 100%; margin: 2px 0 0; }
+    .dl-list :global(.dl-icon) { margin-top: 2px; }
   }
 </style>

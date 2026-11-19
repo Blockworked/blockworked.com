@@ -3,108 +3,175 @@
 // format) on its master branch, richer than the GitHub release bodies,
 // which are generated from it at tag time and are sometimes just a stub.
 import Base from '../../layouts/Base.astro';
-import { Check, Tag } from '@lucide/astro';
+import { Check } from '@lucide/astro';
 import { RELEASES_URL, REPO_URL, changelog, formatDate } from '../../lib/releases';
 import { languagePaths, locale } from '../../lib/i18n';
 
 export const getStaticPaths = languagePaths;
 const { t, th, tag } = locale(Astro.url);
 // The notes themselves stay in English: they come from Blockwork's CHANGELOG.md.
-const entries = await changelog();
+const entries = (await changelog()).map(e => {
+  const unreleased = e.version.toLowerCase() === 'unreleased';
+  return { ...e, unreleased, id: unreleased ? 'unreleased' : e.version, latest: false };
+});
+// The newest real release is the latest, even when an Unreleased entry sits above it.
+const latest = entries.find(e => !e.unreleased);
+if (latest) latest.latest = true;
 ---
 
 <Base title={t('Changelog')} description={t("What's new in each Blockwork release.")}>
-  <section class="section">
-    <div class="container narrow">
-      <h1 class="section-heading">{t("What's new")}</h1>
-      <p class="section-lede">{t('Every Blockwork release, newest first.')}</p>
+  <section class="page">
+    <div class="container page-column">
+      <h1>{t("What's new")}</h1>
+      <p class="lede">{t('Every Blockwork release, newest first.')}</p>
 
       {entries.length === 0 ? (
         <p class="fallback" set:html={th("The changelog couldn't be loaded when this page was built. See {link}.", { link: `<a href="${RELEASES_URL}">${th('releases on GitHub')}</a>` })} />
       ) : (
-        <ol class="releases">
-          {entries.map((e, i) => {
-            const unreleased = e.version.toLowerCase() === 'unreleased';
-            return (
-              <li class:list={['release', { current: i === 0 && !unreleased }]}>
-                <div class="release-marker" aria-hidden="true"></div>
-                <article class="panel">
-                  <header class="panel-title release-header">
-                    <Tag />
-                    {unreleased ? <span class="version">{t('Unreleased')}</span> : <a class="version" href={`${REPO_URL}/releases/tag/${e.version}`}>{e.version}</a>}
-                    {i === 0 && !unreleased && <span class="latest"><Check />{t('latest')}</span>}
-                    {e.date && <time datetime={e.date}>{formatDate(`${e.date}T12:00:00`, tag)}</time>}
-                  </header>
-                  <div class="notes" set:html={e.html || `<p>${th('No notes for this release.')}</p>`} />
-                </article>
-              </li>
-            );
-          })}
-        </ol>
+        <div class="changelog">
+          <!-- Jump to a version; the one being read is marked (script below). -->
+          <nav class="versions" aria-label={t('Versions')}>
+            <ol>
+              {entries.map(e => (
+                <li><a href={`#${e.id}`} data-version-link={e.id}>{e.unreleased ? t('Unreleased') : e.version}</a></li>
+              ))}
+            </ol>
+          </nav>
+          <div class="releases">
+            {entries.map(e => (
+              <article class="release" id={e.id} data-release>
+                <header class="release-head">
+                  <h2>
+                    {e.unreleased
+                      ? <span class="pending">{t('Unreleased')}</span>
+                      : <a class="version" href={`${REPO_URL}/releases/tag/${e.version}`}>{e.version}</a>}
+                  </h2>
+                  {e.latest && <span class="latest"><Check />{t('latest')}</span>}
+                  {e.date && <time datetime={e.date}>{formatDate(`${e.date}T12:00:00`, tag)}</time>}
+                </header>
+                <div class="notes" set:html={e.html || `<p>${th('No notes for this release.')}</p>`} />
+              </article>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   </section>
 </Base>
 
-<style>
-  .narrow { max-width: 760px; }
-  .fallback { margin-top: 32px; color: var(--blockstitch-text-dim); }
-  .fallback a { color: var(--blockstitch-accent); }
+<script>
+  const links = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>('[data-version-link]')].map(a => [a.dataset.versionLink!, a]),
+  );
+  const visible = new Set<string>();
+  const releases = [...document.querySelectorAll<HTMLElement>('[data-release]')];
+  const mark = () => {
+    // The topmost release on screen is the one being read.
+    const current = releases.find(r => visible.has(r.id)) ?? null;
+    for (const [id, a] of links) {
+      if (current && id === current.id) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    }
+  };
+  const observer = new IntersectionObserver(items => {
+    for (const item of items) {
+      if (item.isIntersecting) visible.add(item.target.id);
+      else visible.delete(item.target.id);
+    }
+    mark();
+  }, { rootMargin: '-72px 0px -45% 0px' });
+  releases.forEach(r => observer.observe(r));
+</script>
 
-  .releases {
-    list-style: none;
-    margin-top: 40px;
+<style>
+  /* The same column and heading as the community and translation pages. */
+  .page { padding: 64px 0 96px; }
+  .page-column { max-width: 920px; }
+  h1 {
+    font-size: clamp(32px, 5vw, 44px);
+    line-height: 1.15;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+  .lede {
+    margin-top: 10px;
+    font-size: 17px;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--blockstitch-text) 78%, var(--blockstitch-text-dim));
+  }
+  .fallback { margin-top: 32px; color: var(--blockstitch-text-dim); }
+  .fallback :global(a) { color: var(--blockstitch-accent); }
+
+  .changelog {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 48px;
+    margin-top: 48px;
+  }
+
+  .versions {
+    position: sticky;
+    top: 80px;
+    align-self: start;
+    max-height: calc(100vh - 104px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .versions ol { list-style: none; }
+  .versions a {
+    display: block;
+    padding: 4px 10px;
+    border-left: 2px solid var(--blockstitch-glass-border);
+    color: var(--blockstitch-text-dim);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+    transition: color var(--blockstitch-dur-fast) var(--blockstitch-ease-standard),
+                border-color var(--blockstitch-dur-fast) var(--blockstitch-ease-standard);
+  }
+  .versions a:hover { color: var(--blockstitch-text); }
+  .versions a[aria-current] {
+    color: var(--blockstitch-text);
+    font-weight: 600;
+    border-left-color: var(--blockstitch-accent);
+  }
+
+  /* Releases are separated by hairlines, not stacked in cards. */
+  .release {
+    padding: 28px 0 32px;
+    border-top: 1px solid var(--blockstitch-glass-border);
+    scroll-margin-top: 72px;
+  }
+  .release:first-child { padding-top: 0; border-top: none; }
+  .release-head {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 4px;
+    margin-bottom: 14px;
   }
-  .release { position: relative; padding-left: 28px; }
-  /* A timeline spine, echoing the C-block spine. */
-  .release::before {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 0;
-    bottom: -20px;
-    width: 1.5px;
-    background: var(--blockstitch-border);
-  }
-  .release:last-child::before { bottom: 0; }
-  .release-marker {
-    position: absolute;
-    left: 0;
-    top: 12px;
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-    background: var(--blockstitch-bg2);
-    border: 1.5px solid var(--blockstitch-border);
-  }
-  .release.current .release-marker {
-    background: var(--blockstitch-accent);
-    border-color: var(--blockstitch-accent);
-    box-shadow: var(--blockstitch-glow-accent);
-  }
-  .release-header { gap: 8px; }
+  .release-head h2 { font-size: 0; line-height: 1; }
   /* A version sits in the same box a block's value does. */
   .version {
-    padding: 3px 7px;
-    border-radius: 5px;
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 6px;
     border: 1px solid var(--blockstitch-border);
-    background: var(--blockstitch-bg);
+    background: var(--blockstitch-bg2);
     color: var(--blockstitch-text);
     text-decoration: none;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.2;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
   a.version:hover { color: var(--blockstitch-accent); }
-  .release-header time {
-    margin-left: auto;
-    text-transform: none;
-    letter-spacing: 0;
-    font-weight: 400;
-    font-size: 12px;
+  /* Not a version yet, so no value box. */
+  .pending { font-size: 20px; line-height: 1.2; font-weight: 700; }
+  .release-head time {
+    color: var(--blockstitch-text-dim);
+    font-size: 14px;
   }
   /* The newest release: a tick and a word, not a pill. */
   .latest {
@@ -112,30 +179,36 @@ const entries = await changelog();
     align-items: center;
     gap: 4px;
     color: var(--blockstitch-text-dim);
-    font-size: 13px;
-    font-weight: 400;
+    font-size: 14px;
   }
   .latest :global(svg) { width: 14px; height: 14px; color: #3ccf6e; }
   :root[data-theme="light"] .latest :global(svg) { color: #18743b; }
 
-  .notes {
-    padding: 12px 16px 16px;
-    font-size: 14px;
-  }
+  .notes { font-size: 15px; line-height: 1.6; max-width: 68ch; }
   .notes :global(h3) {
-    margin: 14px 0 6px;
-    font-size: 14px;
+    margin: 20px 0 6px;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--blockstitch-text);
   }
   .notes :global(h3:first-child) { margin-top: 0; }
   .notes :global(p) { margin: 6px 0; }
-  .notes :global(ul) { padding-left: 20px; }
-  .notes :global(li) { margin: 3px 0; }
+  .notes :global(ul) { padding-left: 18px; }
+  .notes :global(li) { margin: 5px 0; padding-left: 2px; }
   .notes :global(li::marker) { color: var(--blockstitch-text-dim); }
+  .notes :global(ul ul) { margin: 4px 0; }
   .notes :global(a) { color: var(--blockstitch-accent); }
   .notes :global(code) {
     padding: 1px 5px;
     border-radius: 4px;
     background: var(--blockstitch-bg3);
+  }
+
+  @media (max-width: 760px) {
+    .changelog { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 32px; }
+    .versions { display: none; }
+  }
+  @media (max-width: 560px) {
+    .page { padding: 40px 0 72px; }
   }
 </style>
