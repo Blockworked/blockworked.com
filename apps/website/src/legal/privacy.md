@@ -182,6 +182,12 @@ We use these services to run Blockwork's sites. Each gets only what it needs:
   and links, never attachments or ticket access keys).
 - **Have I Been Pwned** answers the password breach check described above.
 - **Our own server** runs the Blockworked mailboxes and Weblate.
+- **Ko-fi** and **GitHub Sponsors** take donations, with **Stripe** and
+  **PayPal** handling the payments. You give your payment details to them,
+  not to us. They pass on your name or username, email address, the amount
+  and any message, which we keep for tax records. If you ask to be thanked on
+  the donate page, we show the name, link and logo you choose there until you
+  ask us to take them down.
 
 Some of them are in the United States, so your information may be processed
 there and in other countries where they operate.

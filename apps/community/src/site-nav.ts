@@ -96,7 +96,7 @@ export function siteFooter(place = LIBRARY): string {
 </div><div class="footer-meta">
 <a href="${REPO_URL}">${t('Blockwork on GitHub')}</a><a href="${REPO_URL}/issues">${t('Report an issue')}</a><a href="${REPO_URL}/releases">${t('All releases')}</a>
 <a href="https://github.com/Blockworked/blockworked.com/tree/master/apps/community">${t('Library source')}</a>
-<a href="${esc(mainUrl)}/privacy">${t('Privacy')}</a><a href="${esc(mainUrl)}/terms">${t('Terms')}</a>
+<a href="${esc(mainUrl)}/donate">${t('Donate')}</a><a href="${esc(mainUrl)}/privacy">${t('Privacy')}</a><a href="${esc(mainUrl)}/terms">${t('Terms')}</a>
 ${languagePicker()}<p class="copyright">© ${year} Blockworked</p></div></div></footer>`;
 }
 

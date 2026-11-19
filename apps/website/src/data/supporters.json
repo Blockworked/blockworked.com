@@ -1,0 +1,4 @@
+{
+  "//": "The supporter wall on /donate. Add people who asked to be listed. tier: patron ($500+ in the last 12 months), sponsor ($100+), backer ($25+), supporter (any amount). url is shown from backer up, logo (files in public/supporters/) for patrons. Set until to the date 12 months after their last donation; after that they move to Past supporters.",
+  "supporters": []
+}

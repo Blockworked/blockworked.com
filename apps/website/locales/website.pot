@@ -104,6 +104,10 @@ msgstr ""
 msgid "All releases"
 msgstr ""
 
+#: src/components/SiteFooter.astro src/pages/[...lang]/donate.astro
+msgid "Donate"
+msgstr ""
+
 #: src/components/SiteFooter.astro
 msgid "Privacy"
 msgstr ""
@@ -188,7 +192,7 @@ msgstr ""
 msgid "Support"
 msgstr ""
 
-#: src/lib/site.ts
+#: src/lib/site.ts src/pages/[...lang]/donate.astro
 msgid "Translate"
 msgstr ""
 
@@ -225,6 +229,107 @@ msgstr ""
 msgid "No notes for this release."
 msgstr ""
 
+#: src/pages/[...lang]/donate.astro
+msgid "Patrons"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "$500 or more in a year"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Sponsors"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "$100 or more in a year"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Backers"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "$25 or more in a year"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Supporters"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Any amount"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "One-off or monthly, by card or PayPal. No account needed."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Monthly or one-time, with your GitHub account."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Star Blockwork on GitHub"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "It helps other people find it."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Bring Blockwork and these sites to your language."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Share your blocks"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Publish a pack on the community library."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Report a bug"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Or suggest something that would make Blockwork better."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Blockwork is free and open source. Donations help keep it that way."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Blockwork is free and open source, made by one person, Ethan Stokes. Donations pay for the domain, servers and code signing, and give more time to work on it."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Thank you"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "People who give and want to be listed. Being listed buys no say in what gets built."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Past supporters"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "Other ways to help"
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+#, python-brace-format
+msgid "Donations go to Ethan Stokes personally. They are not tax-deductible, and they buy no features, support or say in the roadmap. If you want to be listed above, say so in your donation message. See the {terms}."
+msgstr ""
+
+#: src/pages/[...lang]/donate.astro
+msgid "terms"
+msgstr ""
+
 #: src/pages/[...lang]/download.astro
 msgid "Download Blockwork for Windows, macOS, or Linux."
 msgstr ""
@@ -249,6 +354,15 @@ msgstr ""
 
 #: src/pages/[...lang]/download.astro
 msgid "repository"
+msgstr ""
+
+#: src/pages/[...lang]/download.astro
+#, python-brace-format
+msgid "Blockwork is free. If it saves you time, you can {donate}."
+msgstr ""
+
+#: src/pages/[...lang]/download.astro
+msgid "chip in"
 msgstr ""
 
 #: src/pages/[...lang]/index.astro

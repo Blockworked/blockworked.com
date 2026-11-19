@@ -15,6 +15,12 @@ export const SUPPORT_URL: string =
 export const TRANSLATE_URL: string =
   import.meta.env.PUBLIC_TRANSLATE_URL ?? 'https://translate.blockworked.com';
 
+/** Where donations go. Ko-fi takes cards and PayPal without an account;
+ *  GitHub Sponsors is for people who already use GitHub. The /donate page
+ *  lists both, and FUNDING.yml in the repos points at the same two. */
+export const KOFI_URL = 'https://ko-fi.com/blockwork';
+export const GITHUB_SPONSORS_URL = 'https://github.com/sponsors/EthanRStokes';
+
 export interface NavLink {
   href: string;
   label: string;

@@ -5,7 +5,7 @@ import { REPO_URL } from '../../lib/releases';
 import { languagePaths, locale } from '../../lib/i18n';
 
 export const getStaticPaths = languagePaths;
-const { t, th } = locale(Astro.url);
+const { t, th, href } = locale(Astro.url);
 const link = (url: string, text: string) => `<a href="${url}">${text}</a>`;
 ---
 
@@ -18,6 +18,7 @@ const link = (url: string, text: string) => `<a href="${url}">${text}</a>`;
         <Downloader mode="full" />
       </div>
       <p class="build-note" set:html={th('Prefer to build it yourself? Clone the {repository} and run {command}.', { repository: link(REPO_URL, th('repository')), command: '<code>just</code>' })} />
+      <p class="build-note donate-note" set:html={th('Blockwork is free. If it saves you time, you can {donate}.', { donate: link(href('/donate'), th('chip in')) })} />
     </div>
   </section>
 </Base>
@@ -48,6 +49,7 @@ const link = (url: string, text: string) => `<a href="${url}">${text}</a>`;
     font-size: 14px;
     color: var(--blockstitch-text-dim);
   }
+  .donate-note { margin-top: 8px; }
   @media (max-width: 560px) {
     .page { padding: 40px 0 72px; }
   }

@@ -1563,6 +1563,10 @@ msgid "Library source"
 msgstr ""
 
 #: src/site-nav.ts
+msgid "Donate"
+msgstr ""
+
+#: src/site-nav.ts
 msgid "Privacy"
 msgstr ""
 

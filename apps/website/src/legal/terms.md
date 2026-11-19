@@ -83,6 +83,14 @@ guarantee a pack is safe, correct or suitable. Look at what a pack does
 before you run it, especially blocks that run commands, scripts or reach the
 network.
 
+## Donations
+
+Donations through Ko-fi or GitHub Sponsors are voluntary gifts to Ethan
+Stokes. They don't buy any goods, services, features, support or say in how
+Blockwork develops, and they aren't tax-deductible. Refunds are at our
+discretion or as the payment platform requires. Being listed on the donate
+page is optional, and we may decline or remove any name, link or logo.
+
 ## No warranty
 
 Blockwork and our services are provided "as is" and "as available", without
