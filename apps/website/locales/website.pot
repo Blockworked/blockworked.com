@@ -302,7 +302,7 @@ msgid "Blockwork is free and open source. Donations help keep it that way."
 msgstr ""
 
 #: src/pages/[...lang]/donate.astro
-msgid "Blockwork is free and open source, made by one person, Ethan Stokes. Donations pay for the domain, servers and code signing, and give more time to work on it."
+msgid "Blockwork is free and open source, made by one developer. Donations pay for the domain, servers and code signing, and give more time to work on it."
 msgstr ""
 
 #: src/pages/[...lang]/donate.astro
@@ -323,7 +323,7 @@ msgstr ""
 
 #: src/pages/[...lang]/donate.astro
 #, python-brace-format
-msgid "Donations go to Ethan Stokes personally. They are not tax-deductible, and they buy no features, support or say in the roadmap. If you want to be listed above, say so in your donation message. See the {terms}."
+msgid "Donations go to Blockwork's developer, not a charity. They are not tax-deductible, and they buy no features, support or say in the roadmap. If you want to be listed above, say so in your donation message. See the {terms}."
 msgstr ""
 
 #: src/pages/[...lang]/donate.astro

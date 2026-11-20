@@ -41,7 +41,7 @@ const help = [
   <section class="page">
     <div class="container page-column">
       <h1>{t('Donate')}</h1>
-      <p class="lede">{t('Blockwork is free and open source, made by one person, Ethan Stokes. Donations pay for the domain, servers and code signing, and give more time to work on it.')}</p>
+      <p class="lede">{t('Blockwork is free and open source, made by one developer. Donations pay for the domain, servers and code signing, and give more time to work on it.')}</p>
 
       <ul class="rows ways">
         {ways.map(w => (
@@ -108,7 +108,7 @@ const help = [
         </ul>
       </section>
 
-      <p class="fine" set:html={th('Donations go to Ethan Stokes personally. They are not tax-deductible, and they buy no features, support or say in the roadmap. If you want to be listed above, say so in your donation message. See the {terms}.', { terms: link(href('/terms'), th('terms')) })} />
+      <p class="fine" set:html={th("Donations go to Blockwork's developer, not a charity. They are not tax-deductible, and they buy no features, support or say in the roadmap. If you want to be listed above, say so in your donation message. See the {terms}.", { terms: link(href('/terms'), th('terms')) })} />
     </div>
   </section>
 </Base>

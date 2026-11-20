@@ -85,8 +85,8 @@ network.
 
 ## Donations
 
-Donations through Ko-fi or GitHub Sponsors are voluntary gifts to Ethan
-Stokes. They don't buy any goods, services, features, support or say in how
+Donations through Ko-fi or GitHub Sponsors are voluntary personal gifts to
+the person who runs Blockworked, named above. They don't buy any goods, services, features, support or say in how
 Blockwork develops, and they aren't tax-deductible. Refunds are at our
 discretion or as the payment platform requires. Being listed on the donate
 page is optional, and we may decline or remove any name, link or logo.
