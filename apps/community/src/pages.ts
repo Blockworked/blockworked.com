@@ -19,25 +19,26 @@ export function esc(value: unknown): string {
 // (or the OS); without it, the light one follows the OS.
 const LIGHT = `
     color-scheme: light;
-    --bg: #f2f2f5; --bg2: #ffffff; --bg3: #e7e7ec; --border: #d4d4da;
-    --fg: #1c1c1e; --muted: #6e6e73;
-    --warn: #6b5300; --warn-bg: #fff6d8; --warn-border: #e6c200; --ok: #18743b;
-    --block: #e7e7ec; --block-top: #f4f4f7;
-    --glass: rgba(255, 255, 255, 0.6); --glass-strong: rgba(230, 230, 236, 0.75); --glass-border: rgba(0, 0, 0, 0.12);
+    --bg: #f3f4f6; --bg2: #ffffff; --bg3: #e9ecf0; --field: #f0f2f5; --border: #aeb5c0;
+    --fg: #202631; --muted: #616b79;
+    --accent: #006fc9; --accent-light: #005eae; --accent-rgb: 0, 111, 201;
+    --warn: #8a5900; --warn-bg: #fff3d6; --warn-border: #d0aa53; --ok: #18743b; --danger: #c62828;
+    --block: #e1e5eb; --block-top: #d5dbe4;
+    --glass: var(--bg2); --glass-strong: var(--bg3); --glass-border: #d7dce3;
     --hover: rgba(0, 0, 0, 0.04);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08); --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);`;
 
 const STYLE = `
 :root {
   color-scheme: dark;
-  --bg: #1c1c1e; --bg2: #2c2c2e; --bg3: #3a3a3c; --border: #48484a;
-  --fg: #e0e0e0; --muted: #8e8e93;
-  --accent: #0a84ff; --accent-light: #3aa0ff; --accent-rgb: 10, 132, 255;
-  --warn: #ffd60a; --warn-bg: #2d2200; --warn-border: #7d6200; --ok: #3ccf6e;
+  --bg: #1d1e20; --bg2: #242527; --bg3: #303134; --field: #292a2d; --border: #4a4b50;
+  --fg: #dedee0; --muted: #96979c;
+  --accent: #1597ff; --accent-light: #32a5ff; --accent-rgb: 21, 151, 255;
+  --warn: #f5b942; --warn-bg: #33291a; --warn-border: #5a4220; --ok: #3ccf6e; --danger: #ff4848;
   --block: #3b3c40; --block-top: #44454a;
-  --glass: rgba(44, 44, 46, 0.55); --glass-strong: rgba(58, 58, 60, 0.6); --glass-border: rgba(255, 255, 255, 0.08);
+  --glass: var(--bg2); --glass-strong: var(--bg3); --glass-border: #36373a;
   --hover: rgba(255, 255, 255, 0.05);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25); --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25); --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
   --radius: 6px; --radius-lg: 14px;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --font: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -101,7 +102,7 @@ ${SITE_NAV_CSS}
 .hero kbd { font: inherit; font-weight: 600; color: var(--fg); }
 
 /* Panels: the app's settings sections, as blockworked.com draws them. */
-.card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 18px 20px; margin: 14px 0; }
+.card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 18px 20px; margin: 14px 0; }
 .card > :first-child { margin-top: 0; }
 .card > :last-child { margin-bottom: 0; }
 .card p { margin: 8px 0; }
@@ -130,13 +131,13 @@ button.large, .button.large { min-height: 44px; padding: 0 20px; font-size: 15px
 .signin { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 20px; }
 .signin .button { min-width: 240px; }
 form.inline { display: inline; }
-input[type=text], input[type=email], input[type=password], input[type=file] { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); color: var(--fg); width: min(100%, 420px); transition: box-shadow 120ms var(--ease), border-color 120ms var(--ease); }
+input[type=text], input[type=email], input[type=password], input[type=file] { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--field); color: var(--fg); width: min(100%, 420px); transition: box-shadow 120ms var(--ease), border-color 120ms var(--ease); }
 .cf-turnstile { width: min(100%, 420px); margin: 8px 0; }
 input[type=text]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.28); }
 input[type=file]::file-selector-button { font: inherit; margin-right: 10px; padding: 5px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg3); color: var(--fg); cursor: pointer; }
 
 /* blockworked.com's warning banner, for form errors. */
-p.risky { padding: 10px 12px; border-radius: var(--radius-lg); border: 1px solid var(--warn-border); background: var(--warn-bg); font-size: 13px; box-shadow: var(--shadow-sm); }
+p.risky { padding: 10px 12px; border-radius: var(--radius-lg); border: 1px solid var(--warn-border); background: var(--warn-bg); font-size: 13px; }
 pre { overflow: auto; max-height: 480px; background: var(--bg2); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 14px 16px; font-size: 12px; line-height: 1.5; }
 .mono { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
 img.avatar { width: 22px; height: 22px; border-radius: 50%; }
@@ -175,7 +176,7 @@ export function libraryShell(user: User | null, admin: boolean): Shell {
 export function page(title: string, user: User | null, admin: boolean, body: string, status = 200, shell = libraryShell(user, admin)): Response {
   const html = `<!doctype html><html lang="${language().tag}" dir="${language().dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)} | ${esc(shell.site)}</title><link rel="icon" type="image/png" href="/favicon.png">
-<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)"><meta name="theme-color" content="#f2f2f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1d1e20" media="(prefers-color-scheme: dark)"><meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
 <script src="/site.js"></script><style>${STYLE}</style></head>
 <body>${siteHeader(shell.place)}
 <div class="subbar"><div class="container"><a class="subbar-title" href="${esc(shell.href)}">${esc(shell.name)}</a><nav aria-label="${esc(shell.name)}">${shell.nav}</nav></div></div>

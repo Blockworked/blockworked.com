@@ -104,7 +104,7 @@ ${languagePicker()}<p class="copyright">© ${year} Blockworked</p></div></div></
  *  SiteFooter. Uses the page's color tokens from pages.ts. */
 export const SITE_NAV_CSS = `
 .site-header { position: sticky; top: 0; z-index: 50; background: var(--glass); view-transition-name: site-header;
-  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--glass-border); box-shadow: var(--shadow-sm); }
+  border-bottom: 1px solid var(--glass-border); }
 .site-header .container, .site-footer .container { max-width: 1120px; padding: 0 24px; }
 .site-header-inner { display: flex; align-items: center; gap: 12px; height: 56px; }
 .brand { display: flex; align-items: center; gap: 8px; color: var(--fg); font-weight: 700; font-size: 17px; line-height: 1; }

@@ -75,7 +75,6 @@ export const TRANSLATE_CSS = `
 .translation-glossary h2, .translation-panel h2 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .translation-panel h2 .n, .translation-panel summary .n { font-weight: 400; }
 .translation-warning { color: var(--warn); font-size: 13px; margin: 8px 0 0; }
-:root[data-theme="light"] .translation-warning { color: #8a6a00; }
 .translation-check { display: flex !important; align-items: center; gap: 8px; font-weight: 400 !important; color: var(--muted); }
 .translation-check input { margin: 0; }
 .translation-panel { margin: 28px 0 0; padding-top: 16px; border-top: 1px solid var(--glass-border); }

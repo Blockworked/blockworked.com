@@ -219,18 +219,17 @@ const ctaLogo = await logoAt(88);
     color: color-mix(in srgb, var(--blockstitch-text) 85%, var(--blockstitch-text-dim));
     text-wrap: pretty;
   }
-  /* The capture carries its own piece of the editor's canvas (#27282b dark,
-     #f5f6f8 light), so the frame is that canvas color with no padding. */
+  /* The capture carries its own piece of the editor's canvas, so the frame is
+     that canvas color with no padding. */
   .hero-script {
     margin: 0;
     overflow: hidden;
     border-radius: 14px;
-    background: #27282b;
+    background: var(--blockstitch-canvas);
     border: 1px solid var(--blockstitch-glass-border);
     box-shadow: var(--blockstitch-shadow-md);
   }
   .hero-script img { display: block; width: min(100%, 340px); height: auto; }
-  :root[data-theme="light"] .hero-script { background: #f5f6f8; }
   :root[data-theme="light"] .hero-script .on-dark,
   :root:not([data-theme="light"]) .hero-script .on-light { display: none; }
   /* Spacing grows between groups: logo + tagline, then the description, then the actions. */

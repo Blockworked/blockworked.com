@@ -124,23 +124,29 @@ site sets `data-theme` from it).
 
 ### Web tokens
 
-The sites use their own token set (`--blockstitch-*` on blockworked.com,
-short names like `--bg`, `--fg`, `--muted` in the community Worker):
+The sites use the same values under web names (`--blockstitch-*` in
+blockworked.com `theme.css`, short names like `--bg`, `--fg`, `--muted` in
+the community Worker's `pages.ts`):
 
-| Token | Dark | Light |
-| --- | --- | --- |
-| `bg` | `#1c1c1e` | `#f2f2f5` |
-| `bg2` | `#2c2c2e` | `#ffffff` |
-| `bg3` | `#3a3a3c` | `#e7e7ec` |
-| `border` | `#48484a` | `#d4d4da` |
-| `text` / `fg` | `#e0e0e0` | `#1c1c1e` |
-| `text-dim` / `muted` | `#8e8e93` | `#6e6e73` |
-| `accent` | `#0a84ff` (hover `#3aa0ff`) | same |
-| `ok` | `#3ccf6e` | `#18743b` |
-| `glass-border` (hairlines) | `rgba(255,255,255,.08)` | `rgba(0,0,0,.12)` |
-| `hover` | `rgba(255,255,255,.05)` | `rgba(0,0,0,.04)` |
+| Web token | App token |
+| --- | --- |
+| `bg` | `window` |
+| `bg2` | `panel` |
+| `bg3` | `panelRaised` |
+| `field` | `field` |
+| `canvas` (website) | `canvas` |
+| `border` | `border` |
+| `glass-border` (hairlines) | `borderSoft` |
+| `text` / `fg` | `text` |
+| `text-dim` / `muted` | `textDim` |
+| `accent`, `accent-light` (hover) | `accent`, `accentHover` |
+| `red` / `danger` | `danger` |
+| `yellow` / `warn`, `yellow-bg`, `yellow-border` | `warning`, `warningBackground`, `warningBorder` |
+| `ok` | `running` |
+| `grid` (website) | `grid` |
+| `glass-bg` / `glass` | same as `bg2` (panels are flat) |
 
-These are close to the app's but not identical (see [Known drift](#known-drift)).
+When `Theme.qml` changes, copy the new values into both files.
 
 ### How color is used
 
@@ -331,19 +337,11 @@ been removed once and should not come back.
 
 ## Known drift
 
-Places where the code doesn't yet match this page. Fix them toward the app
-tokens when you are in those files.
+Places where the code doesn't yet match this page.
 
-- **Web and app greys and blue differ.** The sites use the older
-  `#1c1c1e` / `#0a84ff` set; the app moved to `#1d1e20` / `#1597ff` (dark) and
-  `#006fc9` (light accent, which the sites don't have: they use `#0a84ff` in
-  light mode too).
-- **blockworked.com `theme.css` still carries the old control styles**
-  (gradient buttons, glow focus rings, hover lift, `ease-spring`, 400ms
-  durations). `global.css` overrides them for the site's own `.btn`
-  classes, but bare elements styled only by `theme.css` still get them.
-- **Web panels use backdrop blur ("glass")**; the app's panels are flat.
 - The community Worker copies the web tokens by hand in `pages.ts` instead of
   sharing a file with the website.
 - `support-css.ts` defines a global `.tabs` that clashes with the browse
   pages' `.tabs`.
+- Light theme hairlines and control borders are darker than they used to be
+  on the web (`#aeb5c0` borders), because they now match the app.
