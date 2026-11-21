@@ -182,9 +182,9 @@ When `Theme.qml` changes, copy the new values into both files.
 Control heights: app buttons 38, text fields 34, menu items 34, switches and
 check boxes 28; web buttons 32 (`--btn-h-md`), small 26, large 44.
 
-Outlines are 1px on controls and 1.3px on blocks. Shadows are small and only
-on the web (`0 1px 2px` at 25% black in dark, 8% in light); the app draws
-none on blocks.
+Outlines are 1px on controls and 1.3px on blocks. Panels, cards, banners
+and the header have no shadow; shadows are kept for things that float above
+the page (screenshots, the editor demo window, menus).
 
 ## Blocks
 
@@ -284,7 +284,7 @@ for lists. On the download page the whole row is the link.
 ### Panels
 
 Settings-style groups: radius 14 (`--radius-lg`), 1px hairline border,
-semi-transparent fill, a title row at 13px 600 and 10 to 12px rows.
+flat `bg2` fill (no blur, no shadow), a title row at 13px 600 and 10 to 12px rows.
 
 ### Tabs
 
@@ -343,5 +343,3 @@ Places where the code doesn't yet match this page.
   sharing a file with the website.
 - `support-css.ts` defines a global `.tabs` that clashes with the browse
   pages' `.tabs`.
-- Light theme hairlines and control borders are darker than they used to be
-  on the web (`#aeb5c0` borders), because they now match the app.
