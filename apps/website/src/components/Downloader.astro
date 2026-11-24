@@ -14,6 +14,7 @@ interface Props {
 const { mode = 'full', align = 'start' } = Astro.props;
 const { t, th, href } = locale(Astro.url);
 const AUR_URL = 'https://aur.archlinux.org/packages/blockwork-bin';
+const FLATPAK_REF = 'https://flatpak.blockworked.com/blockwork.flatpakref';
 const COPR_URL = 'https://copr.fedorainfracloud.org/coprs/ethanstokes/Blockwork/';
 const NIX_URL = 'https://github.com/Blockworked/Blockwork#linux';
 const STORE_URL = 'https://apps.microsoft.com/detail/9PMN4BMXPH54';
@@ -62,6 +63,17 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
                     <span class="dl-hint">{t('Installs and updates through the Store')}</span>
                   </span>
                   <ExternalLink class="dl-icon" />
+                </a>
+              </li>
+            )}
+            {id === 'linux' && (
+              <li data-static>
+                <a class="dl-row" href={FLATPAK_REF}>
+                  <span class="dl-row-main">
+                    <span class="dl-row-title">{t('Flatpak repository')} <span class="dl-arch">{t('Any distribution')}</span></span>
+                    <span class="dl-hint" set:html={th('Open it to install, or run {command}. Updates with flatpak update', { command: '<code>flatpak install https://flatpak.blockworked.com/blockwork.flatpakref</code>' })} />
+                  </span>
+                  <Download class="dl-icon" />
                 </a>
               </li>
             )}
@@ -341,6 +353,7 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
   .dl-list :global(.dl-row-title) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; font-weight: 600; font-size: 15px; }
   .dl-list :global(.dl-arch) { font-weight: 400; color: var(--blockstitch-text-dim); font-size: 14px; }
   .dl-list :global(.dl-hint) { font-size: 13px; color: var(--blockstitch-text-dim); }
+  .dl-list :global(.dl-hint code) { overflow-wrap: anywhere; }
   .dl-list :global(.dl-size) {
     font-size: 13px;
     color: var(--blockstitch-text-dim);

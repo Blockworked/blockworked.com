@@ -38,6 +38,19 @@ msgid "Installs and updates through the Store"
 msgstr ""
 
 #: src/components/Downloader.astro
+msgid "Flatpak repository"
+msgstr ""
+
+#: src/components/Downloader.astro
+msgid "Any distribution"
+msgstr ""
+
+#: src/components/Downloader.astro
+#, python-brace-format
+msgid "Open it to install, or run {command}. Updates with flatpak update"
+msgstr ""
+
+#: src/components/Downloader.astro
 #, python-brace-format
 msgid "Updates with the system: {command}"
 msgstr ""
@@ -188,7 +201,7 @@ msgid "Runs on most distributions. Mark it executable and launch"
 msgstr ""
 
 #: src/lib/releases.ts
-msgid "Sandboxed bundle. Install with flatpak install"
+msgid "Single-file bundle. Install with flatpak install"
 msgstr ""
 
 #: src/lib/site.ts
