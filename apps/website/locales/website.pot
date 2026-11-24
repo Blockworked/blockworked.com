@@ -200,10 +200,6 @@ msgstr ""
 msgid "Runs on most distributions. Mark it executable and launch"
 msgstr ""
 
-#: src/lib/releases.ts
-msgid "Single-file bundle. Install with flatpak install"
-msgstr ""
-
 #: src/lib/site.ts
 msgid "Features"
 msgstr ""

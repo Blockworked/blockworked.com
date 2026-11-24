@@ -80,9 +80,7 @@ export function parseAsset(asset: GitHubAsset): ReleaseAsset | null {
     if (name.endsWith('.appimage')) {
       return { ...base, platform: 'linux', kind: 'AppImage', hint: ct('Runs on most distributions. Mark it executable and launch'), rank: 0 };
     }
-    if (name.endsWith('.flatpak')) {
-      return { ...base, platform: 'linux', kind: 'Flatpak', hint: ct('Single-file bundle. Install with flatpak install'), rank: 1 };
-    }
+    // .flatpak bundles are left out: the Flatpak repo row installs and updates.
   }
   return null;
 }
