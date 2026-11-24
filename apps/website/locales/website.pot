@@ -46,6 +46,10 @@ msgid "Any distribution"
 msgstr ""
 
 #: src/components/Downloader.astro
+msgid "Suggested for this computer"
+msgstr ""
+
+#: src/components/Downloader.astro
 #, python-brace-format
 msgid "Open it to install, or run {command}. Updates with flatpak update"
 msgstr ""
@@ -63,10 +67,6 @@ msgstr ""
 #: src/components/Downloader.astro
 #, python-brace-format
 msgid "Run it with {command}, or enable programs.blockwork on NixOS"
-msgstr ""
-
-#: src/components/Downloader.astro
-msgid "Suggested for this computer"
 msgstr ""
 
 #: src/components/Downloader.astro

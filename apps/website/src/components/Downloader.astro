@@ -4,7 +4,7 @@
 // static site never goes stale between deploys), suggests the build for the
 // visitor's OS/arch, and in `full` mode lists every asset by platform.
 import { Check, Download, ExternalLink } from '@lucide/astro';
-import { RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
+import { FLATPAK_REF, RELEASES_URL, PLATFORM_LABELS, type Platform } from '../lib/releases';
 import { locale } from '../lib/i18n';
 
 interface Props {
@@ -14,7 +14,6 @@ interface Props {
 const { mode = 'full', align = 'start' } = Astro.props;
 const { t, th, href } = locale(Astro.url);
 const AUR_URL = 'https://aur.archlinux.org/packages/blockwork-bin';
-const FLATPAK_REF = 'https://flatpak.blockworked.com/blockwork.flatpakref';
 const COPR_URL = 'https://copr.fedorainfracloud.org/coprs/ethanstokes/Blockwork/';
 const NIX_URL = 'https://github.com/Blockworked/Blockwork#linux';
 const STORE_URL = 'https://apps.microsoft.com/detail/9PMN4BMXPH54';
@@ -67,10 +66,13 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
               </li>
             )}
             {id === 'linux' && (
-              <li data-static>
+              <li data-static data-lead>
                 <a class="dl-row" href={FLATPAK_REF}>
                   <span class="dl-row-main">
-                    <span class="dl-row-title">{t('Flatpak repository')} <span class="dl-arch">{t('Any distribution')}</span></span>
+                    <span class="dl-row-title">
+                      {t('Flatpak repository')} <span class="dl-arch">{t('Any distribution')}</span>
+                      <span class="dl-suggested" data-suggested hidden><Check />{t('Suggested for this computer')}</span>
+                    </span>
                     <span class="dl-hint" set:html={th('Open it to install, or run {command}. Updates with flatpak update', { command: '<code>flatpak install https://flatpak.blockworked.com/blockwork.flatpakref</code>' })} />
                   </span>
                   <Download class="dl-icon" />
@@ -135,7 +137,7 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
 
 <script>
   import {
-    PLATFORM_LABELS, RELEASES_URL, REPO, formatDate, formatSize, parseAsset,
+    FLATPAK_REF, PLATFORM_LABELS, RELEASES_URL, REPO, formatDate, formatSize, parseAsset,
     type Arch, type GitHubRelease, type Platform, type ReleaseAsset,
   } from '../lib/releases';
   import { ct, localHref } from '../lib/client-i18n';
@@ -207,9 +209,13 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
 
     const assets = release.assets.map(parseAsset).filter((a): a is ReleaseAsset => a !== null);
     const { platform, arch } = await detect();
-    const recommended = pickRecommended(assets, platform, arch);
+    const recommended = platform === 'linux' ? null : pickRecommended(assets, platform, arch);
 
-    if (recommended) {
+    if (platform === 'linux') {
+      // The Flatpak repo is preferred on Linux: it installs and keeps updating.
+      recommendedLink.href = FLATPAK_REF;
+      recommendedLabel.textContent = ct('Download for {platform}', { platform: PLATFORM_LABELS.linux });
+    } else if (recommended) {
       recommendedLink.href = recommended.url;
       recommendedLabel.textContent = ct('Download for {platform}', { platform: PLATFORM_LABELS[recommended.platform] });
     } else {
@@ -248,6 +254,9 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
       }
       // The visitor's own platform goes first.
       if (id === platform) groups.prepend(section);
+      if (id === 'linux' && platform === 'linux') {
+        section.querySelector<HTMLElement>('[data-lead] [data-suggested]')!.hidden = false;
+      }
       for (const asset of list) {
         const row = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
         row.querySelector('[data-kind]')!.textContent = asset.kind;
@@ -258,7 +267,8 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
         link.href = asset.url;
         link.title = asset.name;
         if (asset === recommended) row.querySelector<HTMLElement>('[data-suggested]')!.hidden = false;
-        rows.insertBefore(row, rows.querySelector('[data-static]'));
+        // Release files go after the lead row (the Flatpak repo) and before the other links.
+        rows.insertBefore(row, rows.querySelector('[data-static]:not([data-lead])'));
       }
     }
     groups.hidden = false;

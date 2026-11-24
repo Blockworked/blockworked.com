@@ -9,6 +9,7 @@ import { ct } from './client-i18n';
 export const REPO = 'Blockworked/Blockwork';
 export const REPO_URL = `https://github.com/${REPO}`;
 export const RELEASES_URL = `${REPO_URL}/releases`;
+export const FLATPAK_REF = 'https://flatpak.blockworked.com/blockwork.flatpakref';
 
 export type Platform = 'windows' | 'macos' | 'linux';
 export type Arch = 'x86_64' | 'arm64';
