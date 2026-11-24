@@ -14,7 +14,7 @@ interface Props {
 const { mode = 'full', align = 'start' } = Astro.props;
 const { t, th, href } = locale(Astro.url);
 const AUR_URL = 'https://aur.archlinux.org/packages/blockwork-bin';
-const COPR_URL = 'https://copr.fedorainfracloud.org/coprs/ethanstokes/blockwork/';
+const COPR_URL = 'https://copr.fedorainfracloud.org/coprs/ethanstokes/Blockwork/';
 const NIX_URL = 'https://github.com/Blockworked/Blockwork#linux';
 const STORE_URL = 'https://apps.microsoft.com/detail/9PMN4BMXPH54';
 
@@ -70,7 +70,7 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
                 <a class="dl-row" href={COPR_URL}>
                   <span class="dl-row-main">
                     <span class="dl-row-title">COPR <span class="dl-arch">Fedora 43+</span></span>
-                    <span class="dl-hint" set:html={th('Updates with the system: {command}', { command: '<code>sudo dnf copr enable ethanstokes/blockwork</code>, <code>sudo dnf install blockwork</code>' })} />
+                    <span class="dl-hint" set:html={th('Updates with the system: {command}', { command: '<code>sudo dnf copr enable ethanstokes/Blockwork</code>, <code>sudo dnf install blockwork</code>' })} />
                   </span>
                   <ExternalLink class="dl-icon" />
                 </a>
