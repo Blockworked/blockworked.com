@@ -13,7 +13,9 @@ interface Props {
 }
 const { mode = 'full', align = 'start' } = Astro.props;
 const { t, th, href } = locale(Astro.url);
-const AUR_URL = 'https://aur.archlinux.org/packages/blockwork';
+const AUR_URL = 'https://aur.archlinux.org/packages/blockwork-bin';
+const COPR_URL = 'https://copr.fedorainfracloud.org/coprs/ethanstokes/blockwork/';
+const NIX_URL = 'https://github.com/Blockworked/Blockwork#linux';
 const STORE_URL = 'https://apps.microsoft.com/detail/9PMN4BMXPH54';
 
 const platforms: Platform[] = ['windows', 'macos', 'linux'];
@@ -65,10 +67,32 @@ const platforms: Platform[] = ['windows', 'macos', 'linux'];
             )}
             {id === 'linux' && (
               <li data-static>
+                <a class="dl-row" href={COPR_URL}>
+                  <span class="dl-row-main">
+                    <span class="dl-row-title">COPR <span class="dl-arch">Fedora 43+</span></span>
+                    <span class="dl-hint" set:html={th('Updates with the system: {command}', { command: '<code>sudo dnf copr enable ethanstokes/blockwork</code>, <code>sudo dnf install blockwork</code>' })} />
+                  </span>
+                  <ExternalLink class="dl-icon" />
+                </a>
+              </li>
+            )}
+            {id === 'linux' && (
+              <li data-static>
                 <a class="dl-row" href={AUR_URL}>
                   <span class="dl-row-main">
                     <span class="dl-row-title">AUR <span class="dl-arch">Arch Linux</span></span>
-                    <span class="dl-hint" set:html={th('Builds from source: {command}', { command: '<code>paru -S blockwork</code>' })} />
+                    <span class="dl-hint" set:html={th('Prebuilt: {prebuilt}, or from source: {source}', { prebuilt: '<code>paru -S blockwork-bin</code>', source: '<code>paru -S blockwork</code>' })} />
+                  </span>
+                  <ExternalLink class="dl-icon" />
+                </a>
+              </li>
+            )}
+            {id === 'linux' && (
+              <li data-static>
+                <a class="dl-row" href={NIX_URL}>
+                  <span class="dl-row-main">
+                    <span class="dl-row-title">Nix <span class="dl-arch">NixOS</span></span>
+                    <span class="dl-hint" set:html={th('Run it with {command}, or enable programs.blockwork on NixOS', { command: '<code>nix run github:Blockworked/Blockwork</code>' })} />
                   </span>
                   <ExternalLink class="dl-icon" />
                 </a>

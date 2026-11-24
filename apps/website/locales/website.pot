@@ -39,7 +39,17 @@ msgstr ""
 
 #: src/components/Downloader.astro
 #, python-brace-format
-msgid "Builds from source: {command}"
+msgid "Updates with the system: {command}"
+msgstr ""
+
+#: src/components/Downloader.astro
+#, python-brace-format
+msgid "Prebuilt: {prebuilt}, or from source: {source}"
+msgstr ""
+
+#: src/components/Downloader.astro
+#, python-brace-format
+msgid "Run it with {command}, or enable programs.blockwork on NixOS"
 msgstr ""
 
 #: src/components/Downloader.astro
@@ -158,6 +168,19 @@ msgstr ""
 
 #: src/lib/releases.ts
 msgid "Unsigned: unzip, move to Applications, then right-click › Open the first time"
+msgstr ""
+
+#: src/lib/releases.ts
+#, python-brace-format
+msgid "Uses Ubuntu {version}'s own Qt. Open it in your software center to install"
+msgstr ""
+
+#: src/lib/releases.ts
+msgid "Debian and Ubuntu"
+msgstr ""
+
+#: src/lib/releases.ts
+msgid "Debian 13, Ubuntu 24.04 and newer, with Qt included. Open it in your software center to install"
 msgstr ""
 
 #: src/lib/releases.ts
