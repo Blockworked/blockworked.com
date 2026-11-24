@@ -68,14 +68,14 @@ export function parseAsset(asset: GitHubAsset): ReleaseAsset | null {
   if (name.includes('macos') || name.includes('darwin')) {
     return { ...base, platform: 'macos', kind: ct('App'), hint: ct('Unsigned: unzip, move to Applications, then right-click › Open the first time'), rank: 0 };
   }
-  // Built against Ubuntu's own Qt, e.g. `blockwork-ubuntu-26.04-amd64.deb`.
+  // For one Ubuntu release, e.g. `blockwork-ubuntu-26.04-amd64.deb`.
   const ubuntu = name.match(/^blockwork-ubuntu-([\d.]+)-.*\.deb$/);
   if (ubuntu) {
-    return { ...base, platform: 'linux', kind: `Ubuntu ${ubuntu[1]}`, hint: ct('Uses Ubuntu {version}\'s own Qt. Open it in your software center to install', { version: ubuntu[1] }), rank: 2 };
+    return { ...base, platform: 'linux', kind: `Ubuntu ${ubuntu[1]}`, hint: ct('For Ubuntu {version}. Open it in your software center to install', { version: ubuntu[1] }), rank: 2 };
   }
   if (name.includes('linux')) {
     if (name.endsWith('.deb')) {
-      return { ...base, platform: 'linux', kind: ct('Debian and Ubuntu'), hint: ct('Debian 13, Ubuntu 24.04 and newer, with Qt included. Open it in your software center to install'), rank: 3 };
+      return { ...base, platform: 'linux', kind: ct('Debian and Ubuntu'), hint: ct('For Debian 13, Ubuntu 24.04 and newer. Open it in your software center to install'), rank: 3 };
     }
     if (name.endsWith('.appimage')) {
       return { ...base, platform: 'linux', kind: 'AppImage', hint: ct('Runs on most distributions. Mark it executable and launch'), rank: 0 };

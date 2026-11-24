@@ -172,7 +172,7 @@ msgstr ""
 
 #: src/lib/releases.ts
 #, python-brace-format
-msgid "Uses Ubuntu {version}'s own Qt. Open it in your software center to install"
+msgid "For Ubuntu {version}. Open it in your software center to install"
 msgstr ""
 
 #: src/lib/releases.ts
@@ -180,7 +180,7 @@ msgid "Debian and Ubuntu"
 msgstr ""
 
 #: src/lib/releases.ts
-msgid "Debian 13, Ubuntu 24.04 and newer, with Qt included. Open it in your software center to install"
+msgid "For Debian 13, Ubuntu 24.04 and newer. Open it in your software center to install"
 msgstr ""
 
 #: src/lib/releases.ts
